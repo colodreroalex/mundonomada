@@ -8,6 +8,7 @@ import { RouterLink } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { Producto } from '../../../models/Producto';
 import { Subscription } from 'rxjs';
+import { apiBaseUrl } from '../../config/api.config';
 
 @Component({
   selector: 'app-carrito',
@@ -78,7 +79,7 @@ export class CarritoComponent implements OnInit, OnDestroy {
       console.log('Productos previamente comprados:', purchasedProductIds);
       
       // Llamar directamente a la API para obtener información actualizada
-      this.http.post<any>('http://localhost/mundonomada/api_php/carrito/getUpdatedProducts.php', { ids: productIds })
+      this.http.post<any>(`${apiBaseUrl}carrito/getUpdatedProducts.php`, { ids: productIds }, { withCredentials: true })
         .subscribe({
           next: (response) => {
             console.log('Refresh Cart Response:', response);

@@ -4,13 +4,14 @@ import { BehaviorSubject, Observable, throwError } from 'rxjs';
 import { tap, catchError, map, mergeMap } from 'rxjs/operators';
 import { CarritoService } from './carrito.service'; // Import the CarritoService
 import { User } from '../../models/Users'; // Asegúrate de importar la clase User correctamente
+import { apiBaseUrl } from '../config/api.config';
 
 @Injectable({
   providedIn: 'root'
 })
 
 export class AuthService {
-  private apiUrl = 'http://localhost/mundonomada/api_php/auth/';
+  private apiUrl = `${apiBaseUrl}auth/`;
   private currentUserSubject: BehaviorSubject<User | null> = new BehaviorSubject<User | null>(null);
 
   // Indicador de que la sesión ya se comprobó
@@ -64,7 +65,7 @@ export class AuthService {
   }
 
   logout(): Observable<any> {
-    return this.http.get(`${this.apiUrl}logout.php`, { withCredentials: true })
+    return this.http.post(`${this.apiUrl}logout.php`, {}, { withCredentials: true })
       .pipe(
         tap(() => {
           this.currentUserSubject.next(null);

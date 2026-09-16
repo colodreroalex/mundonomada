@@ -1,80 +1,51 @@
 <?php
+declare(strict_types=1);
 
-// Configuración de CORS y manejo de preflight
-header("Access-Control-Allow-Origin: http://localhost:4200");
-header("Access-Control-Allow-Credentials: true");
-header("Access-Control-Allow-Headers: Content-Type");
-header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
-header("Content-Type: application/json; charset=UTF-8");
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    http_response_code(200);
-    exit;
+require_once __DIR__ . '/seguridad.php';
+require_once __DIR__ . '/../conexion_postgres.php';
+
+aplicarCors(['POST', 'OPTIONS']);
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    responderJson(['error' => 'Método no permitido'], 405);
 }
-
-require("../conexion.php");
-$conexion = retornarConexion();
 
 $input = json_decode(file_get_contents('php://input'), true);
-if (!$input || empty($input['name']) || empty($input['email']) || empty($input['password'])) {
-    http_response_code(400);
-    echo json_encode(['error' => 'Faltan datos']);
-    exit;
+$name = is_array($input) ? trim((string) ($input['name'] ?? '')) : '';
+$email = is_array($input) ? strtolower(trim((string) ($input['email'] ?? ''))) : '';
+$password = is_array($input) ? (string) ($input['password'] ?? '') : '';
+
+if ($name === '' || !filter_var($email, FILTER_VALIDATE_EMAIL) || strlen($password) < 8) {
+    responderJson(['error' => 'Revisa el nombre, correo y contraseña (mínimo 8 caracteres).'], 400);
 }
 
-$name = $input['name'];
-$email = $input['email'];
-$password = $input['password'];
+$pdo = retornarConexionPostgres();
+try {
+    $pdo->beginTransaction();
+    $stmt = $pdo->prepare(
+        'insert into public.users (name, email, password, role)
+         values (:name, :email, :password, :role)
+         returning id, name, email, role, created_at, updated_at'
+    );
+    $stmt->execute([
+        ':name' => $name,
+        ':email' => $email,
+        ':password' => password_hash($password, PASSWORD_DEFAULT),
+        ':role' => 'user',
+    ]);
+    $user = $stmt->fetch();
+    $pdo->commit();
 
-// Verificar si el email ya existe usando sentencias preparadas
-$stmtCheck = $conexion->prepare("SELECT id FROM users WHERE email = ? LIMIT 1");
-$stmtCheck->bind_param("s", $email);
-$stmtCheck->execute();
-$resultCheck = $stmtCheck->get_result();
-if ($resultCheck && $resultCheck->num_rows > 0) {
-    http_response_code(409);
-    echo json_encode(['error' => 'El correo electrónico ya está registrado']);
-    exit;
-}
-
-// Hashear la contraseña
-$hashedPassword = password_hash($password, PASSWORD_DEFAULT);
-
-// Iniciar la transacción
-$conexion->begin_transaction();
-
-// Insertar el nuevo usuario de forma segura
-$stmtInsert = $conexion->prepare("INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, 'user')");
-$stmtInsert->bind_param("sss", $name, $email, $hashedPassword);
-if ($stmtInsert->execute()) {
-    $userId = $conexion->insert_id;
-    // Obtener y devolver los datos del usuario sin la contraseña
-    $stmtSelect = $conexion->prepare("SELECT id, name, email, role FROM users WHERE id = ? LIMIT 1");
-    $stmtSelect->bind_param("i", $userId);
-    if ($stmtSelect->execute()) {
-        $resultSelect = $stmtSelect->get_result();
-        if ($resultSelect && $resultSelect->num_rows > 0) {
-            $user = $resultSelect->fetch_assoc();
-            // Confirmar la transacción
-            $conexion->commit();
-            echo json_encode($user);
-            exit;
-        } else {
-            $conexion->rollback();
-            http_response_code(500);
-            echo json_encode(['error' => 'Error al obtener datos del usuario registrado']);
-            exit;
-        }
-    } else {
-        $conexion->rollback();
-        http_response_code(500);
-        echo json_encode(['error' => 'Error al obtener datos del usuario registrado']);
-        exit;
+    iniciarSesionSegura();
+    session_regenerate_id(true);
+    $_SESSION['user'] = $user;
+    responderJson($user, 201);
+} catch (PDOException $exception) {
+    if ($pdo->inTransaction()) {
+        $pdo->rollBack();
     }
-} else {
-    $conexion->rollback();
-    http_response_code(500);
-    echo json_encode(['error' => 'Error al registrar el usuario']);
-    exit;
+    if ($exception->getCode() === '23505') {
+        responderJson(['error' => 'El correo electrónico ya está registrado.'], 409);
+    }
+    error_log('Mundo Nomada registration failed: ' . $exception->getMessage());
+    responderJson(['error' => 'No se pudo completar el registro.'], 500);
 }
-
-?>

@@ -6,7 +6,9 @@
 2. Unificar el checkout en una única ruta. El servidor debe obtener productos, precio y stock desde la base de datos y calcular el total dentro de una transacción.
 3. Configurar credenciales de base de datos mediante variables de entorno o un archivo local no versionado. No devolver detalles de conexión al cliente.
 4. Configurar cookies de sesión seguras en producción (`Secure`, `HttpOnly`, `SameSite`) y protección CSRF para peticiones con cookie.
-5. Añadir límite de intentos de inicio de sesión, validación estricta de entradas y registros de errores sin datos sensibles.
+5. Aplicar el límite de intentos de inicio de sesión a la BBDD desplegada y extender la validación estricta de entradas y registros de errores sin datos sensibles al resto de endpoints.
+
+Estado: registro, login y carrito ya tienen esta base en PDO PostgreSQL; los endpoints administrativos y de perfil siguen pendientes de migración y revisión.
 
 ## Necesario para vender
 

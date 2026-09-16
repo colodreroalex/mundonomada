@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: mundo-nomada-api-test
+    runtime: docker
+    region: frankfurt
+    plan: free
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    healthCheckPath: /api_php/health.php
+    autoDeployTrigger: commit
+    envVars:
+      - key: MUNDONOMADA_SUPABASE_DSN
+        sync: false
+      - key: MUNDONOMADA_SUPABASE_USER
+        sync: false
+      - key: MUNDONOMADA_SUPABASE_PASSWORD
+        sync: false
+      - key: MUNDONOMADA_ALLOWED_ORIGIN
+        sync: false

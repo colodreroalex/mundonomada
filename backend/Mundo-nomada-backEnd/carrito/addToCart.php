@@ -1,63 +1,51 @@
 <?php
-header('Access-Control-Allow-Origin: http://localhost:4200');
-header('Access-Control-Allow-Credentials: true');
-header('Access-Control-Allow-Methods: POST, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type');
-header('Content-Type: application/json; charset=UTF-8');
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { http_response_code(204); exit; }
+declare(strict_types=1);
 
-session_start();
-if (!isset($_SESSION['user']['id'])) {
-    http_response_code(401);
-    echo json_encode(['resultado' => 'ERROR', 'mensaje' => 'Debes iniciar sesión para guardar el carrito.']);
-    exit;
+require_once __DIR__ . '/seguridad_carrito.php';
+
+$userId = usuarioSesionCarrito(['POST', 'OPTIONS']);
+$input = entradaJsonCarrito();
+$productId = filter_var($input['producto_id'] ?? null, FILTER_VALIDATE_INT);
+$quantity = filter_var($input['cantidad'] ?? null, FILTER_VALIDATE_INT);
+if (!$productId || !$quantity || $quantity < 1) {
+    responderJson(['resultado' => 'ERROR', 'mensaje' => 'Producto o cantidad no válidos.'], 400);
 }
 
-$data = json_decode(file_get_contents('php://input'), true);
-$productoId = isset($data['producto_id']) ? filter_var($data['producto_id'], FILTER_VALIDATE_INT) : false;
-$cantidad = isset($data['cantidad']) ? filter_var($data['cantidad'], FILTER_VALIDATE_INT) : false;
-if ($productoId === false || $productoId <= 0 || $cantidad === false || $cantidad <= 0) {
-    http_response_code(400);
-    echo json_encode(['resultado' => 'ERROR', 'mensaje' => 'Producto o cantidad no válidos.']);
-    exit;
-}
-
-require_once __DIR__ . '/../conexion.php';
-$conexion = retornarConexion();
-$userId = (int) $_SESSION['user']['id'];
+$pdo = retornarConexionPostgres();
 try {
-    $conexion->begin_transaction();
-    $product = $conexion->prepare('SELECT stock FROM productos WHERE ProductoID = ? FOR UPDATE');
-    $product->bind_param('i', $productoId);
-    $product->execute();
-    $stock = $product->get_result()->fetch_assoc();
-    $product->close();
-    if (!$stock) { throw new RuntimeException('El producto ya no existe.'); }
+    $pdo->beginTransaction();
+    $product = $pdo->prepare('select stock from public.productos where id = :id for update');
+    $product->execute([':id' => $productId]);
+    $stock = $product->fetch();
+    if (!$stock) {
+        throw new RuntimeException('El producto ya no existe.');
+    }
 
-    $cart = $conexion->prepare('SELECT id, cantidad FROM carrito WHERE user_id = ? AND producto_id = ? FOR UPDATE');
-    $cart->bind_param('ii', $userId, $productoId);
-    $cart->execute();
-    $item = $cart->get_result()->fetch_assoc();
-    $cart->close();
-    $newQuantity = $cantidad + ($item ? (int) $item['cantidad'] : 0);
-    if ($newQuantity > (int) $stock['stock']) { throw new RuntimeException('No hay suficientes unidades disponibles.'); }
+    $cart = $pdo->prepare(
+        'select id, cantidad from public.carrito
+         where user_id = :user_id and producto_id = :product_id for update'
+    );
+    $cart->execute([':user_id' => $userId, ':product_id' => $productId]);
+    $item = $cart->fetch();
+    $newQuantity = $quantity + ($item ? (int) $item['cantidad'] : 0);
+    if ($newQuantity > (int) $stock['stock']) {
+        throw new RuntimeException('No hay suficientes unidades disponibles.');
+    }
 
     if ($item) {
-        $stmt = $conexion->prepare('UPDATE carrito SET cantidad = ? WHERE id = ? AND user_id = ?');
-        $stmt->bind_param('iii', $newQuantity, $item['id'], $userId);
+        $pdo->prepare('update public.carrito set cantidad = :quantity where id = :id and user_id = :user_id')
+            ->execute([':quantity' => $newQuantity, ':id' => $item['id'], ':user_id' => $userId]);
     } else {
-        $stmt = $conexion->prepare('INSERT INTO carrito (user_id, producto_id, cantidad) VALUES (?, ?, ?)');
-        $stmt->bind_param('iii', $userId, $productoId, $cantidad);
+        $pdo->prepare('insert into public.carrito (user_id, producto_id, cantidad) values (:user_id, :product_id, :quantity)')
+            ->execute([':user_id' => $userId, ':product_id' => $productId, ':quantity' => $quantity]);
     }
-    $stmt->execute();
-    $stmt->close();
-    $conexion->commit();
-    echo json_encode(['resultado' => 'OK', 'mensaje' => 'Producto añadido al carrito.']);
-} catch (Throwable $exception) {
-    $conexion->rollback();
-    http_response_code(400);
-    echo json_encode(['resultado' => 'ERROR', 'mensaje' => $exception->getMessage()]);
-} finally {
-    $conexion->close();
+    $pdo->commit();
+    responderJson(['resultado' => 'OK', 'mensaje' => 'Producto añadido al carrito.']);
+} catch (RuntimeException $exception) {
+    if ($pdo->inTransaction()) { $pdo->rollBack(); }
+    responderJson(['resultado' => 'ERROR', 'mensaje' => $exception->getMessage()], 400);
+} catch (PDOException $exception) {
+    if ($pdo->inTransaction()) { $pdo->rollBack(); }
+    error_log('Mundo Nomada add cart failed: ' . $exception->getMessage());
+    responderJson(['resultado' => 'ERROR', 'mensaje' => 'No se pudo actualizar el carrito.'], 500);
 }
-?>

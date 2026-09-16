@@ -1,34 +1,20 @@
 <?php
-// Configuración de CORS
-header('Access-Control-Allow-Origin: http://localhost:4200');
-header('Access-Control-Allow-Headers: Content-Type');
-header('Access-Control-Allow-Credentials: true');
-header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
-header('Content-Type: application/json');
+declare(strict_types=1);
 
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    http_response_code(200);
-    exit;
+require_once __DIR__ . '/../auth/seguridad.php';
+require_once __DIR__ . '/../conexion_postgres.php';
+
+aplicarCors(['GET']);
+if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+    responderJson(['resultado' => 'ERROR', 'mensaje' => 'Método no permitido.'], 405);
 }
 
-// Para este endpoint, no requerimos verificación de admin ya que mostrar categorías
-// podría ser necesario para todos los usuarios en la tienda
-
-require("../conexion.php");
-$con = retornarConexion();
-
-$query = "SELECT * FROM Categorias";
-$result = $con->query($query);
-
-$categorias = array();
-while ($fila = $result->fetch_assoc()) {
-    $categorias[] = $fila;
+try {
+    $consulta = retornarConexionPostgres()->query(
+        'select id as "CategoriaID", nombre, descripcion from public.categorias order by nombre'
+    );
+    responderJson(['result' => 'OK', 'categorias' => $consulta->fetchAll()]);
+} catch (PDOException $error) {
+    error_log('Error al listar categorías: ' . $error->getMessage());
+    responderJson(['result' => 'ERROR', 'mensaje' => 'No se pudieron consultar las categorías.'], 500);
 }
-
-echo json_encode([
-    'result' => 'OK',
-    'categorias' => $categorias
-]);
-
-$con->close();
-?>

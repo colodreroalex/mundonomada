@@ -2,8 +2,6 @@
 -- Ejecutar solamente después de verificar que esta consulta no devuelve filas:
 -- SELECT user_id, producto_id, COUNT(*) FROM carrito GROUP BY user_id, producto_id HAVING COUNT(*) > 1;
 
-START TRANSACTION;
-
 ALTER TABLE productos
   MODIFY precio DECIMAL(10,2) NOT NULL;
 
@@ -25,5 +23,3 @@ ALTER TABLE orders
   ADD COLUMN shipping_address VARCHAR(255) DEFAULT NULL AFTER shipping_name,
   ADD COLUMN shipping_phone VARCHAR(30) DEFAULT NULL AFTER shipping_address,
   ADD UNIQUE KEY orders_payment_reference_unique (payment_reference);
-
-COMMIT;

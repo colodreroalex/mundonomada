@@ -4,6 +4,7 @@ import { Observable, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { Pedido } from '../../models/Pedido';
 import { OrderItem } from '../../models/OrderItem';
+import { apiBaseUrl } from '../config/api.config';
 
 interface ApiResponse<T> {
   resultado: string;
@@ -17,7 +18,7 @@ interface ApiResponse<T> {
   providedIn: 'root'
 })
 export class OrdersService {
-  private apiUrl = 'http://localhost/mundonomada/api_php/'; // URL base de tu API PHP
+  private apiUrl = apiBaseUrl;
 
   constructor(private http: HttpClient) { }
 

@@ -2,12 +2,13 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, map, catchError, throwError } from 'rxjs';
 import { User } from '../../models/Users';
+import { apiBaseUrl } from '../config/api.config';
 
 @Injectable({
   providedIn: 'root'
 })
 export class UsuariosService {
-  private apiUrl = 'http://localhost/mundonomada/api_php/usuarios/';
+  private apiUrl = `${apiBaseUrl}usuarios/`;
 
   constructor(private http: HttpClient) { }
 

@@ -1,41 +1,32 @@
 <?php
-header("Access-Control-Allow-Origin: http://localhost:4200");
-header("Access-Control-Allow-Credentials: true");
-header("Content-Type: application/json");
+declare(strict_types=1);
 
-session_start();
+require_once __DIR__ . '/seguridad.php';
+require_once __DIR__ . '/../conexion_postgres.php';
 
+aplicarCors(['GET', 'OPTIONS']);
+iniciarSesionSegura();
 if (isset($_SESSION['user'])) {
-    // Si ya hay una sesión activa, se devuelve el usuario
-    echo json_encode($_SESSION['user']);
-    exit;
+    responderJson($_SESSION['user']);
+}
+if (empty($_COOKIE['remember_me'])) {
+    responderJson(['error' => 'No hay sesión activa'], 401);
 }
 
-// Si no hay sesión activa, se intenta validar la cookie "remember_me"
-if (isset($_COOKIE['remember_me'])) {
-    require("../conexion.php");
-    $conexion = retornarConexion();
-    $token = $_COOKIE['remember_me'];
-    
-    $stmt = $conexion->prepare("SELECT * FROM users WHERE remember_token = ? AND token_expiry > NOW() LIMIT 1");
-    $stmt->bind_param("s", $token);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    
-    if ($result && $result->num_rows > 0) {
-        $user = $result->fetch_assoc();
-        // No es necesario llamar nuevamente a session_start()
-        session_regenerate_id(true);
-        unset($user['password']);
-        $_SESSION['user'] = $user;
-        echo json_encode($user);
-        exit;
-    }
+$pdo = retornarConexionPostgres();
+$stmt = $pdo->prepare(
+    'select id, name, email, role, created_at, updated_at
+     from public.users
+     where remember_token = :token and token_expiry > now()
+     limit 1'
+);
+$stmt->execute([':token' => hash('sha256', (string) $_COOKIE['remember_me'])]);
+$user = $stmt->fetch();
+if (!$user) {
+    setcookie('remember_me', '', cookieSegura() + ['expires' => time() - 3600]);
+    responderJson(['error' => 'No hay sesión activa'], 401);
 }
 
-// Si no se encontró cookie válida o no existe, se retorna error
-http_response_code(401);
-echo json_encode(['error' => 'No hay sesión activa']);
-
-
-?>
+session_regenerate_id(true);
+$_SESSION['user'] = $user;
+responderJson($user);

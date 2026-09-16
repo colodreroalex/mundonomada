@@ -4,12 +4,13 @@ import { Carrito } from '../../models/Carrito';
 import { map, Observable, switchMap, throwError, of, forkJoin, Subject } from 'rxjs';
 import { tap, catchError } from 'rxjs/operators';
 import { Producto } from '../../models/Producto';
+import { apiBaseUrl } from '../config/api.config';
 
 @Injectable({
   providedIn: 'root',
 })
 export class CarritoService {
-  url = 'http://localhost/mundonomada/api_php/carrito/';
+  url = `${apiBaseUrl}carrito/`;
   private LOCAL_CART_KEY = 'guestCart';
   
   // Constantes para cálculos

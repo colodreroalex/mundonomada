@@ -1,6 +1,6 @@
 # Mundo Nómada
 
-Tienda online compuesta por un frontend Angular y una API PHP. Actualmente usa MySQL/MariaDB en local; la BBDD de producción objetivo es Supabase PostgreSQL.
+Tienda online compuesta por un frontend Angular, una API PHP y Supabase PostgreSQL como base de datos de producción. XAMPP fue solo el entorno local original: no forma parte del despliegue final.
 
 ## Estructura
 
@@ -12,12 +12,23 @@ Tienda online compuesta por un frontend Angular y una API PHP. Actualmente usa M
 
 La carpeta `htdocs/` es una copia local para XAMPP. No forma parte del repositorio: para probar cambios, copia o enlaza el backend fuente en tu instalación local, pero no edites ambas copias.
 
-## Arranque local
+## Arquitectura de producción
 
-1. Crea una base de datos vacía y ejecuta `database/schema.sql`.
-2. Copia `backend/Mundo-nomada-backEnd/config/database.local.example.php` como `database.local.php` y configura las credenciales locales. No subas contraseñas ni exportaciones con datos.
-3. Desde `frontend/mundo-nomada`, ejecuta `npm ci` y `npm start`.
-4. Sirve la API PHP con Apache/XAMPP en la ruta configurada por el frontend.
+`Navegador Angular → API PHP desplegada → Supabase PostgreSQL`
+
+- Supabase guarda los datos y copias de seguridad; no ejecuta este backend PHP.
+- Angular no se conecta a las tablas ni recibe claves de Supabase.
+- La API PHP se despliega en un hosting o servidor con PHP 8.2+, `PDO_PGSQL` y HTTPS. Puede ser un hosting PHP gestionado o un VPS con Nginx/Apache; no XAMPP.
+
+## Desarrollo local sin XAMPP
+
+Para desarrollar hace falta algún runtime de PHP con la extensión `pdo_pgsql`; XAMPP es solo una posibilidad, no un requisito. Puedes usar PHP instalado de forma independiente, Docker o un hosting de pruebas. Configura las credenciales únicamente en `config/supabase.local.php` (archivo ignorado por Git) y ejecuta Angular con `npm ci` y `npm start` desde `frontend/mundo-nomada`.
+
+La guía completa de la conexión está en `supabase/README.md`.
+
+## Configurar la URL de la API
+
+El frontend lee `frontend/mundo-nomada/public/runtime-config.js` al arrancar. Para desarrollo local mantiene `http://localhost/mundonomada/api_php/`. En el despliegue, cambia únicamente `apiBaseUrl` por la URL HTTPS pública del backend, por ejemplo `https://api.ejemplo.es/`. Este archivo es público: nunca guardes en él contraseñas, claves de Supabase ni claves de pago.
 
 ## Forma de trabajar
 

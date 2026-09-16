@@ -1,29 +1,33 @@
 <?php
+declare(strict_types=1);
 
-header("Access-Control-Allow-Origin: http://localhost:4200");
-header("Access-Control-Allow-Credentials: true");
-header("Content-Type: application/json");
+require_once __DIR__ . '/seguridad.php';
+require_once __DIR__ . '/../conexion_postgres.php';
 
-session_start();
-$_SESSION = array();
+aplicarCors(['POST', 'OPTIONS']);
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    responderJson(['error' => 'Método no permitido'], 405);
+}
 
-// Eliminar la cookie de sesión de forma segura
-if (ini_get("session.use_cookies")) {
+iniciarSesionSegura();
+$userId = $_SESSION['user']['id'] ?? null;
+if ($userId !== null) {
+    $pdo = retornarConexionPostgres();
+    $pdo->prepare('update public.users set remember_token = null, token_expiry = null where id = :id')
+        ->execute([':id' => $userId]);
+}
+
+$_SESSION = [];
+if (ini_get('session.use_cookies')) {
     $params = session_get_cookie_params();
-    setcookie(session_name(), '', time() - 42000,
-        $params["path"], $params["domain"],
-        $params["secure"], $params["httponly"]
-    );
+    setcookie(session_name(), '', [
+        'expires' => time() - 3600,
+        'path' => $params['path'] ?: '/',
+        'secure' => (bool) $params['secure'],
+        'httponly' => (bool) $params['httponly'],
+        'samesite' => $params['samesite'] ?? 'Lax',
+    ]);
 }
 session_destroy();
-
-// Eliminar la cookie "remember_me" si existe
-if (isset($_COOKIE['remember_me'])) {
-    setcookie('remember_me', '', time() - 3600, "/", "", isset($_SERVER["HTTPS"]), true);
-}
-
-echo json_encode(['message' => 'Sesión cerrada']);
-
-
-
- ?>
+setcookie('remember_me', '', cookieSegura() + ['expires' => time() - 3600]);
+responderJson(['message' => 'Sesión cerrada']);

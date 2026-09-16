@@ -3,12 +3,13 @@ import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http
 import { Producto } from '../../models/Producto';
 import { Observable, throwError, of } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
+import { apiBaseUrl } from '../config/api.config';
 
 @Injectable({
   providedIn: 'root',
 })
 export class ProductosService {
-  url = 'http://localhost/mundonomada/api_php/Productos/'; // Cambia esto por la URL de tu backend
+  url = `${apiBaseUrl}Productos/`;
 
   constructor(private http: HttpClient) {}
 

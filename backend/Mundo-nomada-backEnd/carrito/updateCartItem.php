@@ -1,54 +1,37 @@
 <?php
-header("Access-Control-Allow-Origin: http://localhost:4200");
-header("Access-Control-Allow-Credentials: true");
-header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
-header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With");
-header('Content-Type: application/json');
+require_once __DIR__ . '/seguridad_carrito.php';
 
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { http_response_code(204); exit; }
-session_start();
-if (!isset($_SESSION['user']['id'])) {
-    http_response_code(401);
-    echo json_encode(['resultado' => 'ERROR', 'mensaje' => 'Debes iniciar sesión.']);
-    exit;
+$userId = usuarioSesionCarrito(['POST']);
+$entrada = entradaJsonCarrito();
+$cartId = filter_var($entrada['id'] ?? null, FILTER_VALIDATE_INT);
+$cantidad = filter_var($entrada['cantidad'] ?? null, FILTER_VALIDATE_INT);
+if ($cartId === false || $cartId <= 0 || $cantidad === false || $cantidad <= 0) {
+    responderJson(['resultado' => 'ERROR', 'mensaje' => 'La cantidad solicitada no es válida.'], 400);
 }
 
-require("../conexion.php");
-$con = retornarConexion();
-
-$data = json_decode(file_get_contents("php://input"));
-
-if (!isset($data->id) || !isset($data->cantidad)) {
-    echo json_encode(['resultado' => 'ERROR', 'mensaje' => 'Datos incompletos']);
-    exit();
+try {
+    $conexion = retornarConexionPostgres();
+    $conexion->beginTransaction();
+    $consulta = $conexion->prepare(
+        'select p.stock from public.carrito c join public.productos p on p.id = c.producto_id
+          where c.id = :cart_id and c.user_id = :user_id for update of c, p'
+    );
+    $consulta->execute([':cart_id' => $cartId, ':user_id' => $userId]);
+    $linea = $consulta->fetch();
+    if (!$linea) {
+        $conexion->rollBack();
+        responderJson(['resultado' => 'ERROR', 'mensaje' => 'Elemento de carrito no encontrado.'], 404);
+    }
+    if ($cantidad > (int) $linea['stock']) {
+        $conexion->rollBack();
+        responderJson(['resultado' => 'ERROR', 'mensaje' => 'La cantidad solicitada supera el stock disponible.'], 409);
+    }
+    $actualizar = $conexion->prepare('update public.carrito set cantidad = :cantidad where id = :cart_id and user_id = :user_id');
+    $actualizar->execute([':cantidad' => $cantidad, ':cart_id' => $cartId, ':user_id' => $userId]);
+    $conexion->commit();
+    responderJson(['resultado' => 'OK', 'mensaje' => 'Cantidad actualizada.']);
+} catch (PDOException $error) {
+    if (isset($conexion) && $conexion->inTransaction()) { $conexion->rollBack(); }
+    error_log('Error al actualizar el carrito: ' . $error->getMessage());
+    responderJson(['resultado' => 'ERROR', 'mensaje' => 'No se pudo actualizar el carrito.'], 500);
 }
-
-$id = intval($data->id);
-$cantidad = intval($data->cantidad);
-if ($id <= 0 || $cantidad <= 0) {
-    http_response_code(400);
-    echo json_encode(['resultado' => 'ERROR', 'mensaje' => 'Datos no válidos.']);
-    exit;
-}
-$userId = (int) $_SESSION['user']['id'];
-
-$sql = "UPDATE carrito SET cantidad = ? WHERE id = ? AND user_id = ?";
-$stmt = $con->prepare($sql);
-$stmt->bind_param("iii", $cantidad, $id, $userId);
-$stmt->execute();
-
-if ($stmt->affected_rows === 0) {
-    http_response_code(404);
-    echo json_encode(['resultado' => 'ERROR', 'mensaje' => 'Elemento de carrito no encontrado.']);
-    exit;
-}
-
-$response = new stdClass();
-$response->resultado = 'OK';
-$response->mensaje = 'Cantidad actualizada';
-
-$stmt->close();
-$con->close();
-
-echo json_encode($response);
-?>

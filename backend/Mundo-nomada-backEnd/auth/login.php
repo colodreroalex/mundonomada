@@ -1,88 +1,87 @@
 <?php
-// Configuración de CORS y manejo de preflight
-header("Access-Control-Allow-Origin: http://localhost:4200");
-header("Access-Control-Allow-Credentials: true");
-header("Access-Control-Allow-Headers: Content-Type");
-header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    http_response_code(200);
-    exit;
+declare(strict_types=1);
+
+require_once __DIR__ . '/seguridad.php';
+require_once __DIR__ . '/../conexion_postgres.php';
+
+aplicarCors(['POST', 'OPTIONS']);
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    responderJson(['error' => 'Método no permitido'], 405);
 }
 
-require("../conexion.php");
-$conexion = retornarConexion();
-
-// Recibir y decodificar la entrada JSON
 $input = json_decode(file_get_contents('php://input'), true);
-if (!$input || empty($input['email']) || empty($input['password'])) {
-    http_response_code(400);
-    echo json_encode(['error' => 'Faltan datos']);
-    exit;
+$email = is_array($input) ? strtolower(trim((string) ($input['email'] ?? ''))) : '';
+$password = is_array($input) ? (string) ($input['password'] ?? '') : '';
+if (!filter_var($email, FILTER_VALIDATE_EMAIL) || $password === '') {
+    responderJson(['error' => 'Correo o contraseña no válidos'], 401);
 }
 
-$email = $input['email'];
-$password = trim($input['password']);
+$identifier = hash('sha256', $email . '|' . ($_SERVER['REMOTE_ADDR'] ?? 'unknown'));
+$pdo = retornarConexionPostgres();
 
-// Usar sentencias preparadas para evitar inyección SQL
-$stmt = $conexion->prepare("SELECT * FROM users WHERE email = ? LIMIT 1");
-$stmt->bind_param("s", $email);
-$stmt->execute();
-$result = $stmt->get_result();
+try {
+    $pdo->beginTransaction();
+    $attemptStmt = $pdo->prepare(
+        'select attempts, window_started_at, locked_until
+         from public.login_attempts where identifier_hash = :identifier for update'
+    );
+    $attemptStmt->execute([':identifier' => $identifier]);
+    $attempt = $attemptStmt->fetch();
 
-if ($result && $result->num_rows > 0) {
-    $user = $result->fetch_assoc();
-    if (password_verify($password, $user['password'])) {
-        // Iniciar la sesión y regenerar el ID
-        session_start(); //lo estableci en el php.ini a 1h
-        session_regenerate_id(true);
-        unset($user['password']);
-        $_SESSION['user'] = $user;
-        
-        // Implementar cookie "Remember Me" si se solicita
-        // En el bloque "Remember Me":
-        if (isset($input['rememberMe']) && $input['rememberMe'] === true) {
-            $token = bin2hex(random_bytes(16));
-            $stmtToken = $conexion->prepare("UPDATE users SET remember_token = ?, token_expiry = DATE_ADD(NOW(), INTERVAL 30 DAY) WHERE id = ?");
-    
-            if (!$stmtToken) {
-                // Manejar error de preparación
-                error_log("Error en prepare: " . $conexion->error);
-                http_response_code(500);
-                echo json_encode(['error' => 'Error interno']);
-                exit;
-            }
-    
-            $stmtToken->bind_param("si", $token, $user['id']);
-            if (!$stmtToken->execute()) {
-                // Manejar error de ejecución
-                error_log("Error en execute: " . $stmtToken->error);
-            }
-    
-            // Configuración moderna de la cookie
-            setcookie('remember_me', $token, [
-                'expires' => time() + (86400 * 30),
-                'path' => '/',
-                'secure' => isset($_SERVER['HTTPS']),
-                'httponly' => true,
-                'samesite' => 'Strict'
-            ]);
-        }
-        
-        echo json_encode($user);
-        exit;
-    } else {
-        http_response_code(401);
-        echo json_encode(['error' => 'Contraseña incorrecta']);
-        exit;
+    if ($attempt && $attempt['locked_until'] !== null && strtotime($attempt['locked_until']) > time()) {
+        $pdo->commit();
+        responderJson(['error' => 'Demasiados intentos. Inténtalo de nuevo más tarde.'], 429);
     }
-} else {
-    http_response_code(404);
-    echo json_encode(['error' => 'Usuario no encontrado']);
-    exit;
+
+    $userStmt = $pdo->prepare(
+        'select id, name, email, password, role, created_at, updated_at
+         from public.users where lower(email) = :email limit 1'
+    );
+    $userStmt->execute([':email' => $email]);
+    $user = $userStmt->fetch();
+
+    if (!$user || !password_verify($password, $user['password'])) {
+        $windowExpired = !$attempt || strtotime($attempt['window_started_at']) < (time() - 900);
+        $attempts = $windowExpired ? 1 : ((int) $attempt['attempts'] + 1);
+        $lockedUntil = $attempts >= 5 ? date('c', time() + 900) : null;
+        $writeAttempt = $pdo->prepare(
+            'insert into public.login_attempts (identifier_hash, attempts, window_started_at, locked_until)
+             values (:identifier, :attempts, now(), :locked_until)
+             on conflict (identifier_hash) do update set
+               attempts = excluded.attempts,
+               window_started_at = case when :window_expired then now() else public.login_attempts.window_started_at end,
+               locked_until = excluded.locked_until'
+        );
+        $writeAttempt->execute([
+            ':identifier' => $identifier,
+            ':attempts' => $attempts,
+            ':locked_until' => $lockedUntil,
+            ':window_expired' => $windowExpired,
+        ]);
+        $pdo->commit();
+        responderJson(['error' => 'Correo o contraseña no válidos'], 401);
+    }
+
+    $pdo->prepare('delete from public.login_attempts where identifier_hash = :identifier')
+        ->execute([':identifier' => $identifier]);
+
+    if (($input['rememberMe'] ?? false) === true) {
+        $token = bin2hex(random_bytes(32));
+        $pdo->prepare("update public.users set remember_token = :token, token_expiry = now() + interval '30 days' where id = :id")
+            ->execute([':token' => hash('sha256', $token), ':id' => $user['id']]);
+        setcookie('remember_me', $token, cookieSegura() + ['expires' => time() + 86400 * 30]);
+    }
+    $pdo->commit();
+
+    unset($user['password']);
+    iniciarSesionSegura();
+    session_regenerate_id(true);
+    $_SESSION['user'] = $user;
+    responderJson($user);
+} catch (PDOException $exception) {
+    if ($pdo->inTransaction()) {
+        $pdo->rollBack();
+    }
+    error_log('Mundo Nomada login failed: ' . $exception->getMessage());
+    responderJson(['error' => 'No se pudo iniciar sesión.'], 500);
 }
-?>
-
-
-
-
-

@@ -77,6 +77,16 @@ create table public.order_items (
 
 create index order_items_producto_idx on public.order_items(producto_id);
 
+create table public.login_attempts (
+  identifier_hash char(64) primary key,
+  attempts smallint not null default 0 check (attempts >= 0),
+  window_started_at timestamptz not null default now(),
+  locked_until timestamptz,
+  updated_at timestamptz not null default now()
+);
+
+create index login_attempts_locked_until_idx on public.login_attempts(locked_until);
+
 create or replace function app_private.set_updated_at()
 returns trigger
 language plpgsql
@@ -97,6 +107,10 @@ create trigger productos_set_updated_at
 before update on public.productos
 for each row execute function app_private.set_updated_at();
 
+create trigger login_attempts_set_updated_at
+before update on public.login_attempts
+for each row execute function app_private.set_updated_at();
+
 -- Impide que la API de datos de Supabase exponga las tablas por defecto.
 -- El acceso continuará pasando por el backend PHP hasta que se implemente
 -- Supabase Auth y políticas específicas.
@@ -106,6 +120,7 @@ alter table public.productos enable row level security;
 alter table public.carrito enable row level security;
 alter table public.orders enable row level security;
 alter table public.order_items enable row level security;
+alter table public.login_attempts enable row level security;
 
 revoke all on all tables in schema public from anon, authenticated;
 revoke all on all sequences in schema public from anon, authenticated;

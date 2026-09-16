@@ -1,52 +1,23 @@
 <?php
-// Configuración de CORS
-header('Access-Control-Allow-Origin: http://localhost:4200'); 
-header("Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept");
-header('Access-Control-Allow-Credentials: true');
-header("Access-Control-Allow-Methods: GET, OPTIONS");
-header('Content-Type: application/json');
+declare(strict_types=1);
 
+require_once __DIR__ . '/../auth/seguridad.php';
+require_once __DIR__ . '/../conexion_postgres.php';
 
-// Manejo de la petición OPTIONS para CORS
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-  http_response_code(200);
-  exit;
+aplicarCors(['GET']);
+if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+    responderJson(['resultado' => 'ERROR', 'mensaje' => 'Método no permitido.'], 405);
 }
-
-// Este endpoint no requiere verificación de administrador ya que los productos
-// necesitan ser accesibles para todos los usuarios de la tienda
-
-require("../conexion.php");
-$con = retornarConexion();
 
 try {
-  // Modificamos la consulta para incluir un JOIN con la tabla categorías
-  // Esto asegura que solo obtenemos productos cuyas categorías existen
-  $query = "SELECT p.* FROM Productos p
-           INNER JOIN Categorias c ON p.categoriaID = c.CategoriaID";
-  $result = $con->query($query);
-  
-  if (!$result) {
-    throw new Exception("Error en la consulta: " . $con->error);
-  }
-  
-  $productos = array();
-  while ($row = $result->fetch_assoc()) {
-    $productos[] = $row;
-  }
-  
-  echo json_encode([
-    'resultado' => 'OK',
-    'productos' => $productos
-  ]);
-  
-} catch (Exception $e) {
-  http_response_code(500);
-  echo json_encode([
-    'resultado' => 'ERROR',
-    'mensaje' => $e->getMessage()
-  ]);
-} finally {
-  $con->close();
+    $consulta = retornarConexionPostgres()->query(
+        'select p.id as "ProductoID", p.nombre, p.precio, p.descripcion, p.stock,
+                p.categoria_id as "categoriaID", p.imagen_url as imagen, p.color, p.talla
+           from public.productos p join public.categorias c on c.id = p.categoria_id
+          order by p.id'
+    );
+    responderJson(['resultado' => 'OK', 'productos' => $consulta->fetchAll()]);
+} catch (PDOException $error) {
+    error_log('Error al listar productos: ' . $error->getMessage());
+    responderJson(['resultado' => 'ERROR', 'mensaje' => 'No se pudieron consultar los productos.'], 500);
 }
-?>

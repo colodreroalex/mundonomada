@@ -121,8 +121,8 @@ def build():
     add_heading(doc, 'Arquitectura')
     add_body(doc, 'El navegador Angular se comunica unicamente con la API PHP. La API valida la sesion y las entradas antes de usar la base de datos. En produccion no se exponen credenciales de base de datos, ni se conectan los navegadores directamente a las tablas de negocio.')
     add_bullet(doc, 'Desarrollo actual: Angular, PHP y MySQL MariaDB local mediante XAMPP.')
-    add_bullet(doc, 'Destino de produccion: Supabase PostgreSQL, con migraciones SQL versionadas en la carpeta supabase del repositorio.')
-    add_bullet(doc, 'Archivos privados: la conexion se define por variables de entorno o por config database local php, que Git ignora.')
+    add_bullet(doc, 'Destino de produccion: el proyecto Supabase PostgreSQL mundo-nomada ya existe en West EU Ireland. La migracion inicial versionada se aplico y las tablas de negocio tienen RLS activado.')
+    add_bullet(doc, 'Archivos privados: la conexion se define por variables de entorno o por archivos locales que Git ignora. Para Supabase, PHP necesita la extension PDO PostgreSQL activada.')
 
     add_heading(doc, 'Modelo de datos')
     add_body(doc, 'La fuente de verdad del modelo es database schema sql para el entorno MySQL local y supabase migrations para PostgreSQL. Ambas definiciones no incluyen datos de clientes ni productos reales.')
@@ -144,12 +144,18 @@ def build():
 
     add_heading(doc, 'Configuracion local')
     add_body(doc, 'Para ejecutar una copia local, se crea una base vacia con database schema sql y se configura el archivo database local php a partir del ejemplo incluido en el backend. La cuenta de la aplicacion debe ser distinta de root y tener solo permisos sobre la base de Mundo Nomada.')
-    add_body(doc, 'Para Supabase, las migraciones se aplicaran desde los archivos versionados. No se editaran tablas manualmente en el panel remoto cuando el flujo de migraciones este activo, porque se perderia la trazabilidad de los cambios.')
+    add_body(doc, 'Para Supabase, la migracion inicial ya se aplico desde el archivo versionado. Antes de usar la CLI para cambios futuros, se debe registrar esa migracion como aplicada, y despues cada cambio se aplicara desde un nuevo archivo versionado. No se editaran tablas manualmente en el panel remoto porque se perderia la trazabilidad de los cambios.')
+
+    add_heading(doc, 'Guia manual de conexion a Supabase')
+    add_bullet(doc, 'En Project Settings y Database, restablece la contrasena de PostgreSQL y guardala en un gestor de contrasenas. No la compartas por chat ni la subas a Git.')
+    add_bullet(doc, 'En Connect, usa Session pooler. Copia sus datos en config supabase local php dentro del backend a partir del ejemplo y completa la contrasena. Ese archivo esta ignorado por Git.')
+    add_bullet(doc, 'En C XAMPP php php ini, habilita pdo pgsql y pgsql, y reinicia Apache. Sin esos drivers PHP no puede conectarse a PostgreSQL.')
+    add_bullet(doc, 'Crea un token personal de Supabase en tu cuenta y ejecuta la reparacion del historial indicada en supabase README antes de usar db push. No compartas el token.')
 
     add_heading(doc, 'Pasos antes de vender')
     numbered = [
         'Fusionar el Pull Request de seguridad y probar que un usuario no puede consultar ni modificar el carrito de otro.',
-        'Crear el proyecto Supabase, aplicar la migracion inicial y adaptar la conexion PHP de mysqli a PDO PostgreSQL.',
+        'Configurar la contrasena y los drivers PDO PostgreSQL, y adaptar la conexion PHP de mysqli a PDO PostgreSQL.',
         'Probar registro, inicio de sesion, carrito, stock, pedido y permisos de administrador con datos ficticios.',
         'Completar la pasarela de pago para que el backend confirme el pago con el proveedor antes de marcar un pedido como pagado.',
         'Configurar HTTPS, cookies seguras, CORS de produccion, limites de inicio de sesion, copias de seguridad y prueba de restauracion.',

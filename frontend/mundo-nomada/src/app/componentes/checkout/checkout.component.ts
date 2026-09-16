@@ -9,6 +9,7 @@ import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } 
 import { HttpClient } from '@angular/common/http';
 import { PdfService } from '../../services/pdf.service';
 import { Subscription } from 'rxjs';
+import { apiBaseUrl } from '../../config/api.config';
 
 @Component({
   selector: 'app-checkout',
@@ -65,9 +66,6 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    // Cargar el script de PayPal
-    this.loadPayPalScript();
-    
     this.authService.getCurrentUserObservable().subscribe((user: User | null) => {
       this.currentUser = user;
       // Recargar el carrito cuando cambia el usuario
@@ -196,15 +194,8 @@ export class CheckoutComponent implements OnInit, OnDestroy {
    */
   updatePayPalButtonState(): void {
     this.formSubmitted = true;
-    
     if (this.isFormValid()) {
-      console.log('Formulario válido, renderizando botón PayPal');
-      // Pequeño timeout para permitir que Angular actualice la vista
-      setTimeout(() => {
-        this.renderPayPalButton();
-      }, 500); // Aumentamos el tiempo para asegurar que Angular haya actualizado la vista
-    } else {
-      console.log('Formulario inválido, no se puede continuar');
+      this.error = 'El pago online está desactivado hasta conectar y verificar un proveedor de pago desde el servidor.';
     }
   }
 
@@ -316,7 +307,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     const productIds = this.carrito.map(item => item.producto_id);
     
     // Obtener la información más reciente de stock directamente del servidor
-    this.http.post<any>('http://localhost/mundonomada/api_php/carrito/getUpdatedProducts.php', { ids: productIds })
+    this.http.post<any>(`${apiBaseUrl}carrito/getUpdatedProducts.php`, { ids: productIds }, { withCredentials: true })
       .subscribe({
         next: (response) => {
           // Crear un mapa con la información actualizada de los productos

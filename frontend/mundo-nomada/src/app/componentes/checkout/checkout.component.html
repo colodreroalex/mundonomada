@@ -204,9 +204,9 @@
               </div>
               
               <div *ngIf="formSubmitted && isFormValid()">
-                <p class="payment-description">Selecciona PayPal para completar tu compra de forma segura.</p>
-                <!-- Contenedor para el botón de PayPal -->
-                <div id="paypal-button-container" class="mt-3"></div>
+                <div class="alert alert-info mb-0">
+                  El pago online está en preparación. No se cobra ni se crea ningún pedido hasta que el proveedor de pago esté conectado y verificado en el servidor.
+                </div>
               </div>
             </div>
           </div>

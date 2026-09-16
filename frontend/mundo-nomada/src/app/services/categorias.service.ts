@@ -3,12 +3,13 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 import { Categoria } from '../../models/Categoria';
+import { apiBaseUrl } from '../config/api.config';
 
 @Injectable({
   providedIn: 'root'
 })
 export class CategoriasService {
-  url = 'http://localhost/mundonomada/api_php/Categorias/';
+  url = `${apiBaseUrl}Categorias/`;
 
   constructor(private http: HttpClient) {}
 
