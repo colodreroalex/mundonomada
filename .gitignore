@@ -16,6 +16,8 @@ coverage/
 *.sql
 !database/schema.sql
 !database/seeds/*.sql
+!database/migrations/*.sql
+!supabase/migrations/*.sql
 
 # Local XAMPP deployment mirror and preserved pre-monorepo Git history.
 /htdocs/
