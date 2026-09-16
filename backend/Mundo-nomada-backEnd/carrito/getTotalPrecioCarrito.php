@@ -6,16 +6,19 @@ header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With");
 header('Content-Type: application/json');
 
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { http_response_code(204); exit; }
+session_start();
+if (!isset($_SESSION['user']['id'])) {
+    http_response_code(401);
+    echo json_encode(['resultado' => 'ERROR', 'mensaje' => 'Debes iniciar sesión.']);
+    exit;
+}
+
 require("../conexion.php");
 $con = retornarConexion();
 
-// Verificar que se haya enviado el parámetro user_id
-if (!isset($_GET['user_id'])) {
-    echo json_encode(['resultado' => 'ERROR', 'mensaje' => 'user_id no especificado']);
-    exit();
-}
-
-$user_id = intval($_GET['user_id']);
+// El usuario siempre procede de la sesión, nunca de la URL.
+$user_id = (int) $_SESSION['user']['id'];
 
 // Consulta para obtener el precio total del carrito: se multiplica la cantidad por el precio de cada producto y se suma el total
 $sql = "SELECT SUM(c.cantidad * p.precio) AS total 

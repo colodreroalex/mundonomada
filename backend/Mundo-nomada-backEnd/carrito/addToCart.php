@@ -1,106 +1,63 @@
 <?php
+header('Access-Control-Allow-Origin: http://localhost:4200');
+header('Access-Control-Allow-Credentials: true');
+header('Access-Control-Allow-Methods: POST, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type');
+header('Content-Type: application/json; charset=UTF-8');
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { http_response_code(204); exit; }
 
-
-// Manejo de la petición OPTIONS para CORS
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    header("Access-Control-Allow-Origin: http://localhost:4200");
-    header("Access-Control-Allow-Credentials: true");
-    header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
-    header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With");
-    exit(0);
+session_start();
+if (!isset($_SESSION['user']['id'])) {
+    http_response_code(401);
+    echo json_encode(['resultado' => 'ERROR', 'mensaje' => 'Debes iniciar sesión para guardar el carrito.']);
+    exit;
 }
 
-// Cabeceras para la petición
-header("Access-Control-Allow-Origin: http://localhost:4200");
-header("Access-Control-Allow-Credentials: true");
-header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
-header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With");
-header('Content-Type: application/json');
-
-// Recoger datos enviados en formato JSON
-$json = file_get_contents('php://input');
-$params = json_decode($json);
-
-// Validar que se reciban los datos mínimos
-if (!isset($params->user_id) || !isset($params->producto_id) || !isset($params->cantidad)) {
-    echo json_encode(['resultado' => 'ERROR', 'mensaje' => 'Datos incompletos']);
-    exit();
+$data = json_decode(file_get_contents('php://input'), true);
+$productoId = isset($data['producto_id']) ? filter_var($data['producto_id'], FILTER_VALIDATE_INT) : false;
+$cantidad = isset($data['cantidad']) ? filter_var($data['cantidad'], FILTER_VALIDATE_INT) : false;
+if ($productoId === false || $productoId <= 0 || $cantidad === false || $cantidad <= 0) {
+    http_response_code(400);
+    echo json_encode(['resultado' => 'ERROR', 'mensaje' => 'Producto o cantidad no válidos.']);
+    exit;
 }
 
-require("../conexion.php");
-$con = retornarConexion();
+require_once __DIR__ . '/../conexion.php';
+$conexion = retornarConexion();
+$userId = (int) $_SESSION['user']['id'];
+try {
+    $conexion->begin_transaction();
+    $product = $conexion->prepare('SELECT stock FROM productos WHERE ProductoID = ? FOR UPDATE');
+    $product->bind_param('i', $productoId);
+    $product->execute();
+    $stock = $product->get_result()->fetch_assoc();
+    $product->close();
+    if (!$stock) { throw new RuntimeException('El producto ya no existe.'); }
 
-$response = new stdClass();
+    $cart = $conexion->prepare('SELECT id, cantidad FROM carrito WHERE user_id = ? AND producto_id = ? FOR UPDATE');
+    $cart->bind_param('ii', $userId, $productoId);
+    $cart->execute();
+    $item = $cart->get_result()->fetch_assoc();
+    $cart->close();
+    $newQuantity = $cantidad + ($item ? (int) $item['cantidad'] : 0);
+    if ($newQuantity > (int) $stock['stock']) { throw new RuntimeException('No hay suficientes unidades disponibles.'); }
 
-// Primero, obtenemos el stock actual del producto
-$stockStmt = $con->prepare("SELECT stock FROM productos WHERE ProductoID = ?");
-$stockStmt->bind_param("i", $params->producto_id);
-$stockStmt->execute();
-$stockStmt->bind_result($stockDisponible);
-if (!$stockStmt->fetch()) {
-    echo json_encode(['resultado' => 'ERROR', 'mensaje' => 'Producto no encontrado']);
-    exit();
-}
-$stockStmt->close();
-
-// Verificamos si el producto ya existe en el carrito para ese usuario
-$checkStmt = $con->prepare("SELECT id, cantidad FROM carrito WHERE user_id = ? AND producto_id = ?");
-$checkStmt->bind_param("ii", $params->user_id, $params->producto_id);
-$checkStmt->execute();
-$checkStmt->store_result();
-
-if ($checkStmt->num_rows > 0) {
-    // Si ya existe, obtenemos el id y la cantidad actual
-    $checkStmt->bind_result($id, $cantidadActual);
-    $checkStmt->fetch();
-    $nuevaCantidad = $cantidadActual + $params->cantidad;
-    $checkStmt->close();
-
-    // Verificar que la cantidad total solicitada no exceda el stock disponible
-    if ($nuevaCantidad > $stockDisponible) {
-        echo json_encode(['resultado' => 'ERROR', 'mensaje' => 'No hay suficientes unidades disponibles']);
-        exit();
-    }
-
-    // Actualizamos la cantidad sumando la nueva cantidad
-    $updateStmt = $con->prepare("UPDATE carrito SET cantidad = ? WHERE id = ?");
-    $updateStmt->bind_param("ii", $nuevaCantidad, $id);
-    if ($updateStmt->execute()) {
-        $response->resultado = 'OK';
-        $response->mensaje = 'Cantidad actualizada en el carrito';
+    if ($item) {
+        $stmt = $conexion->prepare('UPDATE carrito SET cantidad = ? WHERE id = ? AND user_id = ?');
+        $stmt->bind_param('iii', $newQuantity, $item['id'], $userId);
     } else {
-        $response->resultado = 'ERROR';
-        $response->mensaje = 'Error al actualizar el carrito';
+        $stmt = $conexion->prepare('INSERT INTO carrito (user_id, producto_id, cantidad) VALUES (?, ?, ?)');
+        $stmt->bind_param('iii', $userId, $productoId, $cantidad);
     }
-    $updateStmt->close();
-} else {
-    $checkStmt->close();
-    
-    // Si la cantidad a insertar supera el stock disponible, se notifica
-    if ($params->cantidad > $stockDisponible) {
-        echo json_encode(['resultado' => 'ERROR', 'mensaje' => 'No hay suficientes unidades disponibles']);
-        exit();
-    }
-    
-    // Si no existe, insertamos un nuevo registro en el carrito
-    $insertStmt = $con->prepare("INSERT INTO carrito (user_id, producto_id, cantidad) VALUES (?, ?, ?)");
-    $insertStmt->bind_param("iii", $params->user_id, $params->producto_id, $params->cantidad);
-    if ($insertStmt->execute()) {
-        $response->resultado = 'OK';
-        $response->mensaje = 'Producto añadido al carrito correctamente';
-    } else {
-        $response->resultado = 'ERROR';
-        $response->mensaje = 'Error al añadir el producto al carrito';
-    }
-    $insertStmt->close();
+    $stmt->execute();
+    $stmt->close();
+    $conexion->commit();
+    echo json_encode(['resultado' => 'OK', 'mensaje' => 'Producto añadido al carrito.']);
+} catch (Throwable $exception) {
+    $conexion->rollback();
+    http_response_code(400);
+    echo json_encode(['resultado' => 'ERROR', 'mensaje' => $exception->getMessage()]);
+} finally {
+    $conexion->close();
 }
-
-$con->close();
-echo json_encode($response);
-
-
-
-
-
-
 ?>
