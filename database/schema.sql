@@ -1,0 +1,81 @@
+-- Mundo Nómada: schema reproducible sin datos personales.
+-- Compatible con MySQL 8+ y MariaDB 10.4+.
+
+CREATE DATABASE IF NOT EXISTS mundonomada
+  CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE mundonomada;
+
+CREATE TABLE users (
+  id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  name VARCHAR(100) NOT NULL,
+  email VARCHAR(254) NOT NULL,
+  password VARCHAR(255) NOT NULL,
+  role ENUM('admin', 'user') NOT NULL DEFAULT 'user',
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  remember_token VARCHAR(255) DEFAULT NULL,
+  token_expiry DATETIME DEFAULT NULL,
+  password_updated_at DATETIME DEFAULT NULL,
+  updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY users_email_unique (email)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE categorias (
+  CategoriaID INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  Nombre VARCHAR(50) NOT NULL,
+  Descripcion TEXT DEFAULT NULL,
+  PRIMARY KEY (CategoriaID),
+  UNIQUE KEY categorias_nombre_unique (Nombre)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE productos (
+  ProductoID INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  nombre VARCHAR(100) NOT NULL,
+  precio DECIMAL(10,2) NOT NULL,
+  descripcion TEXT DEFAULT NULL,
+  stock INT UNSIGNED NOT NULL DEFAULT 0,
+  categoriaID INT UNSIGNED DEFAULT NULL,
+  imagen LONGTEXT DEFAULT NULL,
+  color VARCHAR(50) DEFAULT NULL,
+  talla VARCHAR(10) DEFAULT NULL,
+  PRIMARY KEY (ProductoID),
+  KEY productos_categoria_idx (categoriaID),
+  CONSTRAINT productos_categoria_fk
+    FOREIGN KEY (categoriaID) REFERENCES categorias (CategoriaID)
+    ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE carrito (
+  id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  user_id INT UNSIGNED NOT NULL,
+  producto_id INT UNSIGNED NOT NULL,
+  cantidad INT UNSIGNED NOT NULL DEFAULT 1,
+  PRIMARY KEY (id),
+  UNIQUE KEY carrito_user_producto_unique (user_id, producto_id),
+  KEY carrito_producto_idx (producto_id),
+  CONSTRAINT carrito_user_fk FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
+  CONSTRAINT carrito_producto_fk FOREIGN KEY (producto_id) REFERENCES productos (ProductoID) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE orders (
+  id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  user_id INT UNSIGNED NOT NULL,
+  fecha DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  total DECIMAL(10,2) NOT NULL,
+  estado VARCHAR(50) NOT NULL DEFAULT 'pendiente',
+  PRIMARY KEY (id),
+  KEY orders_user_fecha_idx (user_id, fecha),
+  CONSTRAINT orders_user_fk FOREIGN KEY (user_id) REFERENCES users (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE order_items (
+  id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  order_id INT UNSIGNED NOT NULL,
+  producto_id INT UNSIGNED NOT NULL,
+  cantidad INT UNSIGNED NOT NULL DEFAULT 1,
+  precio_unitario DECIMAL(10,2) NOT NULL,
+  PRIMARY KEY (id),
+  KEY order_items_producto_idx (producto_id),
+  CONSTRAINT order_items_order_fk FOREIGN KEY (order_id) REFERENCES orders (id) ON DELETE CASCADE,
+  CONSTRAINT order_items_producto_fk FOREIGN KEY (producto_id) REFERENCES productos (ProductoID)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

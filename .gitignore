@@ -1,0 +1,30 @@
+# Dependencies and generated frontend files
+node_modules/
+dist/
+.angular/
+coverage/
+
+# Local/editor configuration
+.env
+.env.*
+!.env.example
+.vscode/
+.idea/
+
+# Database exports can contain customer accounts, password hashes and tokens.
+*.sql
+!database/schema.sql
+!database/seeds/*.sql
+
+# Local XAMPP deployment mirror and preserved pre-monorepo Git history.
+/htdocs/
+/.git-backups/
+/backend-before-monorepo.bundle
+
+# This lockfile has no matching package manifest; the frontend lockfile is tracked.
+/package-lock.json
+
+# Logs and temporary files
+*.log
+tmp/
+*.tmp

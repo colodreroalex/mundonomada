@@ -1,0 +1,110 @@
+<nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm custom-navbar">
+  <div class="container d-flex justify-content-between align-items-center">
+    <!-- LOGO / BRAND -->
+    <a class="navbar-brand fw-bold text-dark d-flex align-items-center" routerLink="/">
+      <img src="img/logo.jpg" alt="Logo" class="logo d-inline-block align-text-top me-2">
+      <span class="ms-3">Mundo Nómada</span>
+    </a>
+
+    <!-- BOTÓN TOGGLER PARA MÓVILES -->
+    <button
+      class="navbar-toggler"
+      type="button"
+      (click)="toggleCollapse()"
+      aria-controls="navbarNav"
+      [attr.aria-expanded]="!isCollapsed"
+      aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <!-- CONTENIDO COLAPSABLE -->
+    <div
+      [ngClass]="{'collapse': isCollapsed, 'navbar-collapse': true}"
+      id="navbarNav"
+      class="justify-content-end">
+      <!-- MENÚ DE ENLACES -->
+      <ul class="navbar-nav align-items-center">
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/main">Home</a>
+        </li>
+
+        <li class="nav-item dropdown">
+          <a
+            class="nav-link dropdown-toggle"
+            href="#"
+            id="catalogoDropdown"
+            role="button"
+            data-bs-toggle="dropdown"
+            aria-expanded="false">
+            Catálogo
+          </a>
+          <ul class="dropdown-menu" aria-labelledby="catalogoDropdown">
+            <li>
+              <a class="dropdown-item" routerLink="/mostrarProductos">
+                <i class="bi bi-grid-3x3-gap-fill me-2"></i>Mostrar Todos
+              </a>
+            </li>
+            <li><hr class="dropdown-divider"></li>
+            <li *ngFor="let categoria of categorias">
+              <a 
+                class="dropdown-item" 
+                [routerLink]="['/mostrarProductos', categoria.CategoriaID]">
+                {{ categoria.Nombre }}
+              </a>
+            </li>
+          </ul>
+        </li>
+
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/contacto">Contacto</a>
+        </li>
+
+        <li class="nav-item" *ngIf="currentUser && currentUser.role === 'admin'">
+          <a class="nav-link" routerLink="/adminPanel">Admin</a>
+        </li>
+
+        <!-- Botón del carrito: Se muestra siempre -->
+        <li class="nav-item">
+          <a routerLink="/carrito" class="nav-link text-dark position-relative">
+            <i class="bi bi-cart3 fs-5"></i>
+            <!-- Contador de productos en el carrito -->
+            <span *ngIf="cantidadProductosCarrito > 0" 
+                  class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+              {{ cantidadProductosCarrito > 99 ? '99+' : cantidadProductosCarrito }}
+              <span class="visually-hidden">productos en el carrito</span>
+            </span>
+          </a>
+        </li>
+
+        <li class="nav-item">
+          <ng-container *ngIf="currentUser; else showLogin">
+            <div class="dropdown">
+              <a class="nav-link text-dark dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="bi bi-person-circle fs-5"></i>
+                <span class="ms-1 d-none d-lg-inline">{{ currentUser.name }}</span>
+              </a>
+              <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                <li>
+                  <a class="dropdown-item" routerLink="/perfil">
+                    <i class="bi bi-person-gear me-2"></i>Mi Perfil
+                  </a>
+                </li>
+                <li><hr class="dropdown-divider"></li>
+                <li>
+                  <a class="dropdown-item" (click)="logout()" style="cursor: pointer;">
+                    <i class="bi bi-box-arrow-right me-2"></i>Cerrar Sesión
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </ng-container>
+          <ng-template #showLogin>
+            <a routerLink="/login" class="nav-link text-dark">
+              <i class="bi bi-person fs-5"></i>
+            </a>
+          </ng-template>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
