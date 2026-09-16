@@ -18,7 +18,7 @@
 
 ## Operación
 
-- Base de datos MySQL/MariaDB alojada con copias de seguridad automáticas.
+- Base de datos Supabase PostgreSQL con migraciones versionadas, copias de seguridad y una prueba de restauración.
 - HTTPS obligatorio.
 - Entornos separados: local, pruebas y producción.
 - No guardar imágenes como base64 en la BBDD a largo plazo; usar almacenamiento de archivos y conservar solo su URL.

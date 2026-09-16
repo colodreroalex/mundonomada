@@ -1,0 +1,5 @@
+-- Ejecutar una vez como administrador de MySQL/MariaDB.
+-- Sustituye la contraseña por una contraseña larga y única antes de ejecutarlo.
+CREATE USER IF NOT EXISTS 'mundonomada_app'@'localhost' IDENTIFIED BY 'CAMBIA_ESTA_CONTRASENA_LARGA';
+GRANT SELECT, INSERT, UPDATE, DELETE ON mundonomada.* TO 'mundonomada_app'@'localhost';
+FLUSH PRIVILEGES;
