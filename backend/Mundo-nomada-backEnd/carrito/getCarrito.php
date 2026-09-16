@@ -1,20 +1,23 @@
 <?php
 header("Access-Control-Allow-Origin: http://localhost:4200");
 header("Access-Control-Allow-Credentials: true");
-header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
+header("Access-Control-Allow-Methods: GET, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With");
 header('Content-Type: application/json');
+
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { http_response_code(204); exit; }
+session_start();
+if (!isset($_SESSION['user']['id'])) {
+    http_response_code(401);
+    echo json_encode(['resultado' => 'ERROR', 'mensaje' => 'Debes iniciar sesión.']);
+    exit;
+}
 
 require("../conexion.php");
 $con = retornarConexion();
 
-// Se espera recibir el user_id por GET
-if (!isset($_GET['user_id'])) {
-    echo json_encode(['resultado' => 'ERROR', 'mensaje' => 'user_id no especificado']);
-    exit();
-}
-
-$user_id = intval($_GET['user_id']);
+// El usuario siempre procede de la sesión, nunca de la URL.
+$user_id = (int) $_SESSION['user']['id'];
 
 // Consulta para obtener los productos del carrito junto con los detalles del producto
 $sql = "SELECT 

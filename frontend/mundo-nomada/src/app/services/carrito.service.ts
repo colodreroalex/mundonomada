@@ -128,7 +128,10 @@ export class CarritoService {
       );
     } else {
       // Usuario autenticado: usar backend
-      return this.http.post<any>(`${this.url}addToCart.php`, carrito, { withCredentials: true })
+      return this.http.post<any>(`${this.url}addToCart.php`, {
+        producto_id: carrito.producto_id,
+        cantidad: carrito.cantidad,
+      }, { withCredentials: true })
         .pipe(
           map(response => {
             if (response && response.resultado === 'OK') {
@@ -161,7 +164,7 @@ export class CarritoService {
     } else {
       // Usuario autenticado: obtener carrito del backend
       return this.http
-        .get<any>(`${this.url}getCarrito.php?user_id=${userId}`, { withCredentials: true })
+        .get<any>(`${this.url}getCarrito.php`, { withCredentials: true })
         .pipe(
           map((response) => {
             if (response && response.resultado === 'OK') {
@@ -311,7 +314,7 @@ export class CarritoService {
       });
     } else {
       return this.http
-        .get<any>(`${this.url}getTotalPrecioCarrito.php?user_id=${userId}`, { withCredentials: true })
+        .get<any>(`${this.url}getTotalPrecioCarrito.php`, { withCredentials: true })
         .pipe(
           map((response) => {
             if (response && response.resultado === 'OK') {
@@ -428,8 +431,10 @@ export class CarritoService {
 
     // Para cada ítem del carrito, actualizamos el user_id y lo agregamos al backend
     const migrationObservables = guestCart.map((item) => {
-      item.user_id = userId;
-      return this.http.post<any>(`${this.url}addToCart.php`, item, { withCredentials: true });
+      return this.http.post<any>(`${this.url}addToCart.php`, {
+        producto_id: item.producto_id,
+        cantidad: item.cantidad,
+      }, { withCredentials: true });
     });
 
     return forkJoin(migrationObservables).pipe(

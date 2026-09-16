@@ -17,6 +17,12 @@ header('Content-Type: application/json');
 // Iniciar la sesión para obtener la información del usuario
 session_start();
 
+if (!isset($_SESSION['user']['id'])) {
+    http_response_code(401);
+    echo json_encode(['resultado' => 'ERROR', 'mensaje' => 'Debes iniciar sesión para finalizar la compra.']);
+    exit;
+}
+
 // Incluir el archivo de conexión
 require("../conexion.php");
 
@@ -49,28 +55,16 @@ $conn = retornarConexion();
 $conn->begin_transaction();
 
 try {
-    // Obtener el ID del usuario desde la sesión o usar 0 para invitados
-    $user_id = isset($_SESSION['user']) ? $_SESSION['user']['id'] : 0;
-    
-    // Si hay un user_id en el primer elemento del carrito, usamos ese con prioridad
-    // Esto asegura que, si hay un carrito en el frontend con user_id establecido, ese valor se utilice
-    if (isset($cartItems[0]['user_id']) && $cartItems[0]['user_id'] > 0) {
-        $user_id = $cartItems[0]['user_id'];
-    }
-    
-    // Si aun así el user_id es 0 pero hay sesión de usuario, usar ese ID
-    if ($user_id === 0 && isset($_SESSION['user']['id'])) {
-        $user_id = $_SESSION['user']['id'];
-    }
-    
-    // Bandera para determinar si se debe crear un registro de pedido
-    $crear_registro_pedido = ($user_id > 0);
+    // El usuario solo procede de la sesión. Nunca aceptamos user_id del navegador.
+    $user_id = (int) $_SESSION['user']['id'];
+    $crear_registro_pedido = true;
     
     // Calcular el total del pedido
     $total = 0;
     $items_for_order = [];
     
     // Primera pasada: verificar stock y calcular total
+    $seenCartIds = [];
     foreach ($cartItems as $item) {
         // Se espera que cada item tenga 'id' (ID del registro en carrito), 'producto_id' y 'cantidad'
         if (!isset($item['id'], $item['producto_id'], $item['cantidad'])) {
@@ -79,9 +73,24 @@ try {
         
         $producto_id = $item['producto_id'];
         $cantidad = $item['cantidad'];
+
+        if ($cantidad <= 0 || in_array($item['id'], $seenCartIds, true)) {
+            throw new Exception('Datos de carrito no válidos.');
+        }
+        $seenCartIds[] = $item['id'];
+
+        // La línea debe pertenecer al usuario y sus valores no se pueden manipular en el navegador.
+        $cartStmt = $conn->prepare('SELECT producto_id, cantidad FROM carrito WHERE id = ? AND user_id = ?');
+        $cartStmt->bind_param('ii', $item['id'], $user_id);
+        $cartStmt->execute();
+        $storedCartItem = $cartStmt->get_result()->fetch_assoc();
+        $cartStmt->close();
+        if (!$storedCartItem || (int) $storedCartItem['producto_id'] !== (int) $producto_id || (int) $storedCartItem['cantidad'] !== (int) $cantidad) {
+            throw new Exception('El carrito ha cambiado. Actualiza la página e inténtalo de nuevo.');
+        }
         
         // Consultar información del producto para obtener precio y stock
-        $stmt = $conn->prepare("SELECT ProductoID, precio, stock FROM productos WHERE ProductoID = ?");
+        $stmt = $conn->prepare("SELECT ProductoID, precio, stock FROM productos WHERE ProductoID = ? FOR UPDATE");
         if (!$stmt) {
             throw new Exception("Error en la preparación de la consulta: " . $conn->error);
         }
@@ -168,14 +177,17 @@ try {
         $stmt->close();
         
         // Eliminar el item del carrito
-        $stmt = $conn->prepare("DELETE FROM carrito WHERE id = ?");
+        $stmt = $conn->prepare("DELETE FROM carrito WHERE id = ? AND user_id = ?");
         if (!$stmt) {
             throw new Exception("Error en la preparación para eliminar el item: " . $conn->error);
         }
         
-        $stmt->bind_param("i", $carrito_id);
+        $stmt->bind_param("ii", $carrito_id, $user_id);
         if (!$stmt->execute()) {
             throw new Exception("Error al eliminar el item del carrito con ID $carrito_id.");
+        }
+        if ($stmt->affected_rows !== 1) {
+            throw new Exception('No se pudo actualizar el carrito.');
         }
         $stmt->close();
     }
