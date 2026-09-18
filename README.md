@@ -7,7 +7,7 @@ Tienda online compuesta por un frontend Angular, una API PHP y Supabase PostgreS
 - `frontend/mundo-nomada`: aplicación Angular.
 - `backend/Mundo-nomada-backEnd`: API PHP; es la fuente de verdad del backend.
 - `database/schema.sql`: estructura limpia de MySQL/MariaDB. No contiene usuarios ni productos reales.
-- `supabase/migrations/`: migraciones versionadas para la futura BBDD PostgreSQL de Supabase.
+- `supabase/migrations/`: migraciones versionadas de PostgreSQL en Supabase.
 - `docs/`: decisiones y trabajo pendiente.
 
 La carpeta `htdocs/` es una copia local para XAMPP. No forma parte del repositorio: para probar cambios, copia o enlaza el backend fuente en tu instalación local, pero no edites ambas copias.
@@ -16,7 +16,7 @@ La carpeta `htdocs/` es una copia local para XAMPP. No forma parte del repositor
 
 `Navegador Angular → API PHP desplegada → Supabase PostgreSQL`
 
-- Supabase guarda los datos y copias de seguridad; no ejecuta este backend PHP.
+- Supabase guarda los datos; no ejecuta este backend PHP. Las copias y la restauración deben validarse antes de vender.
 - Angular no se conecta a las tablas ni recibe claves de Supabase.
 - La API PHP se despliega en un hosting o servidor con PHP 8.2+, `PDO_PGSQL` y HTTPS. Puede ser un hosting PHP gestionado o un VPS con Nginx/Apache; no XAMPP.
 
@@ -38,3 +38,17 @@ El frontend lee `frontend/mundo-nomada/public/runtime-config.js` al arrancar. Pa
 - Nunca añadas al repositorio archivos `.env`, exportaciones `.sql` con datos, tokens ni credenciales.
 
 Consulta `docs/PROJECT-STATUS.md`, `docs/SECURITY-ROADMAP.md` y `supabase/README.md` antes de publicar la tienda.
+
+## Despliegue de prueba (18 de septiembre de 2026)
+
+Web: https://mundo-nomada-test.onrender.com
+
+Angular y PHP se sirven desde el mismo contenedor y dominio, con el `Dockerfile`
+de la raíz. La API usa `/api_php/`; las credenciales solo están en las variables
+privadas de Render. El servicio gratuito está en Frankfurt y puede tardar en
+despertar tras un periodo sin visitas. Es una demostración con tres artículos
+ficticios y pagos deshabilitados.
+
+Ver `docs/DEPLOYMENT-PLAN.md` para desplegar y `tools/smoke-test.mjs` para verificar
+el entorno de prueba. Los cambios están en `codex/render-deployment`; no se ha
+fusionado `main`.

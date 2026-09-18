@@ -1,37 +1,48 @@
-# Estado real del proyecto
+# Estado del proyecto
 
-Última revisión: septiembre de 2026.
+Última revisión: 18 de septiembre de 2026.
 
-## Implementado en el código
+## Publicado como demostración
 
-- Frontend Angular para catálogo, autenticación, perfil, administración y carrito.
-- API PHP y modelo de datos para usuarios, categorías, productos, carrito, pedidos y líneas de pedido.
-- Esquema vacío y reproducible de MySQL/MariaDB en `database/schema.sql`.
-- Primera migración PostgreSQL aplicada en el proyecto Supabase europeo `mundo-nomada`; las siete tablas de negocio tienen RLS activado y no están expuestas automáticamente al navegador.
-- Configuración de conexión fuera de Git mediante `config/database.local.php` o variables de entorno.
-- Adaptador PDO PostgreSQL preparado en `conexion_postgres.php`; requiere un servidor PHP con la extensión `pdo_pgsql` antes de usarlo.
-- Registro, inicio/cierre de sesión y los endpoints de consulta y modificación del carrito usan PDO PostgreSQL y el usuario de la sesión del servidor.
-- El carrito comprueba el stock al añadir o modificar cantidades; los productos y categorías públicos ya se consultan desde PostgreSQL.
-- Límite de intentos de login, tokens de sesión persistente almacenados como hash y consulta de líneas de pedido limitada a su propietario.
-- URL de API centralizada en `public/runtime-config.js`, preparada para cambiar el dominio de despliegue sin recompilar ni exponer secretos.
+https://mundo-nomada-test.onrender.com — Angular y API PHP en Render gratuito
+(Frankfurt), conectados a Supabase PostgreSQL (Irlanda).
 
-## Pendiente de aprobación o prueba
+- Catálogo con tres artículos claramente ficticios.
+- Registro, login, logout, sesión persistente, perfil y cambio de contraseña.
+- Carrito por sesión con control de stock y propiedad en el servidor.
+- Endpoints de administración y consulta de pedidos migrados a PDO PostgreSQL.
+- Usuario de base de datos exclusivo del backend con permisos limitados.
+- RLS en las siete tablas y sin acceso desde `anon`/`authenticated`.
+- Cookies `Secure`, `HttpOnly`, `SameSite=Lax`; validación de origen y JSON en
+  mutaciones; límite de intentos de login.
+- Dockerfile conjunto, secretos fuera de Git, rutas Angular y health check real.
 
-- El Pull Request #1 protege la propiedad del carrito y el checkout, pero todavía no está fusionado en `main`.
-- Siguen pendientes algunos endpoints de perfil, administración y pedidos; no deben exponerse en producción hasta migrarlos y comprobar sus permisos. XAMPP no forma parte del despliegue final.
-- El checkout está bloqueado de forma intencionada: no crea pedidos ni descuenta stock hasta validar la confirmación de pago en el backend.
-- Deben probarse registro, sesión, carrito, pedido y permisos de administrador con una BBDD limpia.
+## Verificación
 
-## No está listo para afirmar que funciona en producción
+- Compilación Angular completada; persisten avisos de tamaño y dependencias CommonJS.
+- Sintaxis PHP comprobada en todos los endpoints.
+- 41 comprobaciones HTTP pasaron en local contra Supabase y en Render por HTTPS.
+- Supabase Security Advisors: sin avisos después de la corrección aplicada.
 
-- JWT, CI/CD, MFA, WebSockets, microservicios, recomendaciones, programa de puntos, internacionalización y escalado automático no forman parte del código verificado.
-- No hay un despliegue de producción ni un proceso de pago real validado.
-- La migración desde MySQL a Supabase PostgreSQL requiere adaptar el backend de `mysqli` a PDO PostgreSQL antes de activar Supabase como BBDD de la tienda.
+El script reproducible es `tools/smoke-test.mjs`. Estos chequeos no equivalen a
+una auditoría completa de todas las funciones administrativas o de seguridad.
 
-## Orden de puesta en marcha
+## Git
 
-1. Fusionar y probar el Pull Request de seguridad.
-2. Configurar el backend de producción con PHP `pdo_pgsql` y las credenciales privadas de Supabase.
-3. Migrar los endpoints pendientes y probar catálogo, registro, sesión y carrito con datos ficticios.
-4. Configurar dominio, HTTPS, cookies seguras y correo transaccional.
-5. Activar pagos reales solo después de revisar legal, privacidad, backups y una prueba de recuperación.
+Rama de despliegue: `codex/render-deployment`, basada en
+`database-production-foundation`. Los cambios se revisan por PR; `main` no se
+ha fusionado. El documento original de la raíz continúa sin versionar.
+
+## Pendiente para vender
+
+- Checkout, creación de pedidos y descuento de stock tras webhook verificado.
+  Las rutas de compra permanecen bloqueadas; no se efectúan cobros.
+- Catálogo e imágenes reales, cuenta de administración para la propietaria.
+- Proveedor de correo, dominio, textos legales y política de privacidad reales.
+- Revisión integral de permisos, recuperación de cuenta, revocación de sesiones
+  y validación de entradas de administración.
+- Copias de seguridad y restauración probadas; configuración estable de sesiones.
+- Alinear el historial remoto/local de migraciones antes de utilizar `db push`.
+
+El despliegue permite probar la web, pero todavía no constituye una tienda
+habilitada para ventas reales.
