@@ -2,6 +2,12 @@
 
     <app-menu></app-menu>
 
+    @if (demoMode) {
+      <div class="alert alert-warning text-center rounded-0 mb-0" role="status">
+        Versión de prueba · Catálogo de demostración · Las compras y los pagos no están disponibles.
+      </div>
+    }
+
     <div class="main-content">
 
       <router-outlet></router-outlet>

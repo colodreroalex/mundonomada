@@ -1,5 +1,6 @@
 interface MundoNomadaRuntimeConfig {
   apiBaseUrl?: string;
+  demoMode?: boolean;
 }
 
 declare global {

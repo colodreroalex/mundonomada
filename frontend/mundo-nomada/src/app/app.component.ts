@@ -10,5 +10,6 @@ import { FooterComponent } from "./componentes/footer/footer.component";
   styleUrl: './app.component.css'
 })
 export class AppComponent {
+  demoMode = window.__MUNDO_NOMADA_CONFIG__?.demoMode === true;
   title = 'mundo-nomada';
 }

@@ -1,0 +1,14 @@
+**
+!Dockerfile
+!backend/
+!backend/**
+!frontend/
+!frontend/mundo-nomada/
+!frontend/mundo-nomada/**
+**/node_modules
+**/dist
+**/.angular
+**/.git
+**/*.local.php
+**/.env*
+**/*.log

@@ -56,7 +56,7 @@ try {
             ':identifier' => $identifier,
             ':attempts' => $attempts,
             ':locked_until' => $lockedUntil,
-            ':window_expired' => $windowExpired,
+            ':window_expired' => $windowExpired ? 'true' : 'false',
         ]);
         $pdo->commit();
         responderJson(['error' => 'Correo o contraseña no válidos'], 401);

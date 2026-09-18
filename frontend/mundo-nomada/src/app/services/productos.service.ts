@@ -35,7 +35,7 @@ export class ProductosService {
   addProduct(producto: Producto): Observable<any> {
     return this.http.post<any>(
       `${this.url}addProduct.php`,
-      JSON.stringify(producto),
+      producto,
       { withCredentials: true }
     ).pipe(
       map(response => {

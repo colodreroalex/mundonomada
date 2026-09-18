@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 function aplicarCors(array $metodos): void
 {
-    $origenPermitido = getenv('MUNDONOMADA_ALLOWED_ORIGIN') ?: 'http://localhost:4200';
+    $origenPermitido = getenv('MUNDONOMADA_ALLOWED_ORIGIN') ?: (getenv('RENDER_EXTERNAL_URL') ?: 'http://localhost:4200');
     $origen = $_SERVER['HTTP_ORIGIN'] ?? '';
 
     if ($origen === $origenPermitido) {
@@ -15,6 +15,19 @@ function aplicarCors(array $metodos): void
     header('Access-Control-Allow-Methods: ' . implode(', ', $metodos));
     header('Access-Control-Allow-Headers: Content-Type');
     header('Content-Type: application/json; charset=UTF-8');
+
+    // Todas las mutaciones de esta API usan JSON. Rechaza formularios y
+    // peticiones de otros sitios antes de leer cookies o modificar datos.
+    if (!in_array($_SERVER['REQUEST_METHOD'], ['GET', 'HEAD', 'OPTIONS'], true)) {
+        if (($origen !== '' && $origen !== $origenPermitido)
+            || (($_SERVER['HTTP_SEC_FETCH_SITE'] ?? '') === 'cross-site')) {
+            responderJson(['error' => 'Origen no permitido.'], 403);
+        }
+        $tipo = strtolower(trim(explode(';', $_SERVER['CONTENT_TYPE'] ?? '')[0]));
+        if ($tipo !== 'application/json') {
+            responderJson(['error' => 'Se requiere contenido JSON.'], 415);
+        }
+    }
 
     if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
         http_response_code(204);
