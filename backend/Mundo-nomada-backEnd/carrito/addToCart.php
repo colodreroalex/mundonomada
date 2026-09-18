@@ -41,11 +41,11 @@ try {
     }
     $pdo->commit();
     responderJson(['resultado' => 'OK', 'mensaje' => 'Producto añadido al carrito.']);
-} catch (RuntimeException $exception) {
-    if ($pdo->inTransaction()) { $pdo->rollBack(); }
-    responderJson(['resultado' => 'ERROR', 'mensaje' => $exception->getMessage()], 400);
 } catch (PDOException $exception) {
     if ($pdo->inTransaction()) { $pdo->rollBack(); }
     error_log('Mundo Nomada add cart failed: ' . $exception->getMessage());
     responderJson(['resultado' => 'ERROR', 'mensaje' => 'No se pudo actualizar el carrito.'], 500);
+} catch (RuntimeException $exception) {
+    if ($pdo->inTransaction()) { $pdo->rollBack(); }
+    responderJson(['resultado' => 'ERROR', 'mensaje' => $exception->getMessage()], 400);
 }
