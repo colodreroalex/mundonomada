@@ -78,6 +78,14 @@
         </ng-template>
       </div>
 
+      <!-- Tema claro/oscuro (escritorio; en móvil está en el panel lateral) -->
+      <button type="button" class="accion boton-tema solo-escritorio"
+              (click)="temaService.alternar()"
+              [attr.aria-label]="temaService.tema() === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'"
+              [attr.title]="temaService.tema() === 'dark' ? 'Modo claro' : 'Modo oscuro'">
+        <i class="bi" [ngClass]="temaService.tema() === 'dark' ? 'bi-sun' : 'bi-moon-stars'" aria-hidden="true"></i>
+      </button>
+
       <!-- Carrito: siempre visible -->
       <a routerLink="/carrito" class="accion accion-carrito" aria-label="Carrito">
         <i class="bi bi-bag" aria-hidden="true"></i>
@@ -186,6 +194,13 @@
   </div>
 
   <div class="panel-pie">
+    <button type="button" class="panel-enlace panel-tema" role="switch"
+            [attr.aria-checked]="temaService.tema() === 'dark'"
+            (click)="temaService.alternar()">
+      <i class="bi" [ngClass]="temaService.tema() === 'dark' ? 'bi-moon-stars' : 'bi-sun'" aria-hidden="true"></i>
+      Modo oscuro
+      <span class="interruptor ms-auto" aria-hidden="true"><span></span></span>
+    </button>
     <button *ngIf="currentUser" type="button" class="panel-enlace panel-salir" (click)="logout()">
       <i class="bi bi-box-arrow-right" aria-hidden="true"></i>Cerrar Sesión
     </button>

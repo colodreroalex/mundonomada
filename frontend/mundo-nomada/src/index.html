@@ -14,12 +14,16 @@
     <link rel="apple-touch-icon" href="img/logo.jpg">
 
     <!-- Tema claro/oscuro antes del primer pintado para evitar parpadeos.
-         Bootstrap 5.3 y los tokens de styles.css leen data-bs-theme. -->
+         Usa la elección guardada con el botón sol/luna o, si no hay, la del
+         dispositivo. Bootstrap 5.3 y los tokens de styles.css leen data-bs-theme. -->
     <script>
       (function () {
         var consulta = window.matchMedia('(prefers-color-scheme: dark)');
         var aplicar = function () {
-          document.documentElement.setAttribute('data-bs-theme', consulta.matches ? 'dark' : 'light');
+          var elegido = null;
+          try { elegido = localStorage.getItem('mn-tema'); } catch (e) {}
+          var tema = elegido === 'dark' || elegido === 'light' ? elegido : (consulta.matches ? 'dark' : 'light');
+          document.documentElement.setAttribute('data-bs-theme', tema);
         };
         aplicar();
         if (consulta.addEventListener) { consulta.addEventListener('change', aplicar); }

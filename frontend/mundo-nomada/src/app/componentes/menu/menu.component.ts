@@ -7,6 +7,7 @@ import { FormsModule } from '@angular/forms';
 import { CategoriasService } from '../../services/categorias.service';
 import { Categoria } from '../../../models/Categoria';
 import { CarritoService } from '../../services/carrito.service';
+import { TemaService } from '../../services/tema.service';
 import { Subscription, filter } from 'rxjs';
 
 @Component({
@@ -42,7 +43,8 @@ export class MenuComponent implements OnInit, OnDestroy {
     private router: Router,
     private categoriasService: CategoriasService,
     private carritoService: CarritoService,
-    private elementRef: ElementRef<HTMLElement>
+    private elementRef: ElementRef<HTMLElement>,
+    public temaService: TemaService
   ) {
     // Suscribirse al observable para actualizar el estado del usuario
     this.subscripciones.push(
