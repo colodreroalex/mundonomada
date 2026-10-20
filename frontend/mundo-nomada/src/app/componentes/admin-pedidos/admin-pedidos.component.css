@@ -134,6 +134,8 @@
 }
 
 .pedido-acciones {
+  gap: var(--esp-2);
+  flex-wrap: wrap;
   display: flex;
   justify-content: flex-end;
   padding: var(--esp-3) var(--esp-5);

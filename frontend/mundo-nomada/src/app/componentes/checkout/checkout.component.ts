@@ -8,7 +8,7 @@ import { Producto } from '../../../models/Producto';
 import { User } from '../../../models/Users';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { PdfService } from '../../services/pdf.service';
+import { PdfService, DatosFactura, facturaDesdePedido } from '../../services/pdf.service';
 import { Subscription } from 'rxjs';
 
 @Component({
@@ -36,6 +36,8 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   pagoPendiente: boolean = false;
   orderId: string = '';
   orderData: any = null;
+  numeroFactura: string | null = null;
+  private factura: DatosFactura | null = null;
 
   // Resumen del pedido: abierto en escritorio, plegado en móvil
   resumenAbierto: boolean = window.innerWidth >= 992;
@@ -199,6 +201,8 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     if (pedido.estado === 'cancelado') {
       this.error = 'Este pago no se completó. No se ha cobrado nada.';
     }
+    this.numeroFactura = pedido.invoice_number ?? null;
+    this.factura = facturaDesdePedido(pedido, items);
     const [nombre, ...apellidos] = (pedido.shipping_name || '').split(' ');
     this.orderData = {
       items: items.map(item => new Carrito(0, this.currentUser?.id ?? 0, item.producto_id, item.cantidad,
@@ -226,22 +230,12 @@ export class CheckoutComponent implements OnInit, OnDestroy {
    * Genera el PDF del recibo después de una compra exitosa
    */
   downloadReceipt(): void {
-    if (!this.orderData) {
+    if (!this.factura) {
       this.error = 'No hay datos de pedido disponibles para descargar';
       return;
     }
-
-    this.pdfService.generateReceiptPdf(
-      this.orderData.items,
-      this.orderData.total,
-      this.orderData.user,
-      this.orderId,
-      this.orderData.iva,
-      this.orderData.envio,
-      this.orderData.totalConIvaYEnvio,
-      this.orderData.datosEnvio
-    ).then(() => {
-      this.feedbackMessage = 'Recibo descargado correctamente';
+    this.pdfService.generarFactura(this.factura).then(() => {
+      this.feedbackMessage = this.numeroFactura ? 'Factura descargada correctamente' : 'Justificante descargado correctamente';
     }).catch((error) => {
       this.error = 'Error al generar el PDF: ' + error;
       console.error('Error al generar PDF:', error);

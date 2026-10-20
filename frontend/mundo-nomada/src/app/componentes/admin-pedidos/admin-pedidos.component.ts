@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { OrdersService, PedidoAdmin } from '../../services/orders.service';
+import { PdfService, facturaDesdePedido } from '../../services/pdf.service';
 
 @Component({
   selector: 'app-admin-pedidos',
@@ -20,7 +21,7 @@ export class AdminPedidosComponent implements OnInit {
 
   readonly estados = ['', 'pendiente', 'pagado', 'enviado', 'completado', 'cancelado'];
 
-  constructor(private ordersService: OrdersService) {}
+  constructor(private ordersService: OrdersService, private pdfService: PdfService) {}
 
   ngOnInit(): void {
     this.cargar();
@@ -49,5 +50,10 @@ export class AdminPedidosComponent implements OnInit {
       next: () => this.cargar(),
       error: (err: Error) => this.error = err.message
     });
+  }
+
+  descargarFactura(pedido: PedidoAdmin): void {
+    this.pdfService.generarFactura(facturaDesdePedido(pedido, pedido.items))
+      .catch((err: Error) => (this.error = 'No se pudo generar la factura: ' + err.message));
   }
 }

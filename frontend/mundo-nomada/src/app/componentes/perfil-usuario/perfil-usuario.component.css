@@ -854,6 +854,8 @@
 }
 
 .dialogo-pie {
+  gap: var(--esp-2);
+  flex-wrap: wrap;
   display: flex;
   justify-content: flex-end;
   padding: var(--esp-3) var(--esp-5);
@@ -863,4 +865,11 @@
 /* ---------- Animaciones ---------- */
 .animated-section {
   animation: aparecer 0.35s var(--ease);
+}
+
+.nota-importes {
+  margin: var(--esp-2) 0 0;
+  font-size: var(--fs-xs);
+  color: var(--color-texto-suave);
+  text-align: right;
 }

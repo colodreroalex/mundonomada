@@ -1,375 +1,405 @@
-import { Injectable, ElementRef } from '@angular/core';
-import { Carrito } from '../../models/Carrito';
-import { User } from '../../models/Users';
+import { Injectable } from '@angular/core';
+import type { jsPDF as JsPDF } from 'jspdf';
+import { DATOS_FISCALES, datosFiscalesCompletos } from '../config/datos-fiscales';
 
-@Injectable({
-  providedIn: 'root'
-})
+export interface LineaFactura {
+  descripcion: string;
+  cantidad: number;
+  /** Precio unitario sin IVA, como se guarda en la base de datos */
+  precioUnitario: number;
+}
+
+export interface DatosFactura {
+  /** Número correlativo asignado por el servidor (F2026-000001). Sin él no hay factura. */
+  numeroFactura: string | null;
+  /** Fecha de expedición: la del cobro */
+  fecha: Date;
+  /** Referencia del pedido (MN-12) */
+  pedido: string;
+  lineas: LineaFactura[];
+  /** Gastos de envío con IVA incluido, tal como se cobran */
+  envio: number;
+  /** Total cobrado (fuente: servidor) */
+  total: number;
+  cliente: {
+    nombre: string;
+    direccion?: string;
+    codigoPostal?: string;
+    ciudad?: string;
+    provincia?: string;
+    telefono?: string;
+    email?: string;
+  };
+  formaPago?: string;
+}
+
+/** Pedido tal como lo devuelve la API (checkout, perfil o administración) */
+export interface PedidoParaFactura {
+  id: number;
+  fecha: string;
+  total: number | string;
+  envio?: number | string | null;
+  paid_at?: string | null;
+  invoice_number?: string | null;
+  invoice_date?: string | null;
+  shipping_name?: string | null;
+  shipping_address?: string | null;
+  shipping_postal_code?: string | null;
+  shipping_city?: string | null;
+  shipping_province?: string | null;
+  shipping_phone?: string | null;
+  shipping_email?: string | null;
+}
+
+/** Convierte un pedido y sus líneas de la API en los datos de la factura */
+export function facturaDesdePedido(
+  pedido: PedidoParaFactura,
+  lineas: { nombre: string; cantidad: number; precio_unitario: number | string }[]
+): DatosFactura {
+  return {
+    numeroFactura: pedido.invoice_number ?? null,
+    fecha: new Date(pedido.invoice_date || pedido.paid_at || pedido.fecha),
+    pedido: `MN-${pedido.id}`,
+    lineas: lineas.map((l) => ({ descripcion: l.nombre, cantidad: Number(l.cantidad), precioUnitario: Number(l.precio_unitario) })),
+    envio: Number(pedido.envio ?? 0),
+    total: Number(pedido.total),
+    cliente: {
+      nombre: pedido.shipping_name || '',
+      direccion: pedido.shipping_address || undefined,
+      codigoPostal: pedido.shipping_postal_code || undefined,
+      ciudad: pedido.shipping_city || undefined,
+      provincia: pedido.shipping_province || undefined,
+      telefono: pedido.shipping_phone || undefined,
+      email: pedido.shipping_email || undefined,
+    },
+  };
+}
+
+// Paleta de la web (RGB)
+const GRANATE: [number, number, number] = [121, 21, 21];
+const TEXTO: [number, number, number] = [51, 51, 51];
+const SUAVE: [number, number, number] = [107, 98, 93];
+const CREMA: [number, number, number] = [246, 241, 235];
+const ARENA: [number, number, number] = [236, 227, 217];
+const BORDE: [number, number, number] = [228, 218, 208];
+
+const MARGEN = 18;
+const ANCHO = 210;
+const ALTO = 297;
+
+@Injectable({ providedIn: 'root' })
 export class PdfService {
-  // Logo en base64 para usar en los PDFs
-  private logoBase64: string = '';
-  // Bandera para saber si ya se intentó cargar el logo
-  private logoLoaded: boolean = false;
+  // Recursos que se descargan una sola vez, cuando se genera la primera factura
+  private fuentes: { normal: string; negrita: string } | null = null;
+  private logo: string | null = null;
 
-  constructor() { 
-    // Precargar logo al iniciar el servicio
-    this.preloadLogo();
+  /**
+   * Genera y descarga la factura simplificada (o el justificante de compra si
+   * aún faltan los datos fiscales del vendedor).
+   */
+  async generarFactura(datos: DatosFactura): Promise<void> {
+    // La librería de PDF solo se descarga cuando se genera un documento
+    const [{ jsPDF }] = await Promise.all([import('jspdf'), this.cargarRecursos()]);
+    // compress: la tipografía va incrustada y sin comprimir el PDF pesaría casi 1 MB
+    const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4', compress: true });
+    const fuente = this.registrarFuentes(pdf);
+
+    const esFactura = datosFiscalesCompletos() && !!datos.numeroFactura;
+    const iva = DATOS_FISCALES.tipoIva;
+    const importes = this.calcularImportes(datos, iva);
+
+    let y = this.cabecera(pdf, fuente, datos, esFactura);
+    y = this.bloquesEmisorCliente(pdf, fuente, datos, y + 8);
+    y = this.tablaLineas(pdf, fuente, datos, importes.envioBase, y + 10);
+    y = this.totales(pdf, fuente, importes, iva, y + 6);
+    this.formaDePago(pdf, fuente, datos, y + 10);
+    this.piePagina(pdf, fuente, esFactura);
+
+    const nombre = esFactura ? `factura_${datos.numeroFactura}` : `justificante_${datos.pedido}`;
+    pdf.save(`${nombre}.pdf`);
   }
 
   /**
-   * Precarga el logo para usarlo en los PDFs
+   * Base imponible y cuota. Los productos se guardan sin IVA; los gastos de
+   * envío se cobran con IVA incluido, así que se desglosan. El total es el
+   * que cobró el servidor y la cuota es la diferencia, para que cuadre exacto.
    */
-  private preloadLogo(): void {
-    // Obtener la ruta correcta para el logo
-    const logoUrl = this.getLogoPath();
-    
-    // Crear un objeto Image para cargar el logo
-    const img = new Image();
-    img.crossOrigin = 'Anonymous'; // Permitir carga cross-origin
-    
-    img.onload = () => {
-      // Crear un canvas para convertir la imagen a base64
-      const canvas = document.createElement('canvas');
-      canvas.width = img.width;
-      canvas.height = img.height;
-      
-      // Dibujar la imagen en el canvas
-      const ctx = canvas.getContext('2d');
-      if (ctx) {
-        ctx.drawImage(img, 0, 0);
-        try {
-          // Convertir a base64
-          this.logoBase64 = canvas.toDataURL('image/jpeg');
-          this.logoLoaded = true;
-          console.log('Logo cargado correctamente');
-        } catch (e) {
-          console.error('Error al convertir logo a base64:', e);
-        }
-      }
-    };
-    
-    img.onerror = () => {
-      console.error('No se pudo cargar el logo desde la ruta directa, intentando rutas alternativas');
-      
-      // Intentar con rutas alternativas
-      img.src = '/img/logo.jpg';
-      
-      // Segunda oportunidad de carga
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        canvas.width = img.width;
-        canvas.height = img.height;
-        
-        const ctx = canvas.getContext('2d');
-        if (ctx) {
-          ctx.drawImage(img, 0, 0);
-          try {
-            this.logoBase64 = canvas.toDataURL('image/jpeg');
-            this.logoLoaded = true;
-            console.log('Logo cargado desde ruta alternativa');
-          } catch (e) {
-            console.error('Error al convertir logo a base64 (segundo intento):', e);
-          }
-        }
-      };
-    };
-    
-    // Iniciar la carga de la imagen
-    img.src = logoUrl;
+  private calcularImportes(datos: DatosFactura, iva: number) {
+    const redondear = (n: number) => Math.round(n * 100) / 100;
+    const baseProductos = redondear(datos.lineas.reduce((suma, l) => suma + redondear(l.precioUnitario * l.cantidad), 0));
+    const envioBase = redondear(datos.envio / (1 + iva / 100));
+    const base = redondear(baseProductos + envioBase);
+    const total = redondear(datos.total);
+    return { base, cuota: redondear(total - base), total, envioBase };
   }
 
-  /**
-   * Método para corregir la ruta del logo según el entorno
-   * @returns La URL correcta para el logo
-   */
-  private getLogoPath(): string {
-    // Ruta pública servida por la propia web (nunca rutas del disco del desarrollador)
-    return 'img/logo.jpg';
-  }
-  
-  /**
-   * Logo predeterminado en base64 en caso de que no se pueda cargar el archivo
-   * Este es un respaldo para garantizar que siempre se mostrará un logo
-   */
-  private getDefaultLogoBase64(): string {
-    // Un logo básico con el texto "MUNDO NÓMADA" como respaldo
-    return 'data:image/png;base64,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';
-  }
+  // ---------- Bloques del documento ----------
 
-  /**
-   * Genera un PDF a partir de un elemento HTML
-   * @param elementId ID del elemento HTML a convertir en PDF
-   * @param fileName Nombre del archivo PDF
-   */
-  generatePdfFromElement(elementId: string, fileName: string): Promise<void> {
-    // Obtener el elemento DOM
-    const element = document.getElementById(elementId);
-    if (!element) {
-      return Promise.reject(new Error(`Elemento con ID ${elementId} no encontrado`));
+  private cabecera(pdf: JsPDF, fuente: string, datos: DatosFactura, esFactura: boolean): number {
+    // Banda superior fina con el color de la marca
+    pdf.setFillColor(...GRANATE);
+    pdf.rect(0, 0, ANCHO, 4, 'F');
+
+    // Logo y nombre comercial
+    if (this.logo) {
+      pdf.addImage(this.logo, 'PNG', MARGEN, 12, 30, 25);
     }
-
-    // Las librerías de PDF (unos 500 KB) solo se descargan cuando se usan
-    return Promise.all([import('html2canvas'), import('jspdf')]).then(([{ default: html2canvas }, { default: jsPDF }]) => html2canvas(element, {
-      scale: 2, // Mejor calidad
-      useCORS: true, // Permitir imágenes de otros dominios
-      logging: false // Desactivar logs
-    }).then(canvas => {
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: 'a4'
-      });
-      
-      const imgWidth = 210; // A4 width in mm 
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      
-      pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
-      pdf.save(`${fileName}.pdf`);
-      return Promise.resolve();
-    }));
-  }
-
-  /**
-   * Genera un PDF de recibo de compra directamente (sin requerir un elemento HTML)
-   * @param items Items del carrito
-   * @param subtotal Subtotal de la compra (sin IVA ni gastos de envío)
-   * @param user Usuario que realiza la compra (puede ser null para invitados)
-   * @param orderId ID de la orden (opcional)
-   * @param iva Importe del IVA
-   * @param envio Gastos de envío
-   * @param totalConIvaYEnvio Total final con IVA y gastos de envío
-   * @param datosEnvio Datos de envío del pedido (opcional)
-   */
-  async generateReceiptPdf(
-    items: Carrito[], 
-    subtotal: number, 
-    user: User | null, 
-    orderId?: string,
-    iva?: number,
-    envio?: number,
-    totalConIvaYEnvio?: number,
-    datosEnvio?: any
-  ): Promise<void> {
-    // La librería de PDF solo se descarga cuando se genera un recibo
-    const { default: jsPDF } = await import('jspdf');
-
-    // Crear un nuevo documento PDF
-    const pdf = new jsPDF({
-      orientation: 'portrait',
-      unit: 'mm',
-      format: 'a4'
-    });
-
-    // Fecha actual
-    const date = new Date().toLocaleDateString('es-ES');
-    const time = new Date().toLocaleTimeString('es-ES');
-
-    // Generar número de orden si no se proporciona
-    if (!orderId) {
-      orderId = `ORD-${new Date().getTime()}`;
-    }
-
-    // Valores por defecto para los parámetros opcionales
-    if (iva === undefined) iva = subtotal * 0.21; // 21% por defecto
-    if (envio === undefined) envio = subtotal >= 60 ? 0 : 3.5; // Envío gratis a partir de 60€
-    if (totalConIvaYEnvio === undefined) totalConIvaYEnvio = subtotal + iva + envio;
-
-    // Configuración de colores y fuentes - Usando la guía de estilos del proyecto
-    pdf.setFillColor(121, 21, 21); // Color primario #791515 (rojo oscuro)
-    pdf.rect(0, 0, 210, 25, 'F');
-    
-    // Añadir logo al PDF
-    try {
-      // Usar el logo precargado en base64 si está disponible
-      if (this.logoLoaded && this.logoBase64) {
-        pdf.addImage(this.logoBase64, 'JPEG', 10, 5, 30, 15);
-      } else {
-        // Intentar cargar el logo directamente
-        try {
-          // Usar el logo predeterminado en caso de cualquier error
-          pdf.addImage(this.getDefaultLogoBase64(), 'PNG', 10, 5, 30, 15);
-        } catch (error) {
-          console.error('Error al cargar el logo:', error);
-        }
-      }
-    } catch (error) {
-      console.error('Error al añadir el logo al PDF:', error);
-      // Usar el logo predeterminado como respaldo
-      try {
-        pdf.addImage(this.getDefaultLogoBase64(), 'PNG', 10, 5, 30, 15);
-      } catch (e) {
-        console.error('Error al cargar el logo predeterminado:', e);
-      }
-    }
-    
-    pdf.setTextColor(247, 247, 247); // Color secundario #f7f7f7
-    pdf.setFontSize(22);
-    pdf.text('RECIBO DE COMPRA', 105, 15, { align: 'center' });
-    
-    // Información de la compra
-    pdf.setTextColor(0, 0, 0);
-    pdf.setFontSize(12);
-    pdf.text(`Fecha: ${date}`, 20, 35);
-    pdf.text(`Hora: ${time}`, 20, 42);
-    pdf.text(`Número de orden: ${orderId}`, 20, 49);
-    
-    // Información del cliente
-    pdf.setFontSize(14);
-    pdf.setTextColor(121, 21, 21); // Color primario para títulos
-    pdf.text('Información del cliente', 20, 60);
-    pdf.setFontSize(12);
-    pdf.setTextColor(0, 0, 0);
-    pdf.text(`Cliente: ${user ? user.name + ' ' : 'Usuario invitado'}`, 20, 67);
-    pdf.text(`Email: ${user ? user.email : 'No disponible'}`, 20, 74);
-    
-    // Información de envío si está disponible
-    let yPosition = 82;
-    if (datosEnvio) {
-      pdf.setFontSize(14);
-      pdf.setTextColor(121, 21, 21); // Color primario para títulos
-      pdf.text('Datos de envío', 20, yPosition);
-      pdf.setFontSize(12);
-      pdf.setTextColor(0, 0, 0);
-      yPosition += 7;
-      pdf.text(`Nombre: ${datosEnvio.nombre} ${datosEnvio.apellidos}`, 20, yPosition);
-      yPosition += 7;
-      pdf.text(`Dirección: ${datosEnvio.direccion}`, 20, yPosition);
-      yPosition += 7;
-      pdf.text(`CP: ${datosEnvio.codigoPostal} - ${datosEnvio.ciudad}, ${datosEnvio.provincia}`, 20, yPosition);
-      yPosition += 7;
-      pdf.text(`Teléfono: ${datosEnvio.telefono}`, 20, yPosition);
-      yPosition += 7;
-      pdf.text(`Email: ${datosEnvio.email}`, 20, yPosition);
-      yPosition += 12; // Espacio adicional antes de los productos
-    } else {
-      yPosition = 85; // Posición inicial si no hay datos de envío
-    }
-    
-    // Encabezado de la tabla
-    pdf.setFillColor(247, 247, 247); // Color secundario #f7f7f7
-    pdf.rect(20, yPosition, 170, 8, 'F');
-    pdf.setFontSize(11);
-    pdf.setTextColor(121, 21, 21); // Color primario para encabezados
-    pdf.text('Producto', 25, yPosition + 5);
-    pdf.text('Cantidad', 100, yPosition + 5);
-    pdf.text('Precio/ud', 130, yPosition + 5);
-    pdf.text('Subtotal', 170, yPosition + 5, { align: 'right' });
-    
-    // Línea bajo el encabezado
-    pdf.setDrawColor(121, 21, 21); // Color primario para líneas
-    pdf.line(20, yPosition + 8, 190, yPosition + 8);
-    
-    // Contenido de los productos
-    yPosition += 15;
-    items.forEach((item, index) => {
-      if (item.producto) {
-        // Alternar colores de fondo para mejorar legibilidad
-        if (index % 2 === 1) {
-          pdf.setFillColor(247, 247, 247); // Color secundario #f7f7f7
-          pdf.rect(20, yPosition - 5, 170, 10, 'F');
-        }
-        
-        // Posición para el texto
-        const nombre = item.producto.nombre;
-        // Acortar el nombre si es demasiado largo
-        const nombreMostrado = nombre.length > 30 ? nombre.substring(0, 27) + '...' : nombre;
-        
-        pdf.setTextColor(0, 0, 0);
-        pdf.text(nombreMostrado, 25, yPosition);
-        pdf.text(item.cantidad.toString(), 100, yPosition);
-        pdf.text(`${item.producto.precio.toFixed(2)} €`, 130, yPosition);
-        const subtotal = item.cantidad * item.producto.precio;
-        pdf.text(`${subtotal.toFixed(2)} €`, 170, yPosition, { align: 'right' });
-        
-        yPosition += 10;
-        
-        // Si nos acercamos al final de la página, crear una nueva
-        if (yPosition > 270) {
-          pdf.addPage();
-          yPosition = 20;
-          
-          // Añadir encabezado de la tabla en la nueva página
-          pdf.setFillColor(247, 247, 247); // Color secundario #f7f7f7
-          pdf.rect(20, yPosition, 170, 8, 'F');
-          pdf.setFontSize(11);
-          pdf.setTextColor(121, 21, 21); // Color primario para encabezados
-          pdf.text('Producto', 25, yPosition + 5);
-          pdf.text('Cantidad', 100, yPosition + 5);
-          pdf.text('Precio/ud', 130, yPosition + 5);
-          pdf.text('Subtotal', 170, yPosition + 5, { align: 'right' });
-          
-          // Línea bajo el encabezado
-          pdf.setDrawColor(121, 21, 21); // Color primario para líneas
-          pdf.line(20, yPosition + 8, 190, yPosition + 8);
-          
-          yPosition += 15;
-        }
-      }
-    });
-    
-    // Añadir línea antes del total
-    pdf.setDrawColor(121, 21, 21); // Color primario para líneas
-    pdf.line(20, yPosition, 190, yPosition);
-    
-    // Total
-    yPosition += 10;
-    pdf.setFontSize(14);
-    pdf.setFont('helvetica', 'bold');
-    pdf.setTextColor(121, 21, 21); // Color primario para el total
-    
-    // Mejora de formato para el resumen de precios - Alineación clara entre etiquetas y valores
-    const xEtiqueta = 110; // Posición X para las etiquetas
-    const xValor = 180;   // Posición X para los valores (alineados a la derecha)
-    
-    // Subtotal
-    pdf.text('Subtotal:', xEtiqueta, yPosition);
-    pdf.text(`${subtotal.toFixed(2)} €`, xValor, yPosition, { align: 'right' });
-    
-    yPosition += 10;
-    // IVA
-    pdf.text('IVA (21%):', xEtiqueta, yPosition);
-    pdf.text(`${iva.toFixed(2)} €`, xValor, yPosition, { align: 'right' });
-    
-    yPosition += 10;
-    // Gastos de envío
-    pdf.text('Gastos de envío:', xEtiqueta, yPosition);
-    if (envio === 0) {
-      pdf.text('Gratis', xValor, yPosition, { align: 'right' });
-    } else {
-      pdf.text(`${envio.toFixed(2)} €`, xValor, yPosition, { align: 'right' });
-    }
-    
-    yPosition += 10;
-    // Total
-    pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(16); // Agrandar el tamaño para el total final
-    pdf.text('Total:', xEtiqueta, yPosition);
-    pdf.text(`${totalConIvaYEnvio.toFixed(2)} €`, xValor, yPosition, { align: 'right' });
-    pdf.setFont('helvetica', 'normal');
-    pdf.setFontSize(14);
-    
-    // Nota de agradecimiento
-    yPosition += 20;
-    pdf.setFontSize(12);
-    pdf.setFont('helvetica', 'normal');
-    pdf.setTextColor(0, 0, 0);
-    pdf.text('¡Gracias por tu compra!', 105, yPosition, { align: 'center' });
-    
-    // Información de contacto
-    yPosition += 10;
-    pdf.setFontSize(10);
-    pdf.text('Si tienes alguna pregunta sobre tu pedido, por favor contáctanos a:', 105, yPosition, { align: 'center' });
-    yPosition += 7;
-    pdf.setTextColor(121, 21, 21); // Color primario para el email
-    pdf.text('mundonomadabaena@gmail.com', 105, yPosition, { align: 'center' });
-    
-    // Pie de página
-    pdf.setTextColor(100, 100, 100);
+    pdf.setFont(fuente, 'bold');
+    pdf.setFontSize(13);
+    pdf.setTextColor(...GRANATE);
+    pdf.text(DATOS_FISCALES.nombreComercial.toUpperCase(), MARGEN, 43);
+    pdf.setFont(fuente, 'normal');
     pdf.setFontSize(8);
-    pdf.text('© 2025 Mundo Nómada - Todos los derechos reservados', 105, 290, { align: 'center' });
-    
-    // Guardar el PDF
-    pdf.save(`recibo_${orderId}.pdf`);
+    pdf.setTextColor(...SUAVE);
+    pdf.text('Moda y complementos', MARGEN, 47.5);
+
+    // Título y datos del documento a la derecha
+    const derecha = ANCHO - MARGEN;
+    pdf.setFont(fuente, 'bold');
+    pdf.setFontSize(18);
+    pdf.setTextColor(...TEXTO);
+    pdf.text(esFactura ? 'FACTURA SIMPLIFICADA' : 'JUSTIFICANTE DE COMPRA', derecha, 21, { align: 'right' });
+
+    const filas: [string, string][] = [];
+    if (esFactura) {
+      filas.push(['Nº de factura', datos.numeroFactura as string]);
+    }
+    filas.push(['Fecha', this.fecha(datos.fecha)], ['Pedido', datos.pedido]);
+
+    let y = 30;
+    for (const [etiqueta, valor] of filas) {
+      pdf.setFont(fuente, 'normal');
+      pdf.setFontSize(8.5);
+      pdf.setTextColor(...SUAVE);
+      pdf.text(etiqueta, derecha - 42, y, { align: 'right' });
+      pdf.setFont(fuente, 'bold');
+      pdf.setTextColor(...TEXTO);
+      pdf.text(valor, derecha, y, { align: 'right' });
+      y += 5.5;
+    }
+
+    // Separador
+    pdf.setDrawColor(...BORDE);
+    pdf.setLineWidth(0.3);
+    pdf.line(MARGEN, 53, derecha, 53);
+    return 53;
+  }
+
+  private bloquesEmisorCliente(pdf: JsPDF, fuente: string, datos: DatosFactura, y: number): number {
+    const ancho = (ANCHO - MARGEN * 2 - 6) / 2;
+    const f = DATOS_FISCALES;
+    const emisor = datosFiscalesCompletos()
+      ? [f.razonSocial, `NIF: ${f.nif}`, f.domicilio, f.localidad, `${f.email} · ${f.telefono}`]
+      : [f.nombreComercial, 'Datos fiscales pendientes de completar', `${f.email} · ${f.telefono}`];
+
+    const c = datos.cliente;
+    const localidad = [c.codigoPostal, c.ciudad].filter(Boolean).join(' ') + (c.provincia ? ` (${c.provincia})` : '');
+    const cliente = [c.nombre, c.direccion, localidad.trim(), [c.telefono, c.email].filter(Boolean).join(' · ')]
+      .filter((linea): linea is string => !!linea && linea.trim() !== '');
+
+    const alto = Math.max(this.altoBloque(pdf, emisor, ancho), this.altoBloque(pdf, cliente, ancho));
+    this.bloque(pdf, fuente, 'VENDEDOR', emisor, MARGEN, y, ancho, alto);
+    this.bloque(pdf, fuente, 'CLIENTE', cliente, MARGEN + ancho + 6, y, ancho, alto);
+    return y + alto;
+  }
+
+  private altoBloque(pdf: JsPDF, lineas: string[], ancho: number): number {
+    pdf.setFontSize(9);
+    const total = lineas.reduce((n, l) => n + pdf.splitTextToSize(l, ancho - 10).length, 0);
+    return 14 + total * 4.6;
+  }
+
+  private bloque(pdf: JsPDF, fuente: string, titulo: string, lineas: string[], x: number, y: number, ancho: number, alto: number): void {
+    pdf.setFillColor(...CREMA);
+    pdf.setDrawColor(...BORDE);
+    pdf.roundedRect(x, y, ancho, alto, 3, 3, 'FD');
+    pdf.setFont(fuente, 'bold');
+    pdf.setFontSize(7.5);
+    pdf.setTextColor(...GRANATE);
+    pdf.text(titulo, x + 5, y + 7, { charSpace: 0.6 });
+
+    let linea = y + 12.5;
+    lineas.forEach((texto, indice) => {
+      pdf.setFont(fuente, indice === 0 ? 'bold' : 'normal');
+      pdf.setFontSize(9);
+      pdf.setTextColor(...(indice === 0 ? TEXTO : SUAVE));
+      for (const trozo of pdf.splitTextToSize(texto, ancho - 10)) {
+        pdf.text(trozo, x + 5, linea);
+        linea += 4.6;
+      }
+    });
+  }
+
+  private tablaLineas(pdf: JsPDF, fuente: string, datos: DatosFactura, envioBase: number, y: number): number {
+    const derecha = ANCHO - MARGEN;
+    const col = { cantidad: 122, precio: 152, importe: derecha };
+    const anchoDescripcion = col.cantidad - MARGEN - 14;
+
+    const encabezado = (posY: number) => {
+      pdf.setFillColor(...GRANATE);
+      pdf.roundedRect(MARGEN, posY, derecha - MARGEN, 9, 2, 2, 'F');
+      pdf.setFont(fuente, 'bold');
+      pdf.setFontSize(8);
+      pdf.setTextColor(255, 255, 255);
+      pdf.text('DESCRIPCIÓN', MARGEN + 4, posY + 5.8);
+      pdf.text('CANT.', col.cantidad, posY + 5.8, { align: 'right' });
+      pdf.text('PRECIO S/IVA', col.precio, posY + 5.8, { align: 'right' });
+      pdf.text('IMPORTE S/IVA', col.importe - 4, posY + 5.8, { align: 'right' });
+      return posY + 9;
+    };
+
+    y = encabezado(y);
+    const filas = [
+      ...datos.lineas.map((l) => ({ descripcion: l.descripcion, cantidad: l.cantidad, precio: l.precioUnitario })),
+      ...(datos.envio > 0 ? [{ descripcion: 'Gastos de envío', cantidad: 1, precio: envioBase }] : []),
+    ];
+
+    filas.forEach((fila, indice) => {
+      pdf.setFontSize(9);
+      const trozos: string[] = pdf.splitTextToSize(fila.descripcion, anchoDescripcion);
+      const alto = Math.max(9, 4 + trozos.length * 4.4);
+
+      // Salto de página manteniendo el encabezado de la tabla
+      if (y + alto > ALTO - 70) {
+        pdf.addPage();
+        y = encabezado(MARGEN);
+      }
+
+      if (indice % 2 === 1) {
+        pdf.setFillColor(...CREMA);
+        pdf.rect(MARGEN, y, derecha - MARGEN, alto, 'F');
+      }
+      pdf.setFont(fuente, 'normal');
+      pdf.setTextColor(...TEXTO);
+      trozos.forEach((trozo, i) => pdf.text(trozo, MARGEN + 4, y + 5.8 + i * 4.4));
+      pdf.text(String(fila.cantidad), col.cantidad, y + 5.8, { align: 'right' });
+      pdf.text(this.euros(fila.precio), col.precio, y + 5.8, { align: 'right' });
+      pdf.setFont(fuente, 'bold');
+      pdf.text(this.euros(fila.precio * fila.cantidad), col.importe - 4, y + 5.8, { align: 'right' });
+      y += alto;
+    });
+
+    pdf.setDrawColor(...BORDE);
+    pdf.line(MARGEN, y, derecha, y);
+    return y;
+  }
+
+  private totales(pdf: JsPDF, fuente: string, imp: { base: number; cuota: number; total: number }, iva: number, y: number): number {
+    const derecha = ANCHO - MARGEN;
+    const x = derecha - 78;
+
+    const fila = (etiqueta: string, valor: string, posY: number) => {
+      pdf.setFont(fuente, 'normal');
+      pdf.setFontSize(9.5);
+      pdf.setTextColor(...SUAVE);
+      pdf.text(etiqueta, x + 4, posY);
+      pdf.setTextColor(...TEXTO);
+      pdf.text(valor, derecha - 4, posY, { align: 'right' });
+    };
+    fila('Base imponible', this.euros(imp.base), y + 5);
+    fila(`IVA (${iva} %)`, this.euros(imp.cuota), y + 11);
+
+    // Total destacado como en el resumen del carrito
+    pdf.setFillColor(...ARENA);
+    pdf.roundedRect(x, y + 15, 78, 13, 3, 3, 'F');
+    pdf.setFont(fuente, 'bold');
+    pdf.setFontSize(10);
+    pdf.setTextColor(...TEXTO);
+    pdf.text('TOTAL', x + 4, y + 23.2);
+    pdf.setFontSize(14);
+    pdf.setTextColor(...GRANATE);
+    pdf.text(this.euros(imp.total), derecha - 4, y + 23.6, { align: 'right' });
+    return y + 28;
+  }
+
+  private formaDePago(pdf: JsPDF, fuente: string, datos: DatosFactura, y: number): void {
+    pdf.setFont(fuente, 'normal');
+    pdf.setFontSize(8.5);
+    pdf.setTextColor(...SUAVE);
+    pdf.text(`Forma de pago: ${datos.formaPago || 'tarjeta (Stripe)'} · Cobrado el ${this.fecha(datos.fecha)}`, MARGEN, y);
+    pdf.text('Precios en euros. IVA incluido en el total.', MARGEN, y + 4.5);
+  }
+
+  private piePagina(pdf: JsPDF, fuente: string, esFactura: boolean): void {
+    const paginas = pdf.getNumberOfPages();
+    for (let p = 1; p <= paginas; p++) {
+      pdf.setPage(p);
+      const y = ALTO - 22;
+      pdf.setDrawColor(...BORDE);
+      pdf.line(MARGEN, y, ANCHO - MARGEN, y);
+
+      pdf.setFont(fuente, 'bold');
+      pdf.setFontSize(9);
+      pdf.setTextColor(...GRANATE);
+      pdf.text('¡Gracias por tu compra!', MARGEN, y + 6);
+      pdf.setFont(fuente, 'normal');
+      pdf.setFontSize(7.5);
+      pdf.setTextColor(...SUAVE);
+      pdf.text(`¿Dudas con tu pedido? ${DATOS_FISCALES.email} · WhatsApp ${DATOS_FISCALES.telefono}`, MARGEN, y + 10.5);
+      pdf.text(
+        esFactura
+          ? 'Factura simplificada (art. 4 del Real Decreto 1619/2012).'
+          : 'Justificante de compra sin validez fiscal: datos fiscales del vendedor pendientes de completar.',
+        MARGEN, y + 14.5
+      );
+      pdf.text(`Página ${p} de ${paginas}`, ANCHO - MARGEN, y + 14.5, { align: 'right' });
+
+      pdf.setFillColor(...GRANATE);
+      pdf.rect(0, ALTO - 3, ANCHO, 3, 'F');
+    }
+  }
+
+  // ---------- Utilidades ----------
+
+  private euros(valor: number): string {
+    return new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(Number(valor) || 0)
+      .replace(/ /g, ' ');
+  }
+
+  private fecha(fecha: Date): string {
+    return new Intl.DateTimeFormat('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(fecha);
+  }
+
+  /** Descarga una vez la tipografía de la web (Montserrat) y el logo transparente */
+  private async cargarRecursos(): Promise<void> {
+    if (this.fuentes && this.logo) {
+      return;
+    }
+    const [normal, negrita, logo] = await Promise.all([
+      this.descargarBase64('fonts/Montserrat-Regular.ttf'),
+      this.descargarBase64('fonts/Montserrat-Bold.ttf'),
+      this.descargarBase64('img/logo-factura.png'),
+    ]);
+    this.fuentes = normal && negrita ? { normal, negrita } : null;
+    this.logo = logo ? `data:image/png;base64,${logo}` : null;
+  }
+
+  /** Registra Montserrat en el documento; si no se pudo descargar, usa Helvetica */
+  private registrarFuentes(pdf: JsPDF): string {
+    if (!this.fuentes) {
+      return 'helvetica';
+    }
+    pdf.addFileToVFS('Montserrat-Regular.ttf', this.fuentes.normal);
+    pdf.addFont('Montserrat-Regular.ttf', 'Montserrat', 'normal');
+    pdf.addFileToVFS('Montserrat-Bold.ttf', this.fuentes.negrita);
+    pdf.addFont('Montserrat-Bold.ttf', 'Montserrat', 'bold');
+    return 'Montserrat';
+  }
+
+  private async descargarBase64(ruta: string): Promise<string | null> {
+    try {
+      const respuesta = await fetch(ruta);
+      if (!respuesta.ok) {
+        return null;
+      }
+      const bytes = new Uint8Array(await respuesta.arrayBuffer());
+      let binario = '';
+      for (let i = 0; i < bytes.length; i += 0x8000) {
+        binario += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+      }
+      return btoa(binario);
+    } catch {
+      return null;
+    }
   }
 }

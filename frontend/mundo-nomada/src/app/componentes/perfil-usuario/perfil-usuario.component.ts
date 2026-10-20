@@ -10,6 +10,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { OrdersService } from '../../services/orders.service';
+import { PdfService, facturaDesdePedido } from '../../services/pdf.service';
 import { User } from '../../../models/Users';
 import { Pedido } from '../../../models/Pedido';
 import { OrderItem } from '../../../models/OrderItem';
@@ -36,6 +37,8 @@ export class PerfilUsuarioComponent implements OnInit {
   // Historial de pedidos
   orders: Pedido[] = [];
   orderItems: OrderItem[] = [];
+  // Líneas de pedido ya consultadas, solo mientras la página está abierta
+  private cacheLineas = new Map<number, OrderItem[]>();
   selectedOrder: Pedido | null = null;
   loadingOrders = false;
   loadingOrderItems = false;
@@ -62,7 +65,8 @@ export class PerfilUsuarioComponent implements OnInit {
   constructor(
     private authService: AuthService,
     private fb: FormBuilder,
-    private ordersService: OrdersService
+    private ordersService: OrdersService,
+    private pdfService: PdfService
   ) {
     // Inicializar datos simulados para actividad
     this.lastLogin = new Date();
@@ -390,64 +394,72 @@ export class PerfilUsuarioComponent implements OnInit {
   loadOrders(): void {
     this.loadingOrders = true;
     this.orderError = '';
+    // Los pedidos incluyen datos de envío: no se guardan en el navegador
+    // (antes se cacheaban en localStorage sin distinguir usuario)
+    this.borrarCacheAntigua();
     this.ordersService.getOrdersByUser().subscribe({
       next: (orders) => {
         this.orders = orders;
         this.loadingOrders = false;
-        // Guardar en localStorage para poder mostrar el historial offline
-        localStorage.setItem('userOrders', JSON.stringify(orders));
       },
       error: (err) => {
         console.error('Error al cargar pedidos:', err);
-        // Intentar recuperar del localStorage si hay un error
-        const cachedOrders = localStorage.getItem('userOrders');
-        if (cachedOrders) {
-          try {
-            this.orders = JSON.parse(cachedOrders);
-          } catch (e) {
-            this.orders = [];
-            localStorage.removeItem('userOrders');
-          }
-        } else {
-          this.orders = [];
-        }
-        this.orderError = 'No se pudieron cargar los pedidos del servidor. Mostrando datos guardados localmente.';
+        this.orders = [];
+        this.orderError = 'No se pudieron cargar los pedidos. Inténtalo de nuevo en unos minutos.';
         this.loadingOrders = false;
       },
     });
   }
 
+  /** Solo los pedidos cobrados tienen factura */
+  pedidoCobrado(pedido: Pedido | null): boolean {
+    return !!pedido && ['pagado', 'enviado', 'completado'].includes(pedido.estado);
+  }
+
+  descargandoFactura = false;
+
+  descargarFactura(): void {
+    if (!this.selectedOrder || !this.pedidoCobrado(this.selectedOrder) || this.orderItems.length === 0) {
+      return;
+    }
+    this.descargandoFactura = true;
+    const lineas = this.orderItems.map((i) => ({ nombre: i.nombre || 'Producto ' + i.producto_id, cantidad: i.cantidad, precio_unitario: i.precio_unitario }));
+    this.pdfService.generarFactura(facturaDesdePedido(this.selectedOrder, lineas))
+      .catch((error) => console.error('Error al generar la factura:', error))
+      .finally(() => (this.descargandoFactura = false));
+  }
+
+  private borrarCacheAntigua(): void {
+    try {
+      localStorage.removeItem('userOrders');
+      Object.keys(localStorage).filter((k) => k.startsWith('orderItems_')).forEach((k) => localStorage.removeItem(k));
+    } catch {
+      // Sin almacenamiento disponible
+    }
+  }
+
+
   // Acción para ver detalle de pedido
   verDetallePedido(order: Pedido): void {
     this.selectedOrder = order;
-    this.loadingOrderItems = true;
-    this.orderItems = []; // Limpiar items anteriores
-    
-    // Buscar en localStorage primero si tenemos los items guardados
-    const cacheKey = `orderItems_${order.id}`;
-    const cachedItems = localStorage.getItem(cacheKey);
-    
-    if (cachedItems) {
-      try {
-        this.orderItems = JSON.parse(cachedItems);
-        this.loadingOrderItems = false;
-      } catch (e) {
-        // Error al parsear, eliminamos cache inválido
-        localStorage.removeItem(cacheKey);
-        this.loadItemsFromServer(order.id, cacheKey);
-      }
-    } else {
-      this.loadItemsFromServer(order.id, cacheKey);
+    const enMemoria = this.cacheLineas.get(order.id);
+    if (enMemoria) {
+      this.orderItems = enMemoria;
+      this.loadingOrderItems = false;
+      return;
     }
+    this.loadingOrderItems = true;
+    this.orderItems = [];
+    this.loadItemsFromServer(order.id);
   }
+
   
   // Método para cargar items desde el servidor
-  private loadItemsFromServer(orderId: number, cacheKey: string): void {
+  private loadItemsFromServer(orderId: number): void {
     this.ordersService.getOrderItems(orderId).subscribe({
       next: (items) => {
         this.orderItems = items;
-        // Guardar en localStorage para acceso offline
-        localStorage.setItem(cacheKey, JSON.stringify(items));
+        this.cacheLineas.set(orderId, items);
         this.loadingOrderItems = false;
       },
       error: (err) => {
@@ -457,4 +469,5 @@ export class PerfilUsuarioComponent implements OnInit {
       },
     });
   }
+
 }

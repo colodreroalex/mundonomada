@@ -40,6 +40,9 @@ export interface PedidoCheckout {
   shipping_province: string;
   shipping_phone: string;
   shipping_email: string;
+  paid_at?: string | null;
+  invoice_number?: string | null;
+  invoice_date?: string | null;
 }
 
 export interface EstadoCheckout {
@@ -49,7 +52,6 @@ export interface EstadoCheckout {
 }
 
 export interface PedidoAdmin extends PedidoCheckout {
-  paid_at: string | null;
   payment_intent: string | null;
   user_email: string;
   items: { nombre: string; cantidad: number; precio_unitario: number }[];

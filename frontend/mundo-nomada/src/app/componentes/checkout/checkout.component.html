@@ -234,7 +234,7 @@
         <h1>¡Compra realizada con éxito!</h1>
         <p class="lead">Gracias por tu compra. Recibirás el justificante de pago por correo electrónico.</p>
         <button class="btn-custom btn-lg" (click)="downloadReceipt()">
-          <i class="bi bi-file-earmark-pdf" aria-hidden="true"></i> Descargar Recibo PDF
+          <i class="bi bi-file-earmark-pdf" aria-hidden="true"></i> {{ numeroFactura ? 'Descargar factura (PDF)' : 'Descargar justificante (PDF)' }}
         </button>
       </div>
 
@@ -255,6 +255,7 @@
           </div>
           <div class="text-md-end">
             <p><strong>Número de pedido:</strong> {{orderId}}</p>
+            <p *ngIf="numeroFactura"><strong>Nº de factura:</strong> {{numeroFactura}}</p>
           </div>
         </div>
 

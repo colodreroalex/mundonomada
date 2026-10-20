@@ -375,11 +375,20 @@
             <div><dt>Estado:</dt><dd><span class="estado estado-{{ selectedOrder.estado }}">{{ selectedOrder.estado | titlecase }}</span></dd></div>
             <div><dt>Fecha del pedido:</dt><dd>{{ selectedOrder.fecha | date:'dd/MM/yyyy HH:mm' }}</dd></div>
             <div><dt>Total:</dt><dd class="fw-semibold">{{ selectedOrder.total | currency:'EUR' }}</dd></div>
+            <div *ngIf="selectedOrder.invoice_number"><dt>Nº de factura:</dt><dd class="fw-semibold">{{ selectedOrder.invoice_number }}</dd></div>
           </dl>
         </div>
         <div>
           <h3><i class="bi bi-truck" aria-hidden="true"></i>Información de Envío</h3>
-          <p class="nota-envio">La información de envío se mostrará aquí en futuras actualizaciones.</p>
+          <div class="nota-envio" *ngIf="selectedOrder.shipping_name; else sinEnvio">
+            <strong>{{ selectedOrder.shipping_name }}</strong><br>
+            {{ selectedOrder.shipping_address }}<br>
+            {{ selectedOrder.shipping_postal_code }} {{ selectedOrder.shipping_city }}<span *ngIf="selectedOrder.shipping_province"> ({{ selectedOrder.shipping_province }})</span><br>
+            {{ selectedOrder.shipping_phone }}
+          </div>
+          <ng-template #sinEnvio>
+            <p class="nota-envio">Este pedido no tiene datos de envío registrados.</p>
+          </ng-template>
         </div>
       </div>
 
@@ -402,9 +411,16 @@
         <span>Total:</span>
         <strong>{{ selectedOrder.total | currency:'EUR' }}</strong>
       </div>
+      <p class="nota-importes">Precios de los productos sin IVA. El total incluye IVA<span *ngIf="selectedOrder.envio && selectedOrder.envio > 0"> y {{ selectedOrder.envio | currency:'EUR' }} de envío</span>.</p>
     </div>
 
     <footer class="dialogo-pie">
+      <button type="button" class="btn-custom" *ngIf="pedidoCobrado(selectedOrder)"
+              [disabled]="loadingOrderItems || descargandoFactura || orderItems.length === 0" (click)="descargarFactura()">
+        <span *ngIf="descargandoFactura" class="spinner-border spinner-border-sm" role="status"></span>
+        <i *ngIf="!descargandoFactura" class="bi bi-file-earmark-pdf" aria-hidden="true"></i>
+        {{ selectedOrder.invoice_number ? 'Descargar factura' : 'Descargar justificante' }}
+      </button>
       <button type="button" class="btn-secundario" (click)="selectedOrder = null">
         <i class="bi bi-x" aria-hidden="true"></i>Cerrar
       </button>

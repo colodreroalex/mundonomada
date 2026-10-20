@@ -29,7 +29,7 @@
       <header class="pedido-cabecera">
         <div>
           <h2>MN-{{ p.id }} <span class="badge estado-{{ p.estado }}">{{ p.estado }}</span></h2>
-          <small>{{ p.fecha | date:'dd/MM/yyyy HH:mm' }} · {{ p.user_email }}</small>
+          <small>{{ p.fecha | date:'dd/MM/yyyy HH:mm' }} · {{ p.user_email }}<span *ngIf="p.invoice_number"> · Factura {{ p.invoice_number }}</span></small>
         </div>
         <div class="pedido-importe">
           <strong>{{ p.total | currency:'EUR' }}</strong>
@@ -51,7 +51,10 @@
         </div>
       </div>
 
-      <footer class="pedido-acciones" *ngIf="p.estado === 'pagado' || p.estado === 'enviado'">
+      <footer class="pedido-acciones" *ngIf="p.estado === 'pagado' || p.estado === 'enviado' || p.estado === 'completado'">
+        <button class="btn-secundario" (click)="descargarFactura(p)">
+          <i class="bi bi-file-earmark-pdf" aria-hidden="true"></i>{{ p.invoice_number ? 'Factura' : 'Justificante' }}
+        </button>
         <button *ngIf="p.estado === 'pagado'" class="btn-custom" (click)="avanzar(p, 'enviado')">
           <i class="bi bi-send" aria-hidden="true"></i>Marcar como enviado
         </button>
