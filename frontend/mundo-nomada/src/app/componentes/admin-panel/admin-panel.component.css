@@ -1,16 +1,100 @@
-.btn-custom {
-    background-color: var(--color-primario);
-    color: var(--color-secundario);
-    border: none;
-    padding: 10px 20px;
-    font-size: 1rem;
-    border-radius: 4px;
-    transition: background-color 0.3s ease;
-  }
-  
-  .btn-custom:hover {
-    background-color: var(--color-hover);
-  }
+.admin {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-6);
+  padding-bottom: var(--esp-6);
+}
 
-  
-  
+.admin-seccion-titulo {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-2);
+  margin: 0 0 var(--esp-3);
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-texto-suave);
+}
+
+.admin-seccion-titulo .bi {
+  color: var(--color-primario);
+  font-size: 1rem;
+}
+
+.admin-acciones {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--esp-3);
+}
+
+@media (min-width: 768px) {
+  .admin-acciones {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.admin-tarjeta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--esp-3);
+  min-height: 112px;
+  padding: var(--esp-4);
+  background: var(--color-superficie);
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio);
+  color: var(--color-texto);
+  font-weight: 600;
+  line-height: 1.3;
+  transition: transform var(--t-rapida) var(--ease), box-shadow var(--t-rapida) var(--ease),
+    border-color var(--t-rapida) var(--ease);
+}
+
+.admin-tarjeta > .bi:first-child {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--color-primario-suave);
+  color: var(--color-primario);
+  font-size: 1.2rem;
+}
+
+.admin-tarjeta:hover {
+  color: var(--color-texto);
+  border-color: var(--color-primario-borde);
+  box-shadow: var(--sombra-2);
+  transform: translateY(-2px);
+}
+
+.admin-tarjeta.destacada {
+  grid-column: 1 / -1;
+  flex-direction: row;
+  align-items: center;
+  min-height: 72px;
+  background: var(--color-marca);
+  border-color: var(--color-marca);
+  color: var(--color-sobre-marca);
+}
+
+.admin-tarjeta.destacada > .bi:first-child {
+  background: rgba(255, 255, 255, 0.16);
+  color: var(--color-sobre-marca);
+}
+
+.admin-tarjeta.destacada:hover {
+  color: var(--color-sobre-marca);
+  background: var(--color-marca-hover);
+}
+
+.admin-tarjeta .flecha {
+  margin-left: auto;
+}
+
+@media (min-width: 768px) {
+  .admin-tarjeta.destacada {
+    grid-column: span 2;
+  }
+}

@@ -1,127 +1,184 @@
-/* Estilos para el componente de contacto */
-.container {
-  max-width: 1200px;
-  background-color: #fff;
-  padding: 30px;
-  border-radius: 10px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
-  margin-bottom: 90px;
+.contacto {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-5);
 }
 
-h1, h3, h4, h5 {
+/* ---------- Vías de contacto ---------- */
+.vias {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--esp-2);
+}
+
+@media (min-width: 576px) {
+  .vias { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (min-width: 1200px) {
+  .vias { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+}
+
+.via {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-3);
+  padding: var(--esp-4);
+  background: var(--color-superficie);
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio);
+  color: var(--color-texto);
+  transition: border-color var(--t-rapida) var(--ease), transform var(--t-rapida) var(--ease), box-shadow var(--t-rapida) var(--ease);
+}
+
+a.via:hover {
+  color: var(--color-texto);
+  border-color: var(--color-primario-borde);
+  box-shadow: var(--sombra-2);
+  transform: translateY(-2px);
+}
+
+.via-icono {
+  flex-shrink: 0;
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--color-primario-suave);
   color: var(--color-primario);
 }
 
-/* Excepción para los headers en card-header */
-.card-header.bg-primario h1,
-.card-header.bg-primario h2,
-.card-header.bg-primario h3,
-.card-header.bg-primario h4,
-.card-header.bg-primario h5 {
-  color: white !important; /* Usamos !important para asegurar que sobrescriba otros estilos */
+.via-icono .material-icons,
+.via-icono .bi {
+  font-size: 1.35rem;
 }
 
-/* Efectos de tarjetas */
-.card {
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+.via-texto {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.35;
 }
 
-.card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1) !important;
+.via-texto strong {
+  font-size: var(--fs-sm);
 }
 
-/* Estilos para los iconos de contacto */
-.contact-icon {
-  width: 60px;
-  height: 60px;
+.via-texto span {
+  font-size: var(--fs-xs);
+  color: var(--color-texto-suave);
+}
+
+.via-whatsapp {
+  background: color-mix(in srgb, #25a35a 10%, var(--color-superficie));
+  border-color: color-mix(in srgb, #25a35a 35%, transparent);
+}
+
+.via-whatsapp .via-icono {
+  background: #25a35a;
+  color: #fff;
+}
+
+/* ---------- Formulario y mapa ---------- */
+.contacto-grid {
+  display: grid;
+  gap: var(--esp-5);
+}
+
+@media (min-width: 992px) {
+  .contacto-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: start;
+  }
+}
+
+.panel-titulo .material-icons {
+  color: var(--color-primario);
+  font-size: 1.4rem;
+}
+
+.formulario-contacto {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-4);
+}
+
+.error-campo {
+  margin-top: 6px;
+  font-size: var(--fs-sm);
+  color: var(--color-error);
+}
+
+textarea.form-control {
+  resize: vertical;
+}
+
+.columna-derecha {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-5);
+}
+
+.mapa-marco {
+  aspect-ratio: 4 / 3;
+  border-radius: var(--radio);
+  overflow: hidden;
+  background: var(--color-arena);
+}
+
+.mapa-marco iframe {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+[data-bs-theme='dark'] .mapa-marco iframe {
+  filter: grayscale(0.3) brightness(0.85);
+}
+
+.motivos {
+  list-style: none;
+  margin: 0 0 var(--esp-4);
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-2);
+}
+
+.motivos li {
   display: flex;
   align-items: center;
-  justify-content: center;
-  transition: all 0.3s ease;
+  gap: var(--esp-2);
+  font-size: var(--fs-sm);
 }
 
-.contact-icon:hover {
-  transform: scale(1.1);
-  background-color: var(--color-primario) !important;
+.motivos .material-icons {
+  color: var(--color-primario);
+  font-size: 1.15rem;
 }
 
-.contact-icon:hover i {
-  color: white !important;
+.sabias {
+  display: flex;
+  gap: var(--esp-3);
+  padding: var(--esp-4);
+  border-radius: var(--radio);
+  background: var(--color-arena);
 }
 
-/* Estilizado del formulario */
-.form-control, .input-group-text {
-  border-radius: 8px;
-  padding: 12px 15px;
-  transition: box-shadow 0.3s ease;
+.sabias .material-icons {
+  color: var(--color-aviso);
+  font-size: 1.6rem;
 }
 
-.form-control:focus {
-  border-color: var(--color-primario);
-  box-shadow: 0 0 0 0.2rem rgba(121, 21, 21, 0.25);
+.sabias h5 {
+  font-size: var(--fs-base);
+  font-weight: 700;
+  margin-bottom: 4px;
 }
 
-/* Estilo para el botón */
-.btn-custom {
-  background-color: var(--color-primario);
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-weight: 600;
-  transition: all 0.3s ease;
-}
-
-.btn-custom:hover {
-  background-color: #9a1a1a; /* Un tono más claro del color primario */
-  transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(121, 21, 21, 0.3);
-}
-
-.btn-custom:active {
-  transform: translateY(0);
-}
-
-/* Estilizado para los mensajes de error y éxito */
-.alert {
-  border-radius: 8px;
-}
-
-.alert-success {
-  background-color: #e8f5e9;
-  border-color: #c8e6c9;
-  color: #2e7d32;
-}
-
-.alert-danger {
-  background-color: #ffebee;
-  border-color: #ffcdd2;
-  color: #c62828;
-}
-
-/* Estilo para los mensajes de validación */
-.text-danger {
-  font-size: 0.85rem;
-}
-
-/* Mejoras para dispositivos móviles */
-@media (max-width: 768px) {
-  .container {
-    padding: 20px;
-  }
-  
-  .contact-icon {
-    width: 50px;
-    height: 50px;
-  }
-  
-  .card-body {
-    padding: 20px;
-  }
-}
-
-/* Estilos para el mapa */
-.ratio-1x1 {
-  border-radius: 0 0 8px 8px;
-  overflow: hidden;
+.sabias p {
+  margin: 0;
+  font-size: var(--fs-sm);
+  color: var(--color-texto-suave);
 }

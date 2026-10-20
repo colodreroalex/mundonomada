@@ -1,242 +1,239 @@
-/* Estilos modernos para el perfil */
+/* Perfil de usuario */
 .profile-container {
   min-height: 80vh;
-  background-color: #f9f9f9;
 }
 
-/* Cabecera de perfil */
+.profile-container > .container {
+  padding-top: var(--esp-5) !important;
+}
+
+/* ---------- Cabecera de perfil ---------- */
 .profile-header {
-  transition: all 0.3s ease;
-  border-color: #e9e9e9 !important;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  background: var(--color-superficie) !important;
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-lg) !important;
+  box-shadow: none !important;
+  position: relative;
+  overflow: hidden;
 }
 
-/* Avatar del usuario */
+.profile-header::after {
+  content: '';
+  position: absolute;
+  right: -30px;
+  bottom: -70px;
+  width: 220px;
+  aspect-ratio: 971 / 810;
+  background-color: var(--color-primario);
+  -webkit-mask: url('/img/logo-mark.svg') center / contain no-repeat;
+  mask: url('/img/logo-mark.svg') center / contain no-repeat;
+  opacity: 0.06;
+  pointer-events: none;
+}
+
 .avatar-circle {
-  width: 70px;
-  height: 70px;
-  background-color: #791515;
-  background-image: linear-gradient(135deg, #791515, #a02020);
+  width: 72px;
+  height: 72px;
   border-radius: 50%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  color: white;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(135deg, var(--color-marca), var(--color-marca-hover));
+  color: var(--color-sobre-marca);
   font-size: 1.8rem;
-  font-weight: 600;
-  box-shadow: 0 3px 10px rgba(121, 21, 21, 0.2);
-  transition: transform 0.3s ease;
+  font-weight: 700;
+  box-shadow: 0 0 0 4px var(--color-superficie), 0 0 0 6px var(--color-primario-borde);
 }
 
-.avatar-circle:hover {
-  transform: scale(1.05);
-}
-
-/* Títulos y subtítulos */
 .profile-title {
-  font-weight: 600;
-  font-size: 1.5rem;
+  font-weight: 800;
+  font-size: var(--fs-h3);
   margin-bottom: 0.25rem;
+  color: var(--color-texto);
+  word-break: break-word;
 }
 
 .profile-subtitle {
-  font-size: 0.9rem;
-  opacity: 0.8;
+  font-size: var(--fs-sm);
+  margin-bottom: 2px;
+  word-break: break-all;
 }
 
-/* Menú de navegación */
+/* ---------- Menú de la cuenta ---------- */
 .profile-menu {
-  border-radius: 8px;
+  border-radius: 0;
   overflow: hidden;
 }
 
 .list-group-item {
-  padding: 0.85rem 1.25rem;
-  transition: all 0.2s ease;
-  border-left: 4px solid transparent;
+  display: flex;
+  align-items: center;
+  min-height: 52px;
+  padding: 0.75rem 1.25rem;
+  background: transparent;
+  color: var(--color-texto);
+  font-weight: 500;
+  border-left: 3px solid transparent !important;
+  transition: background-color var(--t-rapida) var(--ease), color var(--t-rapida) var(--ease);
 }
 
 .list-group-item.active {
-  background-color: #791515;
-  border-color: #791515;
-  font-weight: 500;
-  box-shadow: 0 2px 5px rgba(121, 21, 21, 0.2);
-  transform: translateX(3px);
+  background-color: var(--color-primario-suave);
+  color: var(--color-primario);
+  font-weight: 700;
+  border-left-color: var(--color-primario) !important;
 }
 
 .list-group-item:not(.active):hover {
-  background-color: #f8f9fa;
-  border-left-color: #791515;
-  transform: translateX(3px);
+  background-color: var(--color-superficie-2);
+  color: var(--color-primario);
 }
 
 .list-group-item i {
   margin-right: 10px;
-  transition: transform 0.2s ease;
+  font-size: 1.1rem;
 }
 
-.list-group-item:hover i {
-  transform: translateX(2px);
+/* En móvil y tablet el menú es una fila de pestañas deslizable */
+@media (max-width: 991.98px) {
+  .col-lg-3 > .card > .card-header {
+    display: none;
+  }
+
+  .col-lg-3 > .card {
+    background: transparent;
+    border: none;
+    box-shadow: none !important;
+    overflow: visible;
+  }
+
+  .profile-menu {
+    flex-direction: row;
+    gap: var(--esp-2);
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding: 2px 2px var(--esp-1);
+    margin-inline: calc(-1 * var(--gutter));
+    padding-inline: var(--gutter);
+  }
+
+  .profile-menu::-webkit-scrollbar {
+    display: none;
+  }
+
+  .profile-menu .list-group-item {
+    flex: 0 0 auto;
+    width: auto;
+    min-height: var(--tactil);
+    padding: 0 var(--esp-4);
+    border: 1.5px solid var(--color-borde) !important;
+    border-radius: var(--radio-pill) !important;
+    background: var(--color-superficie);
+    scroll-snap-align: start;
+    white-space: nowrap;
+    font-size: var(--fs-sm);
+  }
+
+  .profile-menu .list-group-item.active {
+    background: var(--color-marca);
+    color: var(--color-sobre-marca);
+    border-color: var(--color-marca) !important;
+  }
+
+  .profile-menu .list-group-item + .list-group-item {
+    margin-top: 0;
+  }
 }
 
-/* Tarjetas para formularios */
+/* ---------- Tarjetas ---------- */
 .card {
-  border-radius: 10px;
-  transition: all 0.3s ease;
-  border: none;
+  border-radius: var(--radio-lg);
+  border: 1px solid var(--color-borde) !important;
   overflow: hidden;
 }
 
-.card:hover {
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08) !important;
-}
-
 .card-header {
-  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  background: var(--color-superficie) !important;
+  border-bottom: 1px solid var(--color-borde);
   padding: 1rem 1.5rem;
 }
 
+.card-header h5 {
+  font-size: var(--fs-base);
+  font-weight: 700;
+  color: var(--color-texto);
+}
+
 .card-body {
-  padding: 2rem !important;
+  padding: clamp(1.1rem, 0.9rem + 1vw, 2rem) !important;
 }
 
-/* Estilos para formularios */
-.form-control {
-  border-radius: 6px;
-  padding: 0.75rem 1rem;
-  transition: all 0.3s ease;
-  border: 1px solid #dee2e6;
-  font-size: 0.95rem;
-}
-
-.form-control:focus {
-  box-shadow: 0 0 0 0.15rem rgba(121, 21, 21, 0.25);
-  border-color: #791515;
-}
-
+/* ---------- Formularios ---------- */
 .form-label {
-  font-weight: 500;
-  color: #444;
-  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: var(--color-texto);
 }
 
-/* Botones personalizados */
-.btn-custom {
-  background-color: #791515;
-  color: white;
-  border: none;
-  padding: 0.6rem 1.5rem;
-  border-radius: 6px;
-  font-weight: 500;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 5px rgba(121, 21, 21, 0.2);
+.input-group-text {
+  background: var(--color-superficie-2) !important;
 }
 
-.btn-custom:hover {
-  background-color: #5d1010;
-  color: white;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(121, 21, 21, 0.25);
-}
-
-.btn-custom:active {
-  transform: translateY(0);
-  box-shadow: 0 2px 3px rgba(121, 21, 21, 0.2);
-}
-
-.btn-custom:disabled {
-  background-color: #b98383;
-  cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
-}
-
-/* Alertas estilizadas */
+/* ---------- Alertas ---------- */
 .alert {
-  border-radius: 6px;
+  border-radius: var(--radio);
   padding: 1rem;
   margin-bottom: 1.5rem;
-  border: none;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
 }
 
-.alert-success {
-  background-color: #e7f7ed;
-  color: #157a39;
-}
-
-.alert-danger {
-  background-color: #f7e7e7;
-  color: #7a1515;
-}
-
-/* Indicador de fuerza de contraseña */
+/* ---------- Fuerza de contraseña ---------- */
 .password-strength-bar {
   height: 6px;
   border-radius: 3px;
   margin-top: 8px;
-  transition: all 0.3s ease;
-  background-color: #e9ecef;
+  background-color: var(--color-arena);
 }
 
 .password-strength-bar .progress-bar {
   border-radius: 3px;
-  transition: all 0.3s ease;
+  transition: width var(--t-media) var(--ease), background-color var(--t-media) var(--ease);
 }
 
-.strength-very-weak {
-  background-color: #dc3545;
-  width: 20%;
-}
+.strength-very-weak { background-color: #dc3545; width: 20%; }
+.strength-weak { background-color: #e0a800; width: 40%; }
+.strength-medium { background-color: #fd7e14; width: 60%; }
+.strength-strong { background-color: #20c997; width: 80%; }
+.strength-very-strong { background-color: #198754; width: 100%; }
 
-.strength-weak {
-  background-color: #ffc107;
-  width: 40%;
-}
-
-.strength-medium {
-  background-color: #fd7e14;
-  width: 60%;
-}
-
-.strength-strong {
-  background-color: #20c997;
-  width: 80%;
-}
-
-.strength-very-strong {
-  background-color: #198754;
-  width: 100%;
-}
-
-/* Estadísticas de usuario */
+/* ---------- Estadísticas ---------- */
 .stat-icon {
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  background: var(--color-primario-suave) !important;
+  color: var(--color-primario);
 }
 
 .stat-icon i {
-  font-size: 1.25rem;
+  font-size: 1.2rem;
 }
 
-/* Timeline para historial de actividad */
+/* ---------- Actividad ---------- */
 .timeline {
   position: relative;
   padding: 0;
   list-style: none;
 }
 
-.timeline:before {
-  content: "";
+.timeline::before {
+  content: '';
   position: absolute;
   top: 0;
   bottom: 0;
   left: 7px;
   width: 2px;
-  background-color: #e9ecef;
+  background-color: var(--color-borde);
 }
 
 .timeline-item {
@@ -249,14 +246,15 @@
   position: absolute;
   left: 0;
   top: 5px;
-  width: 15px;
-  height: 15px;
+  width: 16px;
+  height: 16px;
   border-radius: 50%;
+  box-shadow: 0 0 0 3px var(--color-superficie);
 }
 
 .timeline-content {
   padding-bottom: 10px;
-  border-bottom: 1px solid #f5f5f5;
+  border-bottom: 1px solid var(--color-borde);
 }
 
 .timeline-item:last-child .timeline-content {
@@ -264,16 +262,64 @@
   padding-bottom: 0;
 }
 
-/* Estilos para modal */
+/* ---------- Modal de pedido ---------- */
 .modal {
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: var(--color-overlay);
+  -webkit-backdrop-filter: blur(3px);
+  backdrop-filter: blur(3px);
 }
 
 .modal-backdrop {
   z-index: 1040;
 }
 
-/* Estilos para sección de pedidos */
+.modal-content {
+  background: var(--color-superficie);
+  color: var(--color-texto);
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-lg);
+  overflow: hidden;
+}
+
+.modal-header {
+  background: var(--color-superficie-2) !important;
+  border-bottom-color: var(--color-borde);
+}
+
+.modal-footer {
+  border-top-color: var(--color-borde);
+}
+
+.modal.show {
+  display: block;
+  animation: fadeInModal 0.25s var(--ease);
+}
+
+.modal.show .modal-dialog {
+  animation: aparecer 0.3s var(--ease);
+}
+
+@keyframes fadeInModal {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@media (max-width: 575.98px) {
+  .modal-dialog {
+    margin: auto 0 0;
+    min-height: 100%;
+    display: flex;
+    align-items: flex-end;
+  }
+
+  .modal-content {
+    border-radius: var(--radio-lg) var(--radio-lg) 0 0;
+    max-height: 90dvh;
+    overflow-y: auto;
+  }
+}
+
+/* ---------- Pedidos ---------- */
 .empty-state {
   display: flex;
   justify-content: center;
@@ -283,75 +329,74 @@
 
 .empty-state i {
   font-size: 3rem;
-  color: #ccc;
+  color: var(--color-texto-suave);
+  opacity: 0.6;
 }
 
-/* Animaciones para el modal */
-.modal.show {
-  display: block;
-  animation: fadeInModal 0.3s ease-in-out;
-}
-
-@keyframes fadeInModal {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-/* Estilos específicos para historial de pedidos */
 .badge.bg-warning {
-  background-color: #ffc107 !important;
-  color: #000;
+  background-color: color-mix(in srgb, var(--color-aviso) 18%, transparent) !important;
+  color: var(--color-aviso) !important;
 }
 
 .badge.bg-info {
-  background-color: #0dcaf0 !important;
+  background-color: color-mix(in srgb, #0d8bd9 16%, transparent) !important;
+  color: #0b74b5 !important;
 }
 
 .badge.bg-success {
-  background-color: #198754 !important;
+  background-color: color-mix(in srgb, var(--color-exito) 16%, transparent) !important;
+  color: var(--color-exito) !important;
 }
 
 .badge.bg-danger {
-  background-color: #dc3545 !important;
+  background-color: color-mix(in srgb, var(--color-error) 14%, transparent) !important;
+  color: var(--color-error) !important;
 }
 
-/* Animaciones */
+[data-bs-theme='dark'] .badge.bg-info {
+  color: #7cc4f2 !important;
+}
+
+/* ---------- Animaciones ---------- */
 .animated-section {
-  animation: fadeIn 0.4s ease-in-out;
+  animation: aparecer 0.35s var(--ease);
 }
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* Mejoras responsive */
+/* ---------- Responsive ---------- */
 @media (max-width: 767px) {
   .avatar-circle {
-    width: 50px;
-    height: 50px;
+    width: 56px;
+    height: 56px;
     font-size: 1.4rem;
   }
-  
-  .profile-title {
-    font-size: 1.2rem;
+
+  .profile-header .d-flex.align-items-center {
+    align-items: flex-start !important;
   }
-  
-  .card-body {
-    padding: 1.25rem !important;
+
+  .profile-avatar {
+    margin-right: var(--esp-3) !important;
   }
-  
+
   .row.g-4 {
     row-gap: 1rem !important;
   }
+}
+
+/* Ajustes móviles: la fila de pestañas va sin marco y las cabeceras pueden partirse */
+@media (max-width: 991.98px) {
+  .col-lg-3 > .card {
+    border: none !important;
+  }
+}
+
+.card-header.d-flex {
+  flex-wrap: wrap;
+  gap: var(--esp-2);
+}
+
+.card-header .badge {
+  white-space: normal;
+  text-align: left;
+  line-height: 1.4;
 }

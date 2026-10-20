@@ -1,236 +1,181 @@
-<div class="container mt-5 mb-5">
-  <div class="row">
-    <div class="col-lg-12 text-center mb-4">
-      <h1 class="text-primario fw-bold">
-        <i class="material-icons align-middle">mail_outline</i> Ponte en contacto con nosotros
-      </h1>
-      <p class="text-muted lead">Estamos aquí para responder a todas tus preguntas y escuchar tus sugerencias</p>
-      <hr class="my-4">
-    </div>
+<header class="cabecera-pagina">
+  <div class="container">
+    <p class="cabecera-pagina-etiqueta">Contacto</p>
+    <h1 class="cabecera-pagina-titulo">Ponte en contacto con nosotros</h1>
+    <p class="cabecera-pagina-texto">Estamos aquí para responder a todas tus preguntas y escuchar tus sugerencias</p>
   </div>
-  
-  <div class="row g-4">
-    <!-- Columna izquierda: Información de contacto y formulario -->
-    <div class="col-lg-6">
-      <div class="card border-0 shadow-sm rounded-3 h-100">
-        <div class="card-header bg-primario text-white py-3">
-          <h3 class="card-title mb-0"><i class="material-icons align-middle">chat</i> Escríbenos</h3>
-        </div>
-        <div class="card-body p-4">
-          <!-- Información de contacto -->
-          <div class="contact-info mb-4">
-            <div class="d-flex align-items-center mb-3">
-              <div class="contact-icon bg-secundario rounded-circle me-3 p-3 text-center">
-                <i class="material-icons text-primario">phone</i>
-              </div>
-              <div>
-                <h5 class="fw-semibold mb-1">Llámanos</h5>
-                <a href="tel:+34645131103" class="text-decoration-none">+34 645 13 11 03</a>
-              </div>
-            </div>
-            
-            <div class="d-flex align-items-center mb-3">
-              <div class="contact-icon bg-secundario rounded-circle me-3 p-3 text-center">
-                <i class="material-icons text-primario">location_on</i>
-              </div>
-              <div>
-                <h5 class="fw-semibold mb-1">Visítanos</h5>
-                <p class="mb-0">Av. Cervantes, 5, Nº 5 BAJO, 14850 Baena, Córdoba</p>
-              </div>
-            </div>
-            
-            <div class="d-flex align-items-center mb-3">
-              <div class="contact-icon bg-secundario rounded-circle me-3 p-3 text-center">
-                <i class="material-icons text-primario">camera_alt</i>
-              </div>
-              <div>
-                <h5 class="fw-semibold mb-1">Síguenos</h5>
-                <a href="https://www.instagram.com/mundonomadaa" target="_blank" class="text-decoration-none">&#64;mundonomadaa</a>
-              </div>
-            </div>
-            
-            <div class="d-flex align-items-center mb-4">
-              <div class="contact-icon bg-secundario rounded-circle me-3 p-3 text-center">
-                <i class="material-icons text-primario">access_time</i>
-              </div>
-              <div>
-                <h5 class="fw-semibold mb-1">Horario</h5>
-                <p class="mb-0">Lunes a Viernes: 10:00 - 14:00 y 17:00 - 20:00<br>
-                Sábados: 10:00 - 14:00</p>
-              </div>
-            </div>
-          </div>
-          
-          <hr class="my-4">
-          
-          <!-- Mensaje de éxito -->
-          <div *ngIf="mensajeEnviado" class="alert alert-success alert-dismissible fade show" role="alert">
-            <div class="d-flex align-items-center">
-              <i class="material-icons align-middle me-2">check_circle</i>
-              <span>Tu mensaje ha sido enviado correctamente. Nos pondremos en contacto contigo lo antes posible.</span>
-            </div>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close" (click)="mensajeEnviado = false"></button>
-          </div>
-          
-          <!-- Mensaje de error -->
-          <div *ngIf="error" class="alert alert-danger alert-dismissible fade show" role="alert">
-            <div class="d-flex align-items-center">
-              <i class="material-icons align-middle me-2">error</i>
-              <span *ngIf="errorMessage">{{ errorMessage }}</span>
-              <span *ngIf="!errorMessage">Ha ocurrido un error al enviar el mensaje. Por favor, inténtalo de nuevo más tarde.</span>
-            </div>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close" (click)="error = false"></button>
-          </div>
-          
-          <!-- Formulario de contacto -->
-          <form [formGroup]="contactForm" (ngSubmit)="enviarMensaje()" id="contact-form">
-            <!-- Nombre -->
-            <div class="mb-3">
-              <label for="nombre" class="form-label fw-semibold">Nombre</label>
-              <div class="input-group">
-                <span class="input-group-text bg-secundario border-0"><i class="material-icons text-primario">person</i></span>
-                <input 
-                  type="text" 
-                  class="form-control border-start-0" 
-                  id="nombre" 
-                  name="from_name"
-                  formControlName="nombre" 
-                  placeholder="Tu nombre" 
-                  [ngClass]="{'is-invalid': getCampoInvalido('nombre')}" 
-                />
-              </div>
-              <div *ngIf="getCampoInvalido('nombre')" class="text-danger small mt-1">
-                <div *ngIf="contactForm.get('nombre')?.errors?.['required']">
-                  <i class="material-icons align-middle fs-6 me-1">info</i>El nombre es requerido.
-                </div>
-                <div *ngIf="contactForm.get('nombre')?.errors?.['minlength']">
-                  <i class="material-icons align-middle fs-6 me-1">info</i>El nombre debe tener al menos 2 caracteres.
-                </div>
-              </div>
-            </div>
-    
-            <!-- Correo Electrónico -->
-            <div class="mb-3">
-              <label for="email" class="form-label fw-semibold">Correo Electrónico</label>
-              <div class="input-group">
-                <span class="input-group-text bg-secundario border-0"><i class="material-icons text-primario">email</i></span>
-                <input 
-                  type="email" 
-                  class="form-control border-start-0" 
-                  id="email" 
-                  name="reply_to"
-                  formControlName="email" 
-                  placeholder="nombre@ejemplo.com" 
-                  [ngClass]="{'is-invalid': getCampoInvalido('email')}" 
-                />
-              </div>
-              <div *ngIf="getCampoInvalido('email')" class="text-danger small mt-1">
-                <div *ngIf="contactForm.get('email')?.errors?.['required']">
-                  <i class="material-icons align-middle fs-6 me-1">info</i>El correo electrónico es requerido.
-                </div>
-                <div *ngIf="contactForm.get('email')?.errors?.['email']">
-                  <i class="material-icons align-middle fs-6 me-1">info</i>Por favor, ingresa un correo electrónico válido.
-                </div>
-              </div>
-            </div>
-    
-            <!-- Mensaje -->
-            <div class="mb-4">
-              <label for="mensaje" class="form-label fw-semibold">Mensaje</label>
-              <div class="input-group">
-                <span class="input-group-text bg-secundario border-0"><i class="material-icons text-primario">chat_bubble</i></span>
-                <textarea 
-                  class="form-control border-start-0" 
-                  id="mensaje" 
-                  name="message"
-                  formControlName="mensaje" 
-                  placeholder="Escribe tu mensaje" 
-                  style="height: 150px; resize: none;"
-                  [ngClass]="{'is-invalid': getCampoInvalido('mensaje')}"
-                ></textarea>
-              </div>
-              <div *ngIf="getCampoInvalido('mensaje')" class="text-danger small mt-1">
-                <div *ngIf="contactForm.get('mensaje')?.errors?.['required']">
-                  <i class="material-icons align-middle fs-6 me-1">info</i>El mensaje es requerido.
-                </div>
-                <div *ngIf="contactForm.get('mensaje')?.errors?.['minlength']">
-                  <i class="material-icons align-middle fs-6 me-1">info</i>El mensaje debe tener al menos 10 caracteres.
-                </div>
-              </div>
-            </div>
-    
-            <button 
-              type="submit" 
-              class="btn btn-custom w-100 py-3 fs-5" 
-              [disabled]="enviando"
-            >
-              <span *ngIf="!enviando">
-                <i class="material-icons align-middle">send</i> Enviar Mensaje
-              </span>
-              <span *ngIf="enviando">
-                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                Enviando...
-              </span>
-            </button>
-          </form>
-        </div>
-      </div>
+</header>
+
+<div class="container contacto">
+  <!-- Vías de contacto -->
+  <div class="vias">
+    <a class="via via-whatsapp" href="https://wa.me/34651881011?text=Hola%20Mundo%20N%C3%B3mada%2C%20tengo%20una%20consulta" target="_blank" rel="noopener">
+      <span class="via-icono"><i class="bi bi-whatsapp" aria-hidden="true"></i></span>
+      <span class="via-texto">
+        <strong>WhatsApp</strong>
+        <span>651 881 011 · Pedidos a toda España</span>
+      </span>
+    </a>
+
+    <a class="via" href="tel:+34645131103">
+      <span class="via-icono"><i class="material-icons" aria-hidden="true">phone</i></span>
+      <span class="via-texto">
+        <strong>Llámanos</strong>
+        <span>+34 645 13 11 03</span>
+      </span>
+    </a>
+
+    <div class="via">
+      <span class="via-icono"><i class="material-icons" aria-hidden="true">location_on</i></span>
+      <span class="via-texto">
+        <strong>Visítanos</strong>
+        <span>Av. Cervantes, 5, Nº 5 BAJO, 14850 Baena, Córdoba</span>
+      </span>
     </div>
 
-    <!-- Columna derecha: Mapa y tarjeta de información -->
-    <div class="col-lg-6">
-      <div class="card border-0 shadow-sm rounded-3 mb-4">
-        <div class="card-header bg-primario text-white py-3">
-          <h3 class="card-title mb-0"><i class="material-icons align-middle">map</i> Nuestra Ubicación</h3>
-        </div>
-        <div class="card-body p-0">
-          <div class="ratio ratio-1x1">
-            <iframe
-              src="https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d1222.1639907177769!2d-4.321207854788916!3d37.6176222012303!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0xd6da147624035cb%3A0x8e1d04cbaafeb11a!2sMundo%20Nomada!5e1!3m2!1ses!2ses!4v1740398554464!5m2!1ses!2ses"
-              style="border:0;" allowfullscreen="" loading="lazy"
-              referrerpolicy="no-referrer-when-downgrade"></iframe>
-          </div>
-        </div>
+    <a class="via" href="https://www.instagram.com/mundonomadaa" target="_blank" rel="noopener">
+      <span class="via-icono"><i class="material-icons" aria-hidden="true">camera_alt</i></span>
+      <span class="via-texto">
+        <strong>Síguenos</strong>
+        <span>&#64;mundonomadaa</span>
+      </span>
+    </a>
+
+    <div class="via">
+      <span class="via-icono"><i class="material-icons" aria-hidden="true">access_time</i></span>
+      <span class="via-texto">
+        <strong>Horario</strong>
+        <span>Lunes a Viernes: 10:00 - 14:00 y 17:00 - 20:00<br>Sábados: 10:00 - 14:00</span>
+      </span>
+    </div>
+  </div>
+
+  <div class="contacto-grid">
+    <!-- Formulario -->
+    <section class="panel-superficie" aria-labelledby="titulo-escribenos">
+      <h2 id="titulo-escribenos" class="panel-titulo"><i class="material-icons" aria-hidden="true">chat</i> Escríbenos</h2>
+
+      <!-- Mensaje de éxito -->
+      <div *ngIf="mensajeEnviado" class="alert alert-success d-flex align-items-start gap-2" role="alert">
+        <i class="material-icons" aria-hidden="true">check_circle</i>
+        <span class="flex-grow-1">Tu mensaje ha sido enviado correctamente. Nos pondremos en contacto contigo lo antes posible.</span>
+        <button type="button" class="btn-close" aria-label="Cerrar" (click)="mensajeEnviado = false"></button>
       </div>
-      
-      <!-- Tarjeta adicional con información o testimonio -->
-      <div class="card border-0 shadow-sm rounded-3 bg-secundario">
-        <div class="card-body p-4">
-          <div class="d-flex justify-content-between align-items-center mb-3">
-            <h4 class="text-primario mb-0"><i class="material-icons align-middle">info</i> ¿Por qué contactarnos?</h4>
+
+      <!-- Mensaje de error -->
+      <div *ngIf="error" class="alert alert-danger d-flex align-items-start gap-2" role="alert">
+        <i class="material-icons" aria-hidden="true">error</i>
+        <span class="flex-grow-1">
+          <span *ngIf="errorMessage">{{ errorMessage }}</span>
+          <span *ngIf="!errorMessage">Ha ocurrido un error al enviar el mensaje. Por favor, inténtalo de nuevo más tarde.</span>
+        </span>
+        <button type="button" class="btn-close" aria-label="Cerrar" (click)="error = false"></button>
+      </div>
+
+      <!-- Formulario de contacto -->
+      <form [formGroup]="contactForm" (ngSubmit)="enviarMensaje()" id="contact-form" class="formulario-contacto">
+        <div class="campo-icono">
+          <label for="nombre" class="form-label">Nombre</label>
+          <div class="campo-icono-control">
+            <i class="bi bi-person" aria-hidden="true"></i>
+            <input
+              type="text"
+              class="form-control"
+              id="nombre"
+              name="from_name"
+              formControlName="nombre"
+              placeholder="Tu nombre"
+              autocomplete="name"
+              [ngClass]="{'is-invalid': getCampoInvalido('nombre')}"
+            />
           </div>
-          <p>En Mundo Nómada estamos comprometidos con ofrecerte la mejor experiencia. Puedes contactarnos para:</p>
-          <ul class="list-group list-group-flush mb-3">
-            <li class="list-group-item bg-transparent border-0 d-flex align-items-center">
-              <i class="material-icons text-primario me-2">check_circle</i>
-              Consultas sobre nuestros productos
-            </li>
-            <li class="list-group-item bg-transparent border-0 d-flex align-items-center">
-              <i class="material-icons text-primario me-2">check_circle</i>
-              Información sobre disponibilidad y envíos
-            </li>
-            <li class="list-group-item bg-transparent border-0 d-flex align-items-center">
-              <i class="material-icons text-primario me-2">check_circle</i>
-              Colaboraciones y oportunidades de negocio
-            </li>
-            <li class="list-group-item bg-transparent border-0 d-flex align-items-center">
-              <i class="material-icons text-primario me-2">check_circle</i>
-              Atención personalizada para proyectos especiales
-            </li>
-          </ul>
-          <div class="alert alert-light border mb-0">
-            <div class="d-flex">
-              <div class="me-3">
-                <i class="material-icons text-warning fs-3">lightbulb</i>
-              </div>
-              <div>
-                <h5 class="fw-bold">¿Sabías que...?</h5>
-                <p class="mb-0">También puedes visitarnos en nuestra tienda física para disfrutar de una experiencia de compra personalizada y conocer todas nuestras colecciones exclusivas.</p>
-              </div>
-            </div>
+          <div *ngIf="getCampoInvalido('nombre')" class="error-campo">
+            <div *ngIf="contactForm.get('nombre')?.errors?.['required']">El nombre es requerido.</div>
+            <div *ngIf="contactForm.get('nombre')?.errors?.['minlength']">El nombre debe tener al menos 2 caracteres.</div>
           </div>
         </div>
-      </div>
+
+        <div class="campo-icono">
+          <label for="email" class="form-label">Correo Electrónico</label>
+          <div class="campo-icono-control">
+            <i class="bi bi-envelope" aria-hidden="true"></i>
+            <input
+              type="email"
+              class="form-control"
+              id="email"
+              name="reply_to"
+              formControlName="email"
+              placeholder="nombre@ejemplo.com"
+              autocomplete="email"
+              inputmode="email"
+              [ngClass]="{'is-invalid': getCampoInvalido('email')}"
+            />
+          </div>
+          <div *ngIf="getCampoInvalido('email')" class="error-campo">
+            <div *ngIf="contactForm.get('email')?.errors?.['required']">El correo electrónico es requerido.</div>
+            <div *ngIf="contactForm.get('email')?.errors?.['email']">Por favor, ingresa un correo electrónico válido.</div>
+          </div>
+        </div>
+
+        <div>
+          <label for="mensaje" class="form-label">Mensaje</label>
+          <textarea
+            class="form-control"
+            id="mensaje"
+            name="message"
+            formControlName="mensaje"
+            placeholder="Escribe tu mensaje"
+            rows="6"
+            [ngClass]="{'is-invalid': getCampoInvalido('mensaje')}"
+          ></textarea>
+          <div *ngIf="getCampoInvalido('mensaje')" class="error-campo">
+            <div *ngIf="contactForm.get('mensaje')?.errors?.['required']">El mensaje es requerido.</div>
+            <div *ngIf="contactForm.get('mensaje')?.errors?.['minlength']">El mensaje debe tener al menos 10 caracteres.</div>
+          </div>
+        </div>
+
+        <button type="submit" class="btn-custom btn-lg w-100" [disabled]="enviando">
+          <span *ngIf="!enviando" class="d-inline-flex align-items-center gap-2">
+            <i class="material-icons" aria-hidden="true">send</i> Enviar Mensaje
+          </span>
+          <span *ngIf="enviando" class="d-inline-flex align-items-center gap-2">
+            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+            Enviando...
+          </span>
+        </button>
+      </form>
+    </section>
+
+    <!-- Mapa e información -->
+    <div class="columna-derecha">
+      <section class="panel-superficie mapa" aria-labelledby="titulo-ubicacion">
+        <h2 id="titulo-ubicacion" class="panel-titulo"><i class="material-icons" aria-hidden="true">map</i> Nuestra Ubicación</h2>
+        <div class="mapa-marco">
+          <iframe
+            title="Mapa de la tienda Mundo Nómada en Baena"
+            src="https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d1222.1639907177769!2d-4.321207854788916!3d37.6176222012303!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0xd6da147624035cb%3A0x8e1d04cbaafeb11a!2sMundo%20Nomada!5e1!3m2!1ses!2ses!4v1740398554464!5m2!1ses!2ses"
+            style="border:0;" allowfullscreen="" loading="lazy"
+            referrerpolicy="no-referrer-when-downgrade"></iframe>
+        </div>
+      </section>
+
+      <section class="panel-superficie" aria-labelledby="titulo-por-que">
+        <h2 id="titulo-por-que" class="panel-titulo"><i class="material-icons" aria-hidden="true">info</i> ¿Por qué contactarnos?</h2>
+        <p>En Mundo Nómada estamos comprometidos con ofrecerte la mejor experiencia. Puedes contactarnos para:</p>
+        <ul class="motivos">
+          <li><i class="material-icons" aria-hidden="true">check_circle</i>Consultas sobre nuestros productos</li>
+          <li><i class="material-icons" aria-hidden="true">check_circle</i>Información sobre disponibilidad y envíos</li>
+          <li><i class="material-icons" aria-hidden="true">check_circle</i>Colaboraciones y oportunidades de negocio</li>
+          <li><i class="material-icons" aria-hidden="true">check_circle</i>Atención personalizada para proyectos especiales</li>
+        </ul>
+        <div class="sabias">
+          <i class="material-icons" aria-hidden="true">lightbulb</i>
+          <div>
+            <h5>¿Sabías que...?</h5>
+            <p>También puedes visitarnos en nuestra tienda física para disfrutar de una experiencia de compra personalizada y conocer todas nuestras colecciones exclusivas.</p>
+          </div>
+        </div>
+      </section>
     </div>
   </div>
 </div>

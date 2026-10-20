@@ -1,74 +1,65 @@
-<div class="container mt-5">
-  <h1 class="card-title text-center mb-4" style="color: var(--color-primario);">Admin Panel</h1>
-
-  <!-- SECCION DE PEDIDOS -->
-  <div class="card p-4 shadow-sm" style="background-color: var(--color-secundario);">
-    <h2 class="card-title text-center mb-4" style="color: var(--color-primario);">
-      Pedidos
-    </h2>
-    <div class="d-flex justify-content-around flex-wrap">
-      <button class="btn btn-custom m-2" [routerLink]="['/adminPedidos']">
-        Ver y gestionar pedidos
-      </button>
-    </div>
+<header class="cabecera-pagina">
+  <div class="container">
+    <p class="cabecera-pagina-etiqueta">Administración</p>
+    <h1 class="cabecera-pagina-titulo">Admin Panel</h1>
   </div>
+</header>
 
-  <br><br>
+<div class="container admin">
+  <!-- SECCION DE PEDIDOS -->
+  <section class="admin-seccion">
+    <h2 class="admin-seccion-titulo"><i class="bi bi-receipt" aria-hidden="true"></i>Pedidos</h2>
+    <div class="admin-acciones">
+      <a class="admin-tarjeta destacada" [routerLink]="['/adminPedidos']">
+        <i class="bi bi-box-seam" aria-hidden="true"></i>
+        <span>Ver y gestionar pedidos</span>
+        <i class="bi bi-arrow-right flecha" aria-hidden="true"></i>
+      </a>
+    </div>
+  </section>
 
   <!-- SECCION DE PRODUCTOS -->
-  <div class="card p-4 shadow-sm" style="background-color: var(--color-secundario);">
-    <h2 class="card-title text-center mb-4" style="color: var(--color-primario);">
-      Productos
-    </h2>
-    <div class="d-flex justify-content-around flex-wrap">
-      <button class="btn btn-custom m-2" [routerLink]="['/addProduct']">
-        Agregar producto
-      </button>
-      <button class="btn btn-custom m-2" [routerLink]="['/deleteProduct']">
-        Eliminar producto
-      </button>
-      <button class="btn btn-custom m-2" [routerLink]="['/modificarProduct']">
-        Modificar producto
-      </button>
-
-      <button class="btn btn-custom m-2" [routerLink]="['/mostrarProductos']">
-        Mostrar todos
-      </button>
+  <section class="admin-seccion">
+    <h2 class="admin-seccion-titulo"><i class="bi bi-bag" aria-hidden="true"></i>Productos</h2>
+    <div class="admin-acciones">
+      <a class="admin-tarjeta" [routerLink]="['/addProduct']">
+        <i class="bi bi-plus-circle" aria-hidden="true"></i><span>Agregar producto</span>
+      </a>
+      <a class="admin-tarjeta" [routerLink]="['/deleteProduct']">
+        <i class="bi bi-trash3" aria-hidden="true"></i><span>Eliminar producto</span>
+      </a>
+      <a class="admin-tarjeta" [routerLink]="['/modificarProduct']">
+        <i class="bi bi-pencil-square" aria-hidden="true"></i><span>Modificar producto</span>
+      </a>
+      <a class="admin-tarjeta" [routerLink]="['/mostrarProductos']">
+        <i class="bi bi-grid" aria-hidden="true"></i><span>Mostrar todos</span>
+      </a>
     </div>
-  </div>
-
-  <br><br>
+  </section>
 
   <!-- SECCION DE CATEGORIAS -->
-  <div class="card p-4 shadow-sm" style="background-color: var(--color-secundario);">
-    <h2 class="card-title text-center mb-4" style="color: var(--color-primario);">
-      Categorias
-    </h2>
-    <div class="d-flex justify-content-around flex-wrap">
-      <button class="btn btn-custom m-2" [routerLink]="['/addCategoria']">
-        Agregar categoría
-      </button>
-      <button class="btn btn-custom m-2" [routerLink]="['/deleteCategoria']">
-        Eliminar categoria
-      </button>
+  <section class="admin-seccion">
+    <h2 class="admin-seccion-titulo"><i class="bi bi-tags" aria-hidden="true"></i>Categorias</h2>
+    <div class="admin-acciones">
+      <a class="admin-tarjeta" [routerLink]="['/addCategoria']">
+        <i class="bi bi-plus-circle" aria-hidden="true"></i><span>Agregar categoría</span>
+      </a>
+      <a class="admin-tarjeta" [routerLink]="['/deleteCategoria']">
+        <i class="bi bi-trash3" aria-hidden="true"></i><span>Eliminar categoria</span>
+      </a>
     </div>
-  </div>
-
-  <br><br>
+  </section>
 
   <!-- SECCION DE USUARIOS -->
-  <div class="card p-4 shadow-sm" style="background-color: var(--color-secundario);">
-    <h2 class="card-title text-center mb-4" style="color: var(--color-primario);">
-      Usuarios
-    </h2>
-    <div class="d-flex justify-content-around flex-wrap">
-      <button class="btn btn-custom m-2" [routerLink]="['/lista-usuarios']">
-        Listar usuarios
-      </button>
-      <button class="btn btn-custom m-2" [routerLink]="['/crear-usuario']">
-        Crear usuario
-      </button>
+  <section class="admin-seccion">
+    <h2 class="admin-seccion-titulo"><i class="bi bi-people" aria-hidden="true"></i>Usuarios</h2>
+    <div class="admin-acciones">
+      <a class="admin-tarjeta" [routerLink]="['/lista-usuarios']">
+        <i class="bi bi-list-ul" aria-hidden="true"></i><span>Listar usuarios</span>
+      </a>
+      <a class="admin-tarjeta" [routerLink]="['/crear-usuario']">
+        <i class="bi bi-person-plus" aria-hidden="true"></i><span>Crear usuario</span>
+      </a>
     </div>
-  </div>
-
+  </section>
 </div>
