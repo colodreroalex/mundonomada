@@ -12,13 +12,17 @@ require_once __DIR__ . '/stripe.php';
 $userId = usuarioSesionCarrito(['POST']);
 $input = entradaJsonCarrito();
 
+// Cada intento reserva stock durante 31 minutos: se limita para que nadie pueda
+// dejar productos "agotados" abriendo pagos sin terminarlos
+limitarAccion('pago|' . $userId, 10, 900, 900);
+
 $campos = [
     'nombre' => 100, 'apellidos' => 100, 'direccion' => 255, 'codigoPostal' => 10,
     'ciudad' => 100, 'provincia' => 100, 'telefono' => 30, 'email' => 254,
 ];
 $envio = [];
 foreach ($campos as $campo => $maximo) {
-    $valor = trim((string) ($input[$campo] ?? ''));
+    $valor = textoValido($input[$campo] ?? null, $maximo) ?? '';
     if ($valor === '' || mb_strlen($valor) > $maximo) {
         responderJson(['resultado' => 'ERROR', 'mensaje' => 'Revisa los datos de envío.'], 400);
     }
