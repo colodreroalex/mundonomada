@@ -4,11 +4,12 @@
 
 ## Instalación local
 
-1. Arranca MySQL o MariaDB desde XAMPP.
-2. Crea una base de datos limpia ejecutando `schema.sql` con un usuario administrador local.
-3. Crea el usuario de aplicación a partir de `users/app-user.sql.example`, sustituyendo la contraseña por una larga y única.
-4. Copia `../backend/Mundo-nomada-backEnd/config/database.local.example.php` a `database.local.php` en esa misma carpeta y coloca exactamente las mismas credenciales.
-5. Importa solo datos de prueba anónimos si los necesitas. No importes el antiguo volcado en un entorno accesible desde Internet.
+El backend ya solo usa PostgreSQL (la conexión MySQL antigua se eliminó). `schema.sql` y
+`users/` se conservan como referencia histórica del esquema MySQL.
+
+Para un entorno local se crea un PostgreSQL vacío aplicando, en orden, las migraciones de
+`supabase/migrations/` y después `seeds/demo_catalog.sql`. No importes el antiguo volcado en
+un entorno accesible desde Internet.
 
 ## Producción
 
