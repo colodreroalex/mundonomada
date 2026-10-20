@@ -11,7 +11,8 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
 
 try {
     $consulta = retornarConexionPostgres()->query(
-        'select id as "CategoriaID", nombre, descripcion from public.categorias order by nombre'
+        'select id as "CategoriaID", nombre as "Nombre", descripcion as "Descripcion"
+           from public.categorias order by nombre'
     );
     responderJson(['result' => 'OK', 'categorias' => $consulta->fetchAll()]);
 } catch (PDOException $error) {
