@@ -1,52 +1,78 @@
 <footer class="footer">
+    <!-- Franja de contacto directo -->
+    <div class="footer-contacto">
+        <div class="footer-container footer-contacto-interior">
+            <div>
+                <p class="footer-contacto-titulo">¿Dudas con una talla o un pedido?</p>
+                <p class="footer-contacto-texto">Escríbenos por WhatsApp. Pedidos a toda España.</p>
+            </div>
+            <a class="boton-whatsapp" href="https://wa.me/34651881011?text=Hola%20Mundo%20N%C3%B3mada%2C%20tengo%20una%20consulta" target="_blank" rel="noopener">
+                <i class="bi bi-whatsapp" aria-hidden="true"></i>
+                <span>651 881 011</span>
+            </a>
+        </div>
+    </div>
+
     <div class="footer-container">
         <div class="footer-content">
-            <!-- Primera columna: SOBRE NOSOTROS -->
-            <div class="footer-col">
-                <h5>SOBRE NOSOTROS</h5>
+            <!-- Marca -->
+            <div class="footer-marca">
+                <a routerLink="/" class="footer-logo" aria-label="Mundo Nómada, ir al inicio"></a>
+                <p>Moda y complementos con alma nómada, desde Baena para toda España.</p>
+                <ul class="social-links" aria-label="Redes sociales">
+                    <li><a href="https://www.instagram.com/mundonomadaa/?hl=es" target="_blank" rel="noopener" aria-label="Instagram"><i class="bi bi-instagram"></i></a></li>
+                    <li><a href="https://www.facebook.com/p/mundo-nomada-baena-61553214752681/" target="_blank" rel="noopener" aria-label="Facebook"><i class="bi bi-facebook"></i></a></li>
+                    <li><a href="https://www.tiktok.com/@marisagarcavalver" target="_blank" rel="noopener" aria-label="TikTok"><i class="bi bi-tiktok"></i></a></li>
+                    <li><a href="https://wa.me/34651881011" target="_blank" rel="noopener" aria-label="WhatsApp"><i class="bi bi-whatsapp"></i></a></li>
+                </ul>
+            </div>
+
+            <!-- SOBRE NOSOTROS -->
+            <details class="footer-col" [open]="escritorio">
+                <summary><h5>Sobre nosotros</h5><i class="bi bi-plus-lg" aria-hidden="true"></i></summary>
                 <ul>
                     <li><a [routerLink]="['/conocenos']">Conócenos</a></li>
                     <li><a [routerLink]="['/nuestras-tiendas']">Nuestras tiendas</a></li>
                     <li><a [routerLink]="['/trabaja-con-nosotros']">Trabaja con nosotros</a></li>
                     <li><a [routerLink]="['/contacto']">Contacto</a></li>
                 </ul>
-            </div>
+            </details>
 
-            <!-- Segunda columna: AYUDA -->
-            <div class="footer-col">
-                <h5>AYUDA</h5>
+            <!-- AYUDA -->
+            <details class="footer-col" [open]="escritorio">
+                <summary><h5>Ayuda</h5><i class="bi bi-plus-lg" aria-hidden="true"></i></summary>
                 <ul>
                     <li><a [routerLink]="['/preguntas-frecuentes']">Preguntas frecuentes</a></li>
                     <li><a [routerLink]="['/condiciones-compra']">Condiciones de compra</a></li>
                     <li><a [routerLink]="['/politica-devolucion']">Política de devolución</a></li>
                 </ul>
-            </div>
+            </details>
 
-            <!-- Tercera columna: SÍGUENOS -->
-            <div class="footer-col">
-                <h5>SÍGUENOS</h5>
-                <ul class="social-links">
-                    <li><a href="https://www.facebook.com/p/mundo-nomada-baena-61553214752681/"><i class="bi bi-facebook"></i> Facebook</a></li>
-                    <li><a href="https://www.instagram.com/mundonomadaa/?hl=es"><i class="bi bi-instagram"></i> Instagram</a></li>
-                    <li><a href="https://www.tiktok.com/@marisagarcavalver"><i class="bi bi-tiktok"></i> TikTok</a></li>
+            <!-- SÍGUENOS -->
+            <details class="footer-col" [open]="escritorio">
+                <summary><h5>Síguenos</h5><i class="bi bi-plus-lg" aria-hidden="true"></i></summary>
+                <ul class="social-list">
+                    <li><a href="https://www.facebook.com/p/mundo-nomada-baena-61553214752681/" target="_blank" rel="noopener"><i class="bi bi-facebook"></i> Facebook</a></li>
+                    <li><a href="https://www.instagram.com/mundonomadaa/?hl=es" target="_blank" rel="noopener"><i class="bi bi-instagram"></i> Instagram</a></li>
+                    <li><a href="https://www.tiktok.com/@marisagarcavalver" target="_blank" rel="noopener"><i class="bi bi-tiktok"></i> TikTok</a></li>
+                    <li><a href="https://wa.me/34651881011" target="_blank" rel="noopener"><i class="bi bi-whatsapp"></i> WhatsApp</a></li>
                 </ul>
-            </div>
-
-            <!-- Cuarta columna: Enlaces legales -->
-            <div class="footer-col legal-links">
-                <ul>
-                    <li><a [routerLink]="['/aviso-legal']">Aviso Legal</a></li>
-                    <li><a [routerLink]="['/politica-privacidad']">Política de Privacidad</a></li>
-                    <li><a [routerLink]="['/terminos-servicio']">Términos de servicio</a></li>
-                    <li><a [routerLink]="['/politica-cookies']">Política de Cookies</a></li>
-                    <li><a [routerLink]="['/consentimiento-cookies']">Consentimiento de Cookies</a></li>
-                </ul>
-            </div>
+            </details>
         </div>
 
-        <!-- Copyright -->
-        <div class="copyright">
-            <p><strong> 2025 Mundo Nomada, Inc. Todos los derechos reservados.</strong></p>
+        <!-- Enlaces legales y copyright -->
+        <div class="footer-legal">
+            <ul class="legal-links">
+                <li><a [routerLink]="['/aviso-legal']">Aviso Legal</a></li>
+                <li><a [routerLink]="['/politica-privacidad']">Política de Privacidad</a></li>
+                <li><a [routerLink]="['/terminos-servicio']">Términos de servicio</a></li>
+                <li><a [routerLink]="['/politica-cookies']">Política de Cookies</a></li>
+                <li><a [routerLink]="['/consentimiento-cookies']">Consentimiento de Cookies</a></li>
+            </ul>
+            <div class="copyright">
+                <p>© {{ anio }} Mundo Nomada, Inc. Todos los derechos reservados.</p>
+                <p class="pagos"><i class="bi bi-shield-lock" aria-hidden="true"></i> Pago seguro con Stripe</p>
+            </div>
         </div>
     </div>
 </footer>
