@@ -8,81 +8,190 @@ No compartas en el chat contraseñas, claves, tokens, datos bancarios ni documen
 
 ## Estado actual (20 de octubre de 2026)
 
-- Base de datos Supabase en Europa, con tablas y protecciones aplicadas.
-- Web y API publicadas como demostración en Render.
-- El pago con Stripe está programado: el servidor calcula el importe, reserva el stock y solo marca un pedido como pagado cuando Stripe lo confirma.
-- La administración tiene una pantalla **Pedidos** para ver qué hay que enviar.
+- Web publicada en Render (modo demostración): https://mundo-nomada-test.onrender.com
+- Base de datos Supabase en Europa con la actualización de pagos aplicada.
+- Pago con Stripe **funcionando en modo de prueba**: compra MN-2 pagada con la tarjeta 4242, confirmada por el webhook y con el stock descontado.
+- Cuenta de administración de la tienda creada. Admin → **Pedidos** muestra lo que hay que enviar.
 
-## Pasos para abrir la tienda
+## Lista de pendientes
 
-### Paso 1. Aplicar la actualización de la base de datos
+- [x] Paso 1. Actualización de la base de datos
+- [x] Paso 2. Cuenta de Stripe en modo de prueba y `STRIPE_SECRET_KEY`
+- [x] Paso 3. Webhook de Stripe y `STRIPE_WEBHOOK_SECRET`
+- [x] Paso 4. Compra de prueba
+- [x] Paso 5. Cuenta de administración
+- [ ] Paso 6. Catálogo real
+- [ ] Paso 7. Dominio y planes de pago (Render Starter, Supabase Pro)
+- [ ] Paso 8. Textos legales
+- [ ] Paso 9. Abrir la tienda con pagos reales
 
-1. Abre [Supabase](https://supabase.com/dashboard) → proyecto **mundo-nomada** → **SQL Editor**.
-2. Pega el contenido de `supabase/migrations/20261020120000_stripe_checkout.sql` y pulsa **Run**.
-3. Debe terminar con "Success". Responde: **Paso 1 hecho**.
+---
 
-### Paso 2. Crear la cuenta de Stripe (modo de prueba)
+## Pasos completados (referencia)
 
-1. Crea una cuenta en [Stripe](https://dashboard.stripe.com/register) con los datos del negocio.
-2. Activa **Test mode** (interruptor arriba a la derecha).
-3. En **Developers → API keys** copia la **Secret key** (`sk_test_...`).
-4. En Render → servicio → **Environment**, añade `STRIPE_SECRET_KEY` con ese valor.
+**Paso 1.** Migración `supabase/migrations/20261020120000_stripe_checkout.sql` ejecutada en Supabase → SQL Editor.
 
-### Paso 3. Conectar el webhook de Stripe
+**Paso 2.** En Render → Environment: `STRIPE_SECRET_KEY` = clave secreta `sk_test_...`. La clave publicable (`pk_...`) no se usa.
 
-1. En Stripe → **Developers → Webhooks → Add endpoint**.
-2. URL: `https://<tu-web>/api_php/checkout/webhook.php`
-   (hoy: `https://mundo-nomada-test.onrender.com/api_php/checkout/webhook.php`).
-3. Eventos: `checkout.session.completed`, `checkout.session.expired`,
-   `checkout.session.async_payment_succeeded`, `checkout.session.async_payment_failed`.
-4. Copia el **Signing secret** (`whsec_...`) y añádelo en Render como `STRIPE_WEBHOOK_SECRET`.
-5. En Stripe → **Settings → Customer emails**, activa **Successful payments** para que el cliente reciba el justificante.
+**Paso 3.** Stripe → Workbench → Webhooks → destino con ámbito **Tu cuenta**, carga **Resumen**, eventos `checkout.session.completed`, `checkout.session.expired`, `checkout.session.async_payment_succeeded` y `checkout.session.async_payment_failed`, URL `https://<web>/api_php/checkout/webhook.php`. Su secreto de firma está en Render como `STRIPE_WEBHOOK_SECRET`.
 
-### Paso 4. Probar una compra de prueba
+**Paso 4.** Compra con la tarjeta `4242 4242 4242 4242`, cualquier fecha futura y cualquier CVC.
 
-Con el despliegue nuevo, compra en la web usando la tarjeta de prueba `4242 4242 4242 4242`, cualquier fecha futura y cualquier CVC. Comprueba que el pedido aparece como **pagado** en Admin → Pedidos y que el stock ha bajado. Después responde: **Paso 4 hecho**.
+**Paso 5.** Tras registrarse en la web, en Supabase → SQL Editor:
 
-### Paso 5. Cuenta de administración
+```sql
+update public.users set role = 'admin' where lower(email) = lower('email-de-la-tienda');
+-- Comprobación:
+select id, name, email, role from public.users where role = 'admin';
+```
 
-1. Regístrate en la web con el email de la tienda.
-2. En Supabase → SQL Editor ejecuta, cambiando el email:
-   `update public.users set role = 'admin' where lower(email) = lower('tu-email@ejemplo.com');`
-3. Cierra sesión y vuelve a entrar: verás el panel de administración.
+El editor responde "Success. No rows returned" aunque el cambio se haya aplicado. Después hay que cerrar sesión y volver a entrar.
 
-### Paso 6. Catálogo real
+---
 
-Desde el panel, crea las categorías y productos reales con su precio **sin IVA** (la web añade el 21 %), stock e imagen. Elimina los tres productos "de prueba".
+## Paso 6. Catálogo real
 
-### Paso 7. Dominio y hosting sin suspensión
+### 6.1 Prepara la información de cada producto
 
-1. Compra el dominio (por ejemplo `mundonomada.es`).
-2. En Render, cambia el plan del servicio a **Starter** (el gratuito se duerme y tarda en despertar).
-3. En Render → **Settings → Custom Domains**, añade el dominio y sigue las instrucciones de DNS.
-4. En **Environment** añade `MUNDONOMADA_ALLOWED_ORIGIN` = `https://tu-dominio` (sin barra final).
-5. Actualiza la URL del webhook de Stripe al nuevo dominio.
+| Campo | Qué poner | Ejemplo |
+|---|---|---|
+| Nombre | Nombre corto y claro | Blusa lino bordada |
+| Precio | **Sin IVA**: la web suma el 21 % | Para que cueste 29,95 €, pon **24,75** (29,95 ÷ 1,21) |
+| Descripción | Material, medidas, cuidados | 100 % lino, lavar a 30 °C |
+| Stock | Unidades reales disponibles | 3 |
+| Categoría | Debe existir antes | Blusas, Bolsos, Accesorios |
+| Color / Talla | Opcional | Blanco / M |
+| Imagen | Foto del producto | Ver abajo |
 
-### Paso 8. Textos legales
+**Imágenes:** se guardan dentro de la base de datos, así que deben ser ligeras.
 
-Revisa y envía los datos reales para: aviso legal (titular, NIF, dirección), privacidad, cookies, condiciones de compra, envíos y devoluciones. Se actualizarán las páginas del pie de la web.
+- Formato JPG o WebP, máximo 1200 px de ancho y menos de 300 KB.
+- Para reducirlas: https://squoosh.app (gratis).
+- Con muchos productos convendrá moverlas a un almacenamiento aparte (Supabase Storage): avisar cuando llegue el momento.
 
-### Paso 9. Abrir la tienda
+**Tallas:** cada talla es un producto distinto con su propio stock (por ejemplo "Blusa lino – S" y "Blusa lino – M"). La web todavía no tiene variantes.
 
-1. En Stripe completa la verificación del negocio y la cuenta bancaria, desactiva **Test mode** y repite los pasos 2 y 3 con las claves reales (`sk_live_...` y su nuevo `whsec_...`).
-2. En Render pon `MUNDONOMADA_PRODUCTION` = `1`. Esto quita el aviso de demostración y permite que Google indexe la web.
-3. Haz una compra real pequeña y reembólsala desde Stripe para confirmar que todo funciona.
+### 6.2 Crear el catálogo
+
+1. Admin Panel → **Agregar categoría**, una por tipo de producto.
+2. Admin Panel → **Agregar producto**, uno por uno.
+3. Abre el catálogo como cliente y revisa precios, fotos y stock.
+
+### 6.3 Productos de prueba
+
+No borres "Blusa de prueba", "Bolso de prueba", "Pañuelo de prueba" ni la categoría **Demostración**: tienen pedidos de prueba asociados. Avisa cuando el catálogo real esté cargado y se limpiarán junto con los usuarios y pedidos de prueba.
+
+**Hecho cuando:** el catálogo real está completo y revisado.
+
+---
+
+## Paso 7. Dominio y planes de pago
+
+### 7.1 Comprar el dominio
+
+- En cualquier registrador: [DonDominio](https://www.dondominio.com), [Namecheap](https://www.namecheap.com) o Cloudflare.
+- Por ejemplo `mundonomada.es` (unos 10 €/año).
+- **No** contrates el hosting ni el correo que ofrezcan junto al dominio.
+
+### 7.2 Render → plan Starter (unos 7 $/mes)
+
+[Render](https://dashboard.render.com/web/srv-damni7u7bikc73bpa7lg) → **Settings → Instance Type → Starter**. El plan gratuito se duerme y el primer visitante espera casi un minuto.
+
+### 7.3 Supabase → plan Pro (25 $/mes)
+
+Supabase → **Organization → Billing → Pro**. El plan gratuito se **pausa tras 7 días sin uso** (ya ocurrió en octubre y dejó la web caída). El plan Pro incluye copias de seguridad diarias.
+
+### 7.4 Conectar el dominio a Render
+
+1. Render → **Settings → Custom Domains → Add Custom Domain**: añade `mundonomada.es` y `www.mundonomada.es`.
+2. Render muestra unos registros DNS (`A` o `CNAME`): créalos en el panel del registrador del dominio.
+3. Espera a que Render marque **Verified**. El HTTPS se activa solo (de minutos a unas horas).
+
+### 7.5 Avisar al servidor del dominio nuevo
+
+Render → **Environment** → añade `MUNDONOMADA_ALLOWED_ORIGIN` = `https://mundonomada.es` (sin barra final) → **Save, rebuild, and deploy**.
+
+Sin esta variable, el inicio de sesión y el carrito fallan desde el dominio nuevo: por seguridad, el servidor solo acepta peticiones de su propio dominio.
+
+### 7.6 Actualizar el webhook de Stripe
+
+Stripe → **Workbench → Webhooks** → tu destino → **Editar** → URL `https://mundonomada.es/api_php/checkout/webhook.php`.
+
+**Hecho cuando:** `https://mundonomada.es` carga, permite iniciar sesión y una compra de prueba con la tarjeta 4242 queda **pagada**.
+
+---
+
+## Paso 8. Textos legales
+
+Obligatorios para vender online en España (LSSI y RGPD). Las páginas actuales tienen **datos de ejemplo** (por ejemplo, el NIF "B12345678" del aviso legal es inventado). Envía en el chat estos datos para actualizarlas:
+
+**Titular**
+
+- Nombre completo o razón social, y si eres autónomo/a o sociedad.
+- NIF/CIF.
+- Dirección fiscal.
+- Email y teléfono de atención al cliente.
+- Si es una sociedad: datos de inscripción en el Registro Mercantil.
+
+**Envíos**
+
+- Zonas: ¿solo península? ¿Baleares, Canarias, Ceuta, Melilla?
+- Plazo de entrega (por ejemplo, 2–4 días laborables) y transportista.
+- Precio: hoy son 3,50 € y gratis desde 60 € sin IVA (72,60 € con IVA). ¿Se mantiene?
+
+**Devoluciones**
+
+- Plazo: mínimo legal de 14 días naturales.
+- Quién paga el envío de la devolución.
+- Excepciones (productos personalizados, ropa interior…).
+- Cómo se solicita (por ejemplo, por email).
+
+**Cookies**
+
+- ¿Se usará Google Analytics u otra herramienta de analítica? Si no, la web solo usa cookies técnicas (sesión y carrito) y el aviso es más sencillo.
+
+Conviene que un/a gestor/a o abogado/a revise los textos finales.
+
+**Hecho cuando:** aviso legal, privacidad, cookies, condiciones de compra, envíos y devoluciones tienen datos reales.
+
+---
+
+## Paso 9. Abrir la tienda con pagos reales
+
+Hazlo solo cuando los pasos 6, 7 y 8 estén completos.
+
+### 9.1 Activar la cuenta de Stripe
+
+1. En Stripe pulsa **"Cambia a la cuenta en modo activo"**.
+2. Completa la verificación: datos del negocio y del titular (documento de identidad), cuenta bancaria (IBAN) para recibir el dinero, descripción del negocio y URL de la web (el dominio nuevo).
+3. Espera la aprobación (de horas a algunos días).
+
+### 9.2 Claves reales
+
+1. En modo activo: **Desarrolladores → Claves de API** → copia la **clave secreta** `sk_live_...`.
+2. Crea un **webhook nuevo en modo activo**, igual que en el paso 3 (mismos 4 eventos, carga **Resumen**, URL del dominio nuevo). Copia su `whsec_...`.
+3. En Render → **Environment**, sustituye los valores:
+   - `STRIPE_SECRET_KEY` → `sk_live_...`
+   - `STRIPE_WEBHOOK_SECRET` → el `whsec_...` del webhook en modo activo
+4. En modo activo: **Configuración → Correos de clientes → Pagos correctos**, para que el cliente reciba el justificante.
+
+### 9.3 Quitar el modo demo
+
+Render → **Environment** → `MUNDONOMADA_PRODUCTION` = `1` → **Save, rebuild, and deploy**. Desaparece el aviso amarillo de demostración y Google puede indexar la web.
+
+### 9.4 Compra real de control
+
+1. Haz una compra real pequeña con tu propia tarjeta.
+2. Comprueba que el pedido aparece **pagado** en Admin → Pedidos, que llega el justificante y que el stock baja.
+3. Reembólsala en Stripe → **Pagos** → el pago → **Reembolsar**, y vuelve a subir el stock del producto desde **Modificar producto**.
+
+**Hecho cuando:** la compra real se ha cobrado, aparece en Pedidos y se ha reembolsado correctamente. La tienda está abierta.
+
+---
 
 ## Uso diario
 
 - **Nuevos pedidos:** Admin → Pedidos, filtro **pagado**. Prepara el paquete y pulsa **Marcar como enviado**; cuando llegue, **Marcar como completado**.
-- **Reembolsos y cancelaciones de pedidos pagados:** se hacen en el panel de Stripe. Después ajusta el stock desde Modificar producto si la prenda vuelve a la tienda.
+- **Reembolsos y cancelaciones de pedidos pagados:** se hacen en el panel de Stripe. Después ajusta el stock desde **Modificar producto** si la prenda vuelve a la tienda.
 - **Pedidos "pendiente" o "cancelado":** son pagos que el cliente no terminó. El stock se devuelve solo cuando Stripe los caduca (unos 30 minutos).
-
-## Antes de vender
-
-- [x] Backend conectado a Supabase y probado.
-- [x] Usuarios, carrito y stock probados con datos ficticios.
-- [ ] Pago validado en modo de pruebas con el webhook (pasos 1–4).
-- [ ] Cuenta de administración y catálogo real (pasos 5–6).
-- [ ] Dominio, HTTPS y plan sin suspensión (paso 7).
-- [ ] Aviso legal, privacidad, cookies, devoluciones y contacto revisados (paso 8).
-- [ ] Copia de seguridad: en Supabase plan Pro hay copias diarias; en el gratuito, descarga una copia antes de abrir.
+- **Copias de seguridad:** con Supabase Pro son diarias. Antes de cambios grandes en el catálogo, descarga una copia desde Supabase → Database → Backups.
