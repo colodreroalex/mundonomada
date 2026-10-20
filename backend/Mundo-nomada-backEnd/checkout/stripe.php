@@ -171,6 +171,23 @@ function confirmarPagoPedido(PDO $pdo, string $sessionId, ?string $paymentIntent
         $pedido->execute([':sid' => $sessionId, ':pi' => $paymentIntent]);
         $fila = $pedido->fetch();
         if ($fila) {
+            // Factura simplificada: número correlativo de la serie del año, en la
+            // misma transacción que el pago para que no queden huecos
+            $contador = $pdo->prepare(
+                "insert into public.invoice_counters (year, last_number)
+                 values (extract(year from now())::integer, 1)
+                 on conflict (year) do update set last_number = public.invoice_counters.last_number + 1
+                 returning year, last_number"
+            );
+            $contador->execute();
+            $serie = $contador->fetch();
+            $pdo->prepare(
+                'update public.orders set invoice_number = :numero, invoice_date = now() where id = :id'
+            )->execute([
+                ':numero' => sprintf('F%d-%06d', $serie['year'], $serie['last_number']),
+                ':id' => $fila['id'],
+            ]);
+
             $pdo->prepare(
                 'delete from public.carrito c using public.order_items oi
                   where oi.order_id = :order_id and c.producto_id = oi.producto_id and c.user_id = :user_id'
