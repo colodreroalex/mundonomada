@@ -182,3 +182,12 @@ textarea.form-control {
   font-size: var(--fs-sm);
   color: var(--color-texto-suave);
 }
+
+/* Campo trampa: fuera de la vista sin display:none (algunos bots lo detectan) */
+.campo-trampa {
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}

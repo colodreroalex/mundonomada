@@ -26,9 +26,11 @@ export class ContactoComponent implements OnInit {
   
   ngOnInit(): void {
     this.contactForm = this.fb.group({
-      nombre: ['', [Validators.required, Validators.minLength(2)]],
-      email: ['', [Validators.required, Validators.email]],
-      mensaje: ['', [Validators.required, Validators.minLength(10)]]
+      nombre: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
+      email: ['', [Validators.required, Validators.email, Validators.maxLength(254)]],
+      mensaje: ['', [Validators.required, Validators.minLength(10), Validators.maxLength(2000)]],
+      // Campo trampa: invisible para personas; si llega relleno, es un bot
+      web: ['']
     });
   }
   
@@ -42,7 +44,26 @@ export class ContactoComponent implements OnInit {
       });
       return;
     }
-    
+
+    // Bots: si el campo trampa llega relleno se finge el envío sin hacerlo
+    if (this.contactForm.value.web) {
+      this.mensajeEnviado = true;
+      this.contactForm.reset();
+      return;
+    }
+
+    // Como máximo un mensaje por minuto desde este navegador. El límite real
+    // de envíos y los dominios permitidos se configuran en el panel de EmailJS.
+    const ahora = Date.now();
+    let ultimo = 0;
+    try { ultimo = Number(localStorage.getItem('mn-contacto') || 0); } catch { /* sin almacenamiento */ }
+    if (ahora - ultimo < 60000) {
+      this.error = true;
+      this.errorMessage = 'Espera un minuto antes de enviar otro mensaje.';
+      return;
+    }
+    try { localStorage.setItem('mn-contacto', String(ahora)); } catch { /* sin almacenamiento */ }
+
     this.enviando = true;
     this.error = false;
     this.errorMessage = '';

@@ -83,8 +83,8 @@ export class PdfService {
    * @returns La URL correcta para el logo
    */
   private getLogoPath(): string {
-    // Ruta absoluta verificada del logo
-    return 'C:/Users/garci/Desktop/Angular/MUNDO-NOMADA-FULL/mundo-nomadaCOPY/public/img/logo.jpg';
+    // Ruta pública servida por la propia web (nunca rutas del disco del desarrollador)
+    return 'img/logo.jpg';
   }
   
   /**

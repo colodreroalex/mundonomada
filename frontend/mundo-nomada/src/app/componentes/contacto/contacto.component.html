@@ -134,6 +134,12 @@
           </div>
         </div>
 
+        <!-- Campo trampa para bots: oculto a personas y lectores de pantalla -->
+        <div class="campo-trampa" aria-hidden="true">
+          <label for="web">Deja este campo vacío</label>
+          <input type="text" id="web" name="web" formControlName="web" tabindex="-1" autocomplete="off">
+        </div>
+
         <button type="submit" class="btn-custom btn-lg w-100" [disabled]="enviando">
           <span *ngIf="!enviando" class="d-inline-flex align-items-center gap-2">
             <i class="material-icons" aria-hidden="true">send</i> Enviar Mensaje
