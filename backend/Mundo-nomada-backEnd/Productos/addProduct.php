@@ -1,5 +1,24 @@
 <?php
-declare(strict_types=1); require_once __DIR__ . '/../auth/seguridad.php'; require_once __DIR__ . '/../conexion_postgres.php'; exigirAdministrador(['POST']);
-$d=json_decode(file_get_contents('php://input'),true); $n=trim((string)($d['nombre']??'')); $p=filter_var($d['precio']??null,FILTER_VALIDATE_FLOAT); $c=filter_var($d['categoriaID']??null,FILTER_VALIDATE_INT); $s=filter_var($d['stock']??0,FILTER_VALIDATE_INT);
-if($n===''||$p===false||$p<0||$c===false||$c<=0||$s===false||$s<0) responderJson(['resultado'=>'ERROR','mensaje'=>'Datos de producto no válidos.'],400);
-try{$q=retornarConexionPostgres()->prepare('insert into public.productos(nombre,precio,descripcion,stock,categoria_id,imagen_url,color,talla) values(:n,:p,:d,:s,:c,:i,:co,:t) returning id');$q->execute([':n'=>$n,':p'=>$p,':d'=>trim((string)($d['descripcion']??''))?:null,':s'=>$s,':c'=>$c,':i'=>trim((string)($d['imagen']??''))?:null,':co'=>trim((string)($d['color']??''))?:null,':t'=>trim((string)($d['talla']??''))?:null]);responderJson(['resultado'=>'OK','mensaje'=>'Producto registrado correctamente.','id'=>$q->fetchColumn()],201);}catch(PDOException $e){error_log('Error producto: '.$e->getMessage());responderJson(['resultado'=>'ERROR','mensaje'=>'No se pudo registrar el producto.'],400);}
+declare(strict_types=1);
+
+require_once __DIR__ . '/../auth/seguridad.php';
+require_once __DIR__ . '/validacion_producto.php';
+
+exigirAdministrador(['POST']);
+$d = json_decode(file_get_contents('php://input'), true);
+$datos = datosProducto(is_array($d) ? $d : []);
+
+try {
+    $q = retornarConexionPostgres()->prepare(
+        'insert into public.productos (nombre, precio, descripcion, stock, categoria_id, imagen_url, color, talla)
+         values (:n, :p, :d, :s, :c, :i, :co, :t) returning id'
+    );
+    $q->execute($datos);
+    responderJson(['resultado' => 'OK', 'mensaje' => 'Producto registrado correctamente.', 'id' => $q->fetchColumn()], 201);
+} catch (PDOException $e) {
+    if ($e->getCode() === '23503') {
+        responderJson(['resultado' => 'ERROR', 'mensaje' => 'La categoría no existe.'], 400);
+    }
+    error_log('Error producto: ' . $e->getMessage());
+    responderJson(['resultado' => 'ERROR', 'mensaje' => 'No se pudo registrar el producto.'], 400);
+}
