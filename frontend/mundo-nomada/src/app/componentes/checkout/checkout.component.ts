@@ -37,6 +37,9 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   orderId: string = '';
   orderData: any = null;
 
+  // Resumen del pedido: abierto en escritorio, plegado en móvil
+  resumenAbierto: boolean = window.innerWidth >= 992;
+
   // Formulario de datos de envío
   shippingForm: FormGroup;
   formSubmitted: boolean = false;
