@@ -264,7 +264,9 @@ export class CarritoComponent implements OnInit, OnDestroy {
   loadTotal(userId: number): void {
     this.carritoService.getTotal(userId).subscribe({
       next: (data) => {
-        this.subtotal = data;
+        // PostgreSQL devuelve el importe como texto ("49.80"): sin convertirlo,
+        // subtotal + iva + envío concatenaría cadenas en lugar de sumar
+        this.subtotal = Number(data) || 0;
         this.calcularTotales();
       },
       error: (err) => {
