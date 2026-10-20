@@ -27,6 +27,10 @@ No compartas en el chat contraseñas, claves, tokens, datos bancarios ni documen
 
 ---
 
+## Antes de desplegar la versión con facturas
+
+En Supabase → **SQL Editor**, ejecuta `supabase/migrations/20261021090000_invoice_numbers.sql` **antes** de pulsar *Deploy latest commit* en Render. La migración numera los pedidos que ya estaban cobrados. Si se despliega antes, los pagos se quedan sin confirmar hasta que se aplique (Stripe reintenta el aviso solo, así que no se pierde ninguno).
+
 ## Pasos completados (referencia)
 
 **Paso 1.** Migración `supabase/migrations/20261020120000_stripe_checkout.sql` ejecutada en Supabase → SQL Editor.
@@ -149,6 +153,15 @@ Obligatorios para vender online en España (LSSI y RGPD). Las páginas actuales 
 **Cookies**
 
 - ¿Se usará Google Analytics u otra herramienta de analítica? Si no, la web solo usa cookies técnicas (sesión y carrito) y el aviso es más sencillo.
+
+**Facturas**
+
+Los mismos datos del titular (nombre o razón social, NIF y domicilio fiscal) se ponen en `frontend/mundo-nomada/src/app/config/datos-fiscales.ts`. Mientras falten, el PDF que reciben los clientes se emite como **"Justificante de compra"** sin validez fiscal. En cuanto estén, pasa a ser **"Factura simplificada"** con numeración correlativa (F2026-000001…).
+
+Que tu gestor/a confirme:
+
+- Que la factura simplificada te sirve: ventas a particulares de hasta 400 €.
+- Cómo te afecta **Verifactu**: el sistema de facturación verificable obligatorio para la facturación electrónica, que se aplica desde 2027.
 
 Conviene que un/a gestor/a o abogado/a revise los textos finales.
 
