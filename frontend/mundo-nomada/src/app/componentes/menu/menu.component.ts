@@ -58,17 +58,35 @@ export class MenuComponent implements OnInit, OnDestroy {
     this.getCategorias();
     this.actualizarContadorCarrito();
 
-    // Actualizar el contador cada 2 segundos para reflejar cambios
-    this.intervaloCarrito = setInterval(() => {
-      this.actualizarContadorCarrito();
-    }, 2000);
+    // El contador se actualiza cuando el carrito cambia, no consultando sin parar
+    this.subscripciones.push(
+      this.carritoService.cambios$.subscribe(() => this.actualizarContadorCarrito())
+    );
 
-    // Cualquier navegación cierra los menús abiertos
+    // Red de seguridad (otra pestaña, pago confirmado por Stripe): una consulta
+    // por minuto y solo si la pestaña está visible
+    this.intervaloCarrito = setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        this.actualizarContadorCarrito();
+      }
+    }, 60000);
+
+    // Cualquier navegación cierra los menús abiertos y refresca el contador
     this.subscripciones.push(
       this.router.events
         .pipe(filter((evento) => evento instanceof NavigationEnd))
-        .subscribe(() => this.cerrarTodo(false))
+        .subscribe(() => {
+          this.cerrarTodo(false);
+          this.actualizarContadorCarrito();
+        })
     );
+  }
+
+  @HostListener('document:visibilitychange')
+  alVolverALaPestana(): void {
+    if (document.visibilityState === 'visible') {
+      this.actualizarContadorCarrito();
+    }
   }
 
   ngOnDestroy(): void {

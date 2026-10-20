@@ -27,7 +27,32 @@ export class CarritoService {
   // Registro de productos comprados por usuarios invitados para evitar que reaparezcan
   private readonly GUEST_PURCHASED_KEY = 'guestPurchasedProducts';
 
+  // Avisa cuando el carrito cambia, para que el contador del menú se actualice
+  // al momento sin tener que preguntar al servidor cada pocos segundos
+  private cambios = new Subject<void>();
+  public cambios$ = this.cambios.asObservable();
+
   constructor(private http: HttpClient) {}
+
+  addToCart(carrito: Carrito): Observable<any> {
+    return this.addToCartInterno(carrito).pipe(tap(() => this.cambios.next()));
+  }
+
+  updateCart(item: Carrito): Observable<any> {
+    return this.updateCartInterno(item).pipe(tap(() => this.cambios.next()));
+  }
+
+  removeItem(cartId: number, userId?: number): Observable<any> {
+    return this.removeItemInterno(cartId, userId).pipe(tap(() => this.cambios.next()));
+  }
+
+  migrateGuestCart(userId: number): Observable<any> {
+    return this.migrateGuestCartInterno(userId).pipe(tap(() => this.cambios.next()));
+  }
+
+  clearCart(userId: number = 0): Observable<any> {
+    return this.clearCartInterno(userId).pipe(tap(() => this.cambios.next()));
+  }
 
   /* Métodos para gestionar el carrito en localStorage (para usuarios invitados) */
   private getLocalCart(): Carrito[] {
@@ -83,7 +108,7 @@ export class CarritoService {
    * Añade un producto al carrito.
    * Si el user_id es 0 o nulo, se guarda en localStorage.
    */
-  addToCart(carrito: Carrito): Observable<any> {
+  private addToCartInterno(carrito: Carrito): Observable<any> {
     // Para usuarios invitados, primero verificar stock actualizado
     if (!carrito.user_id || carrito.user_id === 0) {
       return this.verificarStockActualizado(carrito.producto_id).pipe(
@@ -208,7 +233,7 @@ export class CarritoService {
    * Actualiza la cantidad de un producto en el carrito.
    * Si user_id es 0, se actualiza en localStorage.
    */
-  updateCart(item: Carrito): Observable<any> {
+  private updateCartInterno(item: Carrito): Observable<any> {
     if (!item.user_id || item.user_id === 0) {
       let guestCart = this.getLocalCart();
       const index = guestCart.findIndex((cartItem) => cartItem.id === item.id);
@@ -266,7 +291,7 @@ export class CarritoService {
    * @param cartId ID del carrito o identificador del item.
    * @param userId (opcional) ID del usuario.
    */
-  removeItem(cartId: number, userId?: number): Observable<any> {
+  private removeItemInterno(cartId: number, userId?: number): Observable<any> {
     if (!userId || userId === 0) {
       let guestCart = this.getLocalCart();
       guestCart = guestCart.filter((item) => item.id !== cartId);
@@ -424,7 +449,7 @@ export class CarritoService {
       );
   }
 
-  migrateGuestCart(userId: number): Observable<any> {
+  private migrateGuestCartInterno(userId: number): Observable<any> {
     const guestCart = this.getLocalCart();
     if (guestCart.length === 0) {
       return of({ resultado: 'OK', mensaje: 'No hay items para migrar.' });
@@ -470,7 +495,7 @@ export class CarritoService {
    * @param userId ID del usuario (si es 0, limpia el carrito local)
    * @returns Observable con el resultado de la operación
    */
-  clearCart(userId: number = 0): Observable<any> {
+  private clearCartInterno(userId: number = 0): Observable<any> {
     if (userId === 0) {
       // Para invitados, limpiar localStorage
       this.removeLocalCart();

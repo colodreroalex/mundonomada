@@ -1,4 +1,5 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, DestroyRef, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { Producto } from '../../../models/Producto';
@@ -17,6 +18,7 @@ import { Location } from '@angular/common';
   styleUrls: ['./detalle-producto.component.css'],
 })
 export class DetalleProductoComponent implements OnInit {
+  private destroyRef = inject(DestroyRef);
   producto: Producto | null = null;
   currentUser: User | null = null;
   loading: boolean = false;
@@ -40,7 +42,7 @@ export class DetalleProductoComponent implements OnInit {
       this.cargarProducto(productoID);
     }
 
-    this.authService.getCurrentUserObservable().subscribe({
+    this.authService.getCurrentUserObservable().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (user) => {
         this.currentUser = user;
       },

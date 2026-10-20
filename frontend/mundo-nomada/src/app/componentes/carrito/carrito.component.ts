@@ -41,18 +41,25 @@ export class CarritoComponent implements OnInit, OnDestroy {
   constructor(private carritoService: CarritoService, private authService: AuthService, private http: HttpClient) {}
 
   ngOnInit(): void {
-    this.authService.getCurrentUserObservable().subscribe((user) => {
+    this.subscription.add(this.authService.getCurrentUserObservable().subscribe((user) => {
       this.currentUser = user;
       const userId = user ? user.id : 0;
       this.loadCarrito(userId);
       this.loadTotal(userId);
-  
-      // Actualización más frecuente para invitados (10 segundos) y normal para usuarios (30 segundos)
+
+      // Actualización más frecuente para invitados (10 segundos) y normal para usuarios (30 segundos).
+      // Se para el temporizador anterior para no acumularlos al cambiar de sesión,
+      // y no se consulta mientras la pestaña está en segundo plano.
+      if (this.refreshIntervalId) {
+        clearInterval(this.refreshIntervalId);
+      }
       const refreshInterval = !user ? 10000 : 30000;
       this.refreshIntervalId = setInterval(() => {
-        this.refreshCart(userId);
+        if (document.visibilityState === 'visible') {
+          this.refreshCart(userId);
+        }
       }, refreshInterval);
-    });
+    }));
     
     // Subscribirse a la notificación de finalización de compra de invitado
     this.subscription.add(

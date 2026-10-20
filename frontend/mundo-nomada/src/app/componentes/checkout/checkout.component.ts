@@ -231,22 +231,21 @@ export class CheckoutComponent implements OnInit, OnDestroy {
       return;
     }
 
-    try {
-      this.pdfService.generateReceiptPdf(
-        this.orderData.items,
-        this.orderData.total,
-        this.orderData.user,
-        this.orderId,
-        this.orderData.iva,
-        this.orderData.envio,
-        this.orderData.totalConIvaYEnvio,
-        this.orderData.datosEnvio
-      );
+    this.pdfService.generateReceiptPdf(
+      this.orderData.items,
+      this.orderData.total,
+      this.orderData.user,
+      this.orderId,
+      this.orderData.iva,
+      this.orderData.envio,
+      this.orderData.totalConIvaYEnvio,
+      this.orderData.datosEnvio
+    ).then(() => {
       this.feedbackMessage = 'Recibo descargado correctamente';
-    } catch (error) {
+    }).catch((error) => {
       this.error = 'Error al generar el PDF: ' + error;
       console.error('Error al generar PDF:', error);
-    }
+    });
   }
 
   goToHome(): void {

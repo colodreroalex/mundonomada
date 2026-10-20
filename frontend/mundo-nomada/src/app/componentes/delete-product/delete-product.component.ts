@@ -1,4 +1,5 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, DestroyRef, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Producto } from '../../../models/Producto';
 import { Categoria } from '../../../models/Categoria';
 import { ProductosService } from '../../services/productos.service';
@@ -15,6 +16,7 @@ import { FormsModule } from '@angular/forms';
   styleUrls: ['./delete-product.component.css']
 })
 export class DeleteProductComponent implements OnInit {
+  private destroyRef = inject(DestroyRef);
   products: Producto[] = [];
   filteredProducts: Producto[] = [];
   categorias: Categoria[] = [];
@@ -34,7 +36,7 @@ export class DeleteProductComponent implements OnInit {
 
   ngOnInit(): void {
     // Verificar si el usuario tiene permisos de administrador
-    this.authService.getCurrentUserObservable().subscribe(user => {
+    this.authService.getCurrentUserObservable().pipe(takeUntilDestroyed(this.destroyRef)).subscribe(user => {
       if (user && user.role === 'admin') {
         this.isAdmin = true;
         this.loadProducts();

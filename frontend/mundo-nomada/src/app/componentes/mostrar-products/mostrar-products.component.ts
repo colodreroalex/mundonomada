@@ -1,4 +1,5 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, DestroyRef, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 import { Producto } from '../../../models/Producto';
 import { ProductosService } from '../../services/productos.service';
@@ -17,6 +18,7 @@ import { FormsModule } from '@angular/forms';
   styleUrls: ['./mostrar-products.component.css']
 })
 export class MostrarProductsComponent implements OnInit {
+  private destroyRef = inject(DestroyRef);
   products: Producto[] = [];
   filterName: string = '';
   filterCategory: number | null = null;
@@ -49,7 +51,7 @@ export class MostrarProductsComponent implements OnInit {
       this.loadProducts();
     });
 
-    this.authService.getCurrentUserObservable().subscribe({
+    this.authService.getCurrentUserObservable().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (user) => {
         this.currentUser = user;
       },

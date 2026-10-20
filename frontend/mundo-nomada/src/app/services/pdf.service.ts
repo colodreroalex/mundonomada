@@ -1,8 +1,6 @@
 import { Injectable, ElementRef } from '@angular/core';
 import { Carrito } from '../../models/Carrito';
 import { User } from '../../models/Users';
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
 
 @Injectable({
   providedIn: 'root'
@@ -110,7 +108,8 @@ export class PdfService {
       return Promise.reject(new Error(`Elemento con ID ${elementId} no encontrado`));
     }
 
-    return html2canvas(element, {
+    // Las librerías de PDF (unos 500 KB) solo se descargan cuando se usan
+    return Promise.all([import('html2canvas'), import('jspdf')]).then(([{ default: html2canvas }, { default: jsPDF }]) => html2canvas(element, {
       scale: 2, // Mejor calidad
       useCORS: true, // Permitir imágenes de otros dominios
       logging: false // Desactivar logs
@@ -128,7 +127,7 @@ export class PdfService {
       pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
       pdf.save(`${fileName}.pdf`);
       return Promise.resolve();
-    });
+    }));
   }
 
   /**
@@ -142,7 +141,7 @@ export class PdfService {
    * @param totalConIvaYEnvio Total final con IVA y gastos de envío
    * @param datosEnvio Datos de envío del pedido (opcional)
    */
-  generateReceiptPdf(
+  async generateReceiptPdf(
     items: Carrito[], 
     subtotal: number, 
     user: User | null, 
@@ -151,7 +150,10 @@ export class PdfService {
     envio?: number,
     totalConIvaYEnvio?: number,
     datosEnvio?: any
-  ): void {
+  ): Promise<void> {
+    // La librería de PDF solo se descarga cuando se genera un recibo
+    const { default: jsPDF } = await import('jspdf');
+
     // Crear un nuevo documento PDF
     const pdf = new jsPDF({
       orientation: 'portrait',

@@ -1,4 +1,5 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, DestroyRef, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
   FormBuilder,
   FormGroup,
@@ -21,6 +22,7 @@ import { OrderItem } from '../../../models/OrderItem';
   styleUrls: ['./perfil-usuario.component.css'],
 })
 export class PerfilUsuarioComponent implements OnInit {
+  private destroyRef = inject(DestroyRef);
   currentUser: User | null = null;
   profileForm!: FormGroup;
   passwordForm!: FormGroup;
@@ -94,7 +96,7 @@ export class PerfilUsuarioComponent implements OnInit {
     );
 
     // Observar cambios en el usuario actual
-    this.authService.getCurrentUserObservable().subscribe((user) => {
+    this.authService.getCurrentUserObservable().pipe(takeUntilDestroyed(this.destroyRef)).subscribe((user) => {
       this.currentUser = user;
       if (user) {
         this.profileForm.patchValue({
