@@ -20,14 +20,6 @@ supabaseMundonomadaPass.txt
 !database/seeds/*.sql
 !supabase/migrations/*.sql
 
-# Local XAMPP deployment mirror and preserved pre-monorepo Git history.
-/htdocs/
-/.git-backups/
-/backend-before-monorepo.bundle
-
-# This lockfile has no matching package manifest; the frontend lockfile is tracked.
-/package-lock.json
-
 # Logs and temporary files
 *.log
 tmp/
