@@ -96,8 +96,50 @@ export class CheckoutComponent implements OnInit, OnDestroy {
           apellidos: this.shippingForm.value.apellidos || user.name?.split(' ').slice(1).join(' ') || '',
           email: this.shippingForm.value.email || user.email || ''
         });
+        this.rellenarConUltimoPedido();
       })
     );
+  }
+
+  // Aviso de que el formulario se ha rellenado con datos de una compra anterior
+  datosPrevios = false;
+
+  /**
+   * Rellena los campos vacíos con los datos de envío del último pedido del
+   * usuario. Solo completa lo que está vacío y todo sigue siendo editable.
+   */
+  private rellenarConUltimoPedido(): void {
+    this.ordersService.getOrdersByUser().subscribe({
+      next: (pedidos) => {
+        const ultimo = pedidos.find((p) => !!p.shipping_name && !!p.shipping_address);
+        if (!ultimo) {
+          return;
+        }
+        const [nombre, ...apellidos] = (ultimo.shipping_name || '').trim().split(/\s+/);
+        const previos: Record<string, string> = {
+          nombre: nombre || '',
+          apellidos: apellidos.join(' '),
+          direccion: ultimo.shipping_address || '',
+          codigoPostal: ultimo.shipping_postal_code || '',
+          ciudad: ultimo.shipping_city || '',
+          provincia: ultimo.shipping_province || '',
+          telefono: (ultimo.shipping_phone || '').replace(/\D/g, '').slice(-9),
+        };
+        const cambios: Record<string, string> = {};
+        for (const [campo, valor] of Object.entries(previos)) {
+          const control = this.shippingForm.get(campo);
+          if (valor && control && !control.dirty && (!control.value || campo === 'nombre')) {
+            cambios[campo] = valor;
+          }
+        }
+        if (Object.keys(cambios).length > 0) {
+          this.shippingForm.patchValue(cambios);
+          this.datosPrevios = true;
+        }
+      },
+      // Sin pedidos anteriores o sin conexión: el formulario queda como estaba
+      error: () => {},
+    });
   }
 
   // Getters para facilitar el acceso a los campos del formulario en la plantilla

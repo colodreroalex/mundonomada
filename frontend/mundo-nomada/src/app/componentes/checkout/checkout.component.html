@@ -91,6 +91,10 @@
       <!-- Datos de envío -->
       <section class="shipping-form" aria-labelledby="titulo-envio">
         <h2 id="titulo-envio" class="panel-titulo"><i class="bi bi-geo-alt" aria-hidden="true"></i>Datos de envío</h2>
+        <p class="aviso-datos" *ngIf="datosPrevios">
+          <i class="bi bi-magic" aria-hidden="true"></i>
+          Hemos rellenado los datos con los de tu último pedido. Puedes cambiarlos si lo necesitas.
+        </p>
         <form id="shipping-form" [formGroup]="shippingForm" (ngSubmit)="pagar()" class="formulario" novalidate>
           <div class="campo">
             <label for="nombre" class="form-label">Nombre *</label>

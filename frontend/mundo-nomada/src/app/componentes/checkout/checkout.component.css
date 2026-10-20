@@ -541,3 +541,20 @@
   justify-content: center;
   margin-top: var(--esp-5);
 }
+
+.aviso-datos {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--esp-2);
+  margin: calc(-1 * var(--esp-2)) 0 var(--esp-4);
+  padding: var(--esp-3);
+  border-radius: var(--radio-sm);
+  background: var(--color-primario-suave);
+  color: var(--color-texto);
+  font-size: var(--fs-sm);
+}
+
+.aviso-datos .bi {
+  color: var(--color-primario);
+  margin-top: 2px;
+}
