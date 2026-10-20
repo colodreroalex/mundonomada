@@ -1,22 +1,18 @@
-# Base de datos de Mundo Nómada
+# Datos de prueba
 
-`schema.sql` es el esquema canónico, vacío y reproducible de la aplicación. No se suben copias de phpMyAdmin ni datos de clientes, pedidos, contraseñas o imágenes en Base64.
+La base de datos de la tienda es **Supabase PostgreSQL**. Su estructura vive en las migraciones
+versionadas de [`supabase/migrations/`](../supabase/migrations) (ver [`supabase/README.md`](../supabase/README.md)).
 
-## Instalación local
+Esta carpeta solo contiene datos de demostración:
 
-El backend ya solo usa PostgreSQL (la conexión MySQL antigua se eliminó). `schema.sql` y
-`users/` se conservan como referencia histórica del esquema MySQL.
+- `seeds/demo_catalog.sql`: categoría "Demostración" con tres artículos ficticios. Únicamente para
+  entornos de prueba; no se carga en producción.
 
-Para un entorno local se crea un PostgreSQL vacío aplicando, en orden, las migraciones de
-`supabase/migrations/` y después `seeds/demo_catalog.sql`. No importes el antiguo volcado en
-un entorno accesible desde Internet.
+## Entorno local
 
-## Producción
+Para un PostgreSQL local vacío aplica, en orden, las migraciones de `supabase/migrations/` y después
+`seeds/demo_catalog.sql`. El procedimiento completo con Docker está en
+[`docs/seguridad/INFORME-PENTEST.md`](../docs/seguridad/INFORME-PENTEST.md#2-alcance-y-entorno).
 
-La aplicación se conecta a través de las variables `MUNDONOMADA_DB_HOST`, `MUNDONOMADA_DB_PORT`, `MUNDONOMADA_DB_NAME`, `MUNDONOMADA_DB_USER` y `MUNDONOMADA_DB_PASSWORD`, o mediante el archivo local ignorado. La cuenta de la aplicación no debe ser `root` ni tener permisos globales.
-
-Para ponerla online, el servidor de MySQL debe aceptar conexiones solamente desde el backend privado. El puerto 3306 no se publica en Internet. Se usa una conexión cifrada cuando el proveedor lo ofrezca.
-
-## Migraciones
-
-Antes de adaptar una BBDD existente, haz una copia de seguridad y prueba el proceso en una clonación. La migración `migrations/001_normalize_money_and_cart.sql` requiere MySQL 8 o MariaDB 10.4 y comprueba primero carritos duplicados para no perder cantidades.
+No se suben a Git exportaciones de la base de datos: pueden contener cuentas, hashes de contraseñas,
+datos de envío y pedidos de clientes.

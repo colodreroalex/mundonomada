@@ -1,66 +1,46 @@
 # Estado del proyecto
 
-Última revisión: 18 de septiembre de 2026.
+Última revisión: 20 de octubre de 2026.
 
-## Publicado como demostración
+## Publicado en pruebas
 
-https://mundo-nomada-test.onrender.com — Angular y API PHP en Render gratuito
-(Frankfurt), conectados a Supabase PostgreSQL (Irlanda).
+https://mundo-nomada-test.onrender.com: Render (Frankfurt, detrás de Cloudflare), conectado a Supabase
+PostgreSQL (Irlanda). Rama desplegada: `codex/render-deployment`.
 
-- Catálogo con tres artículos claramente ficticios.
-- Registro, login, logout, sesión persistente, perfil y cambio de contraseña.
-- Carrito por sesión con control de stock y propiedad en el servidor.
-- Endpoints de administración y consulta de pedidos migrados a PDO PostgreSQL.
-- Usuario de base de datos exclusivo del backend con permisos limitados.
-- RLS en las siete tablas y sin acceso desde `anon`/`authenticated`.
-- Cookies `Secure`, `HttpOnly`, `SameSite=Lax`; validación de origen y JSON en
-  mutaciones; límite de intentos de login.
-- Dockerfile conjunto, secretos fuera de Git, rutas Angular y health check real.
+**Tienda**
+- Catálogo, ficha de producto, carrito con control de stock en el servidor.
+- Registro, acceso, sesión persistente con rotación de token, perfil e historial de pedidos.
+- Checkout con Stripe Checkout en modo test: el servidor calcula importes, reserva stock y solo el
+  webhook firmado marca el pedido como pagado. El formulario se rellena con el último envío.
+- Factura simplificada en PDF con numeración correlativa anual (F2026-000001); se emite como
+  justificante hasta completar los datos fiscales (`src/app/config/datos-fiscales.ts`).
 
-## Verificación
+**Administración**
+- Productos (con validación de imagen y precio), categorías, usuarios y pedidos (pagado → enviado →
+  completado), con descarga de facturas.
 
-- Compilación Angular completada; persisten avisos de tamaño y dependencias CommonJS.
-- Sintaxis PHP comprobada en todos los endpoints.
-- 41 comprobaciones HTTP pasaron en local contra Supabase y en Render por HTTPS.
-- Supabase Security Advisors: sin avisos después de la corrección aplicada.
+**Diseño**
+- Rediseño responsive con panel lateral, modo claro/oscuro con selector y paleta cálida.
 
-El script reproducible es `tools/smoke-test.mjs`. Estos chequeos no equivalen a
-una auditoría completa de todas las funciones administrativas o de seguridad.
-
-## Git
-
-Rama de despliegue: `codex/render-deployment`, basada en
-`database-production-foundation`. Los cambios se revisan por PR; `main` no se
-ha fusionado. El documento original de la raíz continúa sin versionar.
+**Seguridad** (auditoría del 20 de octubre: [informe](seguridad/INFORME-PENTEST.md))
+- Sesiones revalidadas contra la base de datos, límites por IP y por cuenta, CSP estricta, HSTS,
+  SRI, validación de entradas, dependencias actualizadas y pruebas automáticas en `tools/`.
 
 ## Pendiente para vender
 
-- Aplicar la migración de Stripe, configurar claves y webhook y hacer una compra de prueba.
-- Catálogo e imágenes reales, cuenta de administración para la propietaria.
-- Proveedor de correo, dominio, textos legales y política de privacidad reales.
-- Revisión integral de permisos, recuperación de cuenta, revocación de sesiones
-  y validación de entradas de administración.
-- Copias de seguridad y restauración probadas; configuración estable de sesiones.
-- Alinear el historial remoto/local de migraciones antes de utilizar `db push`.
+Detallado en la [guía de la propietaria](GUIA_DEL_PROPIETARIO.md) y en la
+[lista de seguridad](seguridad/CHECKLIST-PRODUCCION.md):
 
-El despliegue permite probar la web, pero todavía no constituye una tienda
-habilitada para ventas reales.
+1. EmailJS: destinatario fijo, dominios permitidos y límite de envíos.
+2. Catálogo real e imágenes.
+3. Dominio propio, Render Starter y Supabase Pro (copias de seguridad).
+4. Textos legales y datos fiscales del vendedor (también para las facturas).
+5. Stripe en modo real y `MUNDONOMADA_PRODUCTION=1`.
+6. Antes de abrir: borrar pedidos y usuarios de prueba y reiniciar el contador de facturas.
 
-## Checkout con Stripe (20 de octubre de 2026, rama `feature/stripe-checkout`)
+## Mejoras recomendadas
 
-- `checkout/createCheckoutSession.php`: exige sesión, valida el envío, lee precios
-  y stock de la BBDD con bloqueo, crea el pedido `pendiente`, reserva stock y
-  abre una sesión de Stripe Checkout (caduca a los 31 minutos).
-- `checkout/webhook.php`: verifica la firma `Stripe-Signature` (HMAC-SHA256,
-  tolerancia 5 min). `completed`/`async_payment_succeeded` → `pagado` y vacía el
-  carrito; `expired`/`async_payment_failed` → `cancelado` y devuelve el stock.
-- `checkout/getCheckoutStatus.php`: recibo al volver de Stripe (solo del propietario).
-- `orders/getAllOrders.php` y `orders/updateOrderStatus.php` (solo admin):
-  pantalla **Pedidos**; transiciones `pagado → enviado → completado`.
-- Migración `20261020120000_stripe_checkout.sql`: importes desglosados, datos
-  de envío y permisos de escritura de pedidos para `mundo_nomada_app`.
-- `MUNDONOMADA_PRODUCTION=1` quita el aviso de demo y la cabecera `noindex`.
-
-Verificado: compilación Angular, sintaxis PHP, firma y cálculo de importes,
-imagen Docker con `curl`/`pdo_pgsql`, y respuestas 400/401/403/405 de las
-nuevas rutas. Pendiente: compra completa en modo test con claves de Stripe.
+- Migrar Angular 19 a una versión con soporte (quedan avisos sin impacto real).
+- Recuperación de contraseña con correo transaccional.
+- Imágenes de producto en Supabase Storage en lugar de base64 en la base de datos.
+- Revisar con gestoría la factura simplificada y la obligación de Verifactu (2027).
