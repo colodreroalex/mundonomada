@@ -14,6 +14,47 @@ interface ApiResponse<T> {
   mensaje?: string;
 }
 
+export interface DatosEnvio {
+  nombre: string;
+  apellidos: string;
+  direccion: string;
+  codigoPostal: string;
+  ciudad: string;
+  provincia: string;
+  telefono: string;
+  email: string;
+}
+
+export interface PedidoCheckout {
+  id: number;
+  fecha: string;
+  estado: string;
+  subtotal: number;
+  iva: number;
+  envio: number;
+  total: number;
+  shipping_name: string;
+  shipping_address: string;
+  shipping_postal_code: string;
+  shipping_city: string;
+  shipping_province: string;
+  shipping_phone: string;
+  shipping_email: string;
+}
+
+export interface EstadoCheckout {
+  resultado: string;
+  pedido: PedidoCheckout;
+  items: { producto_id: number; nombre: string; cantidad: number; precio_unitario: number }[];
+}
+
+export interface PedidoAdmin extends PedidoCheckout {
+  paid_at: string | null;
+  payment_intent: string | null;
+  user_email: string;
+  items: { nombre: string; cantidad: number; precio_unitario: number }[];
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -23,9 +64,8 @@ export class OrdersService {
   constructor(private http: HttpClient) { }
 
   /**
-   * Este método no es necesario ya que los pedidos se crean automáticamente
-   * al finalizar una compra en finalizePurchase.php, que guarda el registro
-   * en las tablas orders y order_items.
+   * Los pedidos se crean en checkout/createCheckoutSession.php y solo el
+   * webhook de Stripe los marca como pagados.
    */
 
   // Obtener todos los pedidos del usuario autenticado
@@ -72,6 +112,34 @@ export class OrdersService {
           return this.handleError(error);
         })
       );
+  }
+
+  // Crea el pedido en el servidor y devuelve la URL de pago de Stripe
+  createCheckoutSession(datosEnvio: DatosEnvio): Observable<string> {
+    return this.http.post<{ resultado: string; url: string }>(
+      `${this.apiUrl}checkout/createCheckoutSession.php`, datosEnvio, { withCredentials: true }
+    ).pipe(map(response => response.url), catchError(error => this.handleError(error)));
+  }
+
+  // Estado del pedido al volver de Stripe
+  getCheckoutStatus(sessionId: string): Observable<EstadoCheckout> {
+    return this.http.get<EstadoCheckout>(
+      `${this.apiUrl}checkout/getCheckoutStatus.php?session_id=${encodeURIComponent(sessionId)}`, { withCredentials: true }
+    ).pipe(catchError(error => this.handleError(error)));
+  }
+
+  // Administración: todos los pedidos, opcionalmente filtrados por estado
+  getAllOrders(estado = ''): Observable<PedidoAdmin[]> {
+    return this.http.get<{ resultado: string; orders: PedidoAdmin[] }>(
+      `${this.apiUrl}orders/getAllOrders.php?estado=${encodeURIComponent(estado)}`, { withCredentials: true }
+    ).pipe(map(response => response.orders), catchError(error => this.handleError(error)));
+  }
+
+  // Administración: marcar un pedido como enviado o completado
+  updateOrderStatus(id: number, estado: 'enviado' | 'completado'): Observable<void> {
+    return this.http.post<void>(
+      `${this.apiUrl}orders/updateOrderStatus.php`, { id, estado }, { withCredentials: true }
+    ).pipe(catchError(error => this.handleError(error)));
   }
 
   // Manejador de errores

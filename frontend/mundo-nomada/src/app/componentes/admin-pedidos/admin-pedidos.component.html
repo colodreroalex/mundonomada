@@ -1,0 +1,48 @@
+<div class="container mt-5 mb-5">
+  <h1 class="text-center mb-4" style="color: var(--color-primario);">Pedidos</h1>
+
+  <div class="d-flex flex-wrap gap-2 align-items-center justify-content-between mb-4">
+    <a class="btn btn-outline-secondary" routerLink="/adminPanel">← Volver al panel</a>
+    <div class="d-flex gap-2 align-items-center">
+      <label for="estado" class="mb-0">Estado:</label>
+      <select id="estado" class="form-select" [(ngModel)]="estado" (change)="cargar()">
+        <option *ngFor="let e of estados" [value]="e">{{ e || 'todos' }}</option>
+      </select>
+    </div>
+  </div>
+
+  <div *ngIf="error" class="alert alert-danger">{{ error }}</div>
+  <div *ngIf="loading" class="text-center my-5"><div class="spinner-border" role="status"></div></div>
+  <p *ngIf="!loading && !error && pedidos.length === 0" class="text-center text-muted">No hay pedidos con este estado.</p>
+
+  <div *ngFor="let p of pedidos" class="card p-3 mb-3 shadow-sm">
+    <div class="d-flex flex-wrap justify-content-between gap-2">
+      <div>
+        <h5 class="mb-1">MN-{{ p.id }} <span class="badge estado-{{ p.estado }}">{{ p.estado }}</span></h5>
+        <small class="text-muted">{{ p.fecha | date:'dd/MM/yyyy HH:mm' }} · {{ p.user_email }}</small>
+      </div>
+      <div class="text-end">
+        <strong>{{ p.total | currency:'EUR' }}</strong><br>
+        <small class="text-muted">IVA {{ p.iva | currency:'EUR' }} · envío {{ p.envio | currency:'EUR' }}</small>
+      </div>
+    </div>
+
+    <div class="row mt-3">
+      <div class="col-md-6">
+        <ul class="mb-2">
+          <li *ngFor="let i of p.items">{{ i.cantidad }} × {{ i.nombre }} ({{ i.precio_unitario | currency:'EUR' }} sin IVA)</li>
+        </ul>
+      </div>
+      <div class="col-md-6 small">
+        <strong>Enviar a:</strong> {{ p.shipping_name }}<br>
+        {{ p.shipping_address }}, {{ p.shipping_postal_code }} {{ p.shipping_city }} ({{ p.shipping_province }})<br>
+        Tel. {{ p.shipping_phone }} · {{ p.shipping_email }}
+      </div>
+    </div>
+
+    <div class="d-flex gap-2 justify-content-end">
+      <button *ngIf="p.estado === 'pagado'" class="btn btn-custom" (click)="avanzar(p, 'enviado')">Marcar como enviado</button>
+      <button *ngIf="p.estado === 'enviado'" class="btn btn-custom" (click)="avanzar(p, 'completado')">Marcar como completado</button>
+    </div>
+  </div>
+</div>

@@ -34,7 +34,7 @@
     </div>
 
     <!-- Resumen del carrito (se muestra solo si no se ha completado la compra) -->
-    <div *ngIf="!loading && carrito && carrito.length > 0 && !orderCompleted" class="cart-summary-container">
+    <div *ngIf="!loading && currentUser && !orderData && carrito.length > 0" class="cart-summary-container">
       <div class="row">
         <!-- Columna izquierda: Lista de productos y formulario de envío -->
         <div class="col-lg-7 mb-4">
@@ -59,7 +59,7 @@
           <!-- Formulario de datos de envío -->
           <div class="shipping-form shadow-sm p-4">
             <h4 class="section-title mb-4"><i class="bi bi-geo-alt me-2"></i>Datos de envío</h4>
-            <form [formGroup]="shippingForm" (ngSubmit)="updatePayPalButtonState()" class="row g-3" novalidate>
+            <form id="shipping-form" [formGroup]="shippingForm" (ngSubmit)="pagar()" class="row g-3" novalidate>
               <!-- Nombre -->
               <div class="col-md-6">
                 <label for="nombre" class="form-label">Nombre *</label>
@@ -146,21 +146,10 @@
                 </div>
               </div>
               
-              <div class="col-12">
-                <button type="submit" class="btn btn-custom w-100">Confirmar datos de envío</button>
-              </div>
-              
               <div class="col-12 mt-3" *ngIf="!isFormValid() && formSubmitted">
                 <div class="alert alert-warning">
                   <i class="bi bi-exclamation-triangle-fill me-2"></i>
                   Completa todos los campos obligatorios para continuar
-                </div>
-              </div>
-              
-              <div class="col-12 mt-3" *ngIf="isFormValid() && formSubmitted">
-                <div class="alert alert-success">
-                  <i class="bi bi-check-circle-fill me-2"></i>
-                  ¡Datos de envío confirmados! Puedes proceder con el pago
                 </div>
               </div>
             </form>
@@ -196,18 +185,14 @@
             <div class="payment-method">
               <h5 class="payment-title">Método de pago</h5>
               
-              <!-- Estado del método de pago -->
-              <div *ngIf="!formSubmitted || !isFormValid()" class="alert alert-warning">
-                <i class="bi bi-info-circle-fill me-2"></i>
-                <strong>Completa primero tus datos de envío</strong>
-                <p class="mb-0 small">Pulsa el botón "Confirmar datos de envío" después de rellenar el formulario</p>
-              </div>
-              
-              <div *ngIf="formSubmitted && isFormValid()">
-                <div class="alert alert-info mb-0">
-                  El pago online está en preparación. No se cobra ni se crea ningún pedido hasta que el proveedor de pago esté conectado y verificado en el servidor.
-                </div>
-              </div>
+              <p class="small mb-3">
+                Pagarás en la página segura de Stripe con tarjeta u otros métodos disponibles.
+                El importe final se calcula en el servidor con los precios y el stock actuales.
+              </p>
+              <button type="submit" form="shipping-form" class="btn btn-custom w-100" [disabled]="redirigiendo">
+                <span *ngIf="redirigiendo" class="spinner-border spinner-border-sm me-2" role="status"></span>
+                {{ redirigiendo ? 'Redirigiendo al pago...' : 'Pagar con tarjeta' }}
+              </button>
             </div>
           </div>
           
@@ -224,8 +209,25 @@
       </div>
     </div>
 
+    <!-- Hace falta una cuenta para comprar -->
+    <div *ngIf="!loading && !currentUser" class="empty-cart-container text-center shadow-sm p-5 my-5">
+      <i class="bi bi-person-lock empty-cart-icon mb-3"></i>
+      <h4 class="mb-3">Inicia sesión para finalizar tu compra</h4>
+      <p class="mb-4">Necesitamos tu cuenta para guardar el pedido y que puedas consultarlo después.</p>
+      <a class="btn btn-primario me-2" routerLink="/login">Iniciar sesión</a>
+      <a class="btn btn-secundario" routerLink="/register">Crear cuenta</a>
+    </div>
+
+    <!-- Stripe ha devuelto al cliente pero el webhook aún no ha confirmado el pago -->
+    <div *ngIf="!loading && pagoPendiente" class="empty-cart-container text-center shadow-sm p-5 my-5">
+      <div class="spinner-border text-primario mb-3" role="status"></div>
+      <h4 class="mb-3">Estamos confirmando tu pago</h4>
+      <p class="mb-0">Pedido {{ orderId }}. Esta página se actualizará sola en unos segundos.
+        Si no cambia, revisa tus pedidos en tu perfil más tarde.</p>
+    </div>
+
     <!-- Carrito vacío -->
-    <div *ngIf="!loading && carrito.length === 0 && !orderCompleted" class="empty-cart-container text-center shadow-sm p-5 my-5">
+    <div *ngIf="!loading && currentUser && !orderData && carrito.length === 0"class="empty-cart-container text-center shadow-sm p-5 my-5">
       <i class="bi bi-cart-x empty-cart-icon mb-3"></i>
       <h4 class="mb-3">Tu carrito está vacío</h4>
       <p class="mb-4">No hay productos en el carrito. Con lo cual no hay un pedido que procesar.</p>
@@ -241,7 +243,7 @@
           <i class="bi bi-check-circle-fill text-success" style="font-size: 3rem;"></i>
         </div>
         <h3 class="text-primario my-3">¡Compra realizada con éxito!</h3>
-        <p class="lead">Gracias por tu compra. Hemos enviado un correo con todos los detalles.</p>
+        <p class="lead">Gracias por tu compra. Recibirás el justificante de pago por correo electrónico.</p>
         <div class="d-flex justify-content-center mb-3">
           <button class="btn btn-primario btn-lg" (click)="downloadReceipt()">
             <i class="bi bi-file-earmark-pdf-fill me-2"></i> Descargar Recibo PDF
@@ -262,7 +264,7 @@
             <p class="mb-0"><strong>Hora:</strong> {{orderData?.date | date:'HH:mm:ss'}}</p>
           </div>
           <div class="text-end">
-            <p class="mb-0"><strong>Número de orden:</strong> {{orderId}}</p>
+            <p class="mb-0"><strong>Número de pedido:</strong> {{orderId}}</p>
           </div>
         </div>
         

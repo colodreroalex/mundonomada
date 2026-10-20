@@ -1,0 +1,21 @@
+.btn-custom {
+  background-color: var(--color-primario);
+  color: var(--color-secundario);
+  border: none;
+}
+
+.btn-custom:hover {
+  background-color: var(--color-hover);
+  color: var(--color-secundario);
+}
+
+select.form-select {
+  width: auto;
+}
+
+.badge { color: #fff; }
+.estado-pendiente { background-color: #6c757d; }
+.estado-pagado { background-color: #b8860b; }
+.estado-enviado { background-color: #0d6efd; }
+.estado-completado { background-color: #198754; }
+.estado-cancelado { background-color: #dc3545; }

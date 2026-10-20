@@ -15,5 +15,10 @@ COPY --from=frontend /app/dist/mundo-nomada/browser/ /var/www/html/
 COPY backend/Mundo-nomada-backEnd/ /var/www/html/api_php/
 COPY backend/apache-site.conf /etc/apache2/sites-available/000-default.conf
 COPY backend/production.ini /usr/local/etc/php/conf.d/production.ini
-COPY backend/runtime-config.production.js /var/www/html/runtime-config.js
+COPY backend/runtime-config.production.js /usr/local/share/mundonomada/runtime-config.production.js
+COPY backend/docker-entrypoint.sh /usr/local/bin/mundonomada-entrypoint
+RUN tr -d '\r' < /usr/local/bin/mundonomada-entrypoint > /tmp/entrypoint \
+    && mv /tmp/entrypoint /usr/local/bin/mundonomada-entrypoint \
+    && chmod 755 /usr/local/bin/mundonomada-entrypoint
 EXPOSE 80
+CMD ["mundonomada-entrypoint"]

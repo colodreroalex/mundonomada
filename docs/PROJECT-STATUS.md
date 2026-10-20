@@ -35,8 +35,7 @@ ha fusionado. El documento original de la raíz continúa sin versionar.
 
 ## Pendiente para vender
 
-- Checkout, creación de pedidos y descuento de stock tras webhook verificado.
-  Las rutas de compra permanecen bloqueadas; no se efectúan cobros.
+- Aplicar la migración de Stripe, configurar claves y webhook y hacer una compra de prueba.
 - Catálogo e imágenes reales, cuenta de administración para la propietaria.
 - Proveedor de correo, dominio, textos legales y política de privacidad reales.
 - Revisión integral de permisos, recuperación de cuenta, revocación de sesiones
@@ -46,3 +45,22 @@ ha fusionado. El documento original de la raíz continúa sin versionar.
 
 El despliegue permite probar la web, pero todavía no constituye una tienda
 habilitada para ventas reales.
+
+## Checkout con Stripe (20 de octubre de 2026, rama `feature/stripe-checkout`)
+
+- `checkout/createCheckoutSession.php`: exige sesión, valida el envío, lee precios
+  y stock de la BBDD con bloqueo, crea el pedido `pendiente`, reserva stock y
+  abre una sesión de Stripe Checkout (caduca a los 31 minutos).
+- `checkout/webhook.php`: verifica la firma `Stripe-Signature` (HMAC-SHA256,
+  tolerancia 5 min). `completed`/`async_payment_succeeded` → `pagado` y vacía el
+  carrito; `expired`/`async_payment_failed` → `cancelado` y devuelve el stock.
+- `checkout/getCheckoutStatus.php`: recibo al volver de Stripe (solo del propietario).
+- `orders/getAllOrders.php` y `orders/updateOrderStatus.php` (solo admin):
+  pantalla **Pedidos**; transiciones `pagado → enviado → completado`.
+- Migración `20261020120000_stripe_checkout.sql`: importes desglosados, datos
+  de envío y permisos de escritura de pedidos para `mundo_nomada_app`.
+- `MUNDONOMADA_PRODUCTION=1` quita el aviso de demo y la cabecera `noindex`.
+
+Verificado: compilación Angular, sintaxis PHP, firma y cálculo de importes,
+imagen Docker con `curl`/`pdo_pgsql`, y respuestas 400/401/403/405 de las
+nuevas rutas. Pendiente: compra completa en modo test con claves de Stripe.

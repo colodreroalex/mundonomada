@@ -10,6 +10,8 @@ coverage/
 !.env.example
 /backend/Mundo-nomada-backEnd/config/database.local.php
 /backend/Mundo-nomada-backEnd/config/supabase.local.php
+/backend/Mundo-nomada-backEnd/config/stripe.local.php
+supabaseMundonomadaPass.txt
 .vscode/
 .idea/
 

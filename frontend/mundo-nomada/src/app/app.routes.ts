@@ -14,6 +14,7 @@ import { CarritoComponent } from './componentes/carrito/carrito.component';
 import { DeleteCategoriaComponent } from './componentes/delete-categoria/delete-categoria.component';
 import { DetalleProductoComponent } from './componentes/detalle-producto/detalle-producto.component';
 import { CheckoutComponent } from './componentes/checkout/checkout.component';
+import { AdminPedidosComponent } from './componentes/admin-pedidos/admin-pedidos.component';
 import { PerfilUsuarioComponent } from './componentes/perfil-usuario/perfil-usuario.component';
 import { ConocenosComponent } from './pages/footer-pages/conocenos/conocenos.component';
 import { NuestrasTiendasComponent } from './pages/footer-pages/nuestras-tiendas/nuestras-tiendas.component';
@@ -38,6 +39,7 @@ export const routes: Routes = [
  { path: 'mostrarProductos/:categoriaID', component: MostrarProductsComponent },
  {path: 'contacto', component: ContactoComponent},
  {path: 'adminPanel', component: AdminPanelComponent, canActivate: [AuthGuard], data: { role: 'admin' }},
+ {path: 'adminPedidos', component: AdminPedidosComponent, canActivate: [AuthGuard], data: { role: 'admin' }},
  {path: 'main', component: MainComponent},
  {path: 'deleteProduct', component: DeleteProductComponent, canActivate: [AuthGuard], data: { role: 'admin' }},
  {path: 'deleteCategoria', component: DeleteCategoriaComponent, canActivate: [AuthGuard], data: { role: 'admin' }},

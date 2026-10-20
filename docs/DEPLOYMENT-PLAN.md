@@ -26,6 +26,9 @@ y evita la indexación del sitio de prueba.
 - `MUNDONOMADA_SUPABASE_DSN`
 - `MUNDONOMADA_SUPABASE_USER`
 - `MUNDONOMADA_SUPABASE_PASSWORD`
+- `STRIPE_SECRET_KEY` (`sk_test_...` hasta abrir la tienda)
+- `STRIPE_WEBHOOK_SECRET` (`whsec_...` del endpoint `/api_php/checkout/webhook.php`)
+- `MUNDONOMADA_PRODUCTION`: `0` demo (aviso y `noindex`), `1` tienda real
 
 El usuario PostgreSQL es `mundo_nomada_app`, sin superusuario, DDL ni bypass de
 RLS. Tiene permisos limitados a las tablas de la aplicación; pedidos y líneas
