@@ -12,4 +12,10 @@ import { FooterComponent } from "./componentes/footer/footer.component";
 export class AppComponent {
   demoMode = window.__MUNDO_NOMADA_CONFIG__?.demoMode === true;
   title = 'mundo-nomada';
+
+  // Enlace de accesibilidad: lleva el foco al contenido principal sin pasar por el menú
+  saltarAlContenido(evento: Event): void {
+    evento.preventDefault();
+    document.getElementById('contenido')?.focus();
+  }
 }

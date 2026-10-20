@@ -1,18 +1,21 @@
 <div class="app-container">
 
+    <a class="visually-hidden-focusable" href (click)="saltarAlContenido($event)">Saltar al contenido</a>
+
     <app-menu></app-menu>
 
     @if (demoMode) {
-      <div class="alert alert-warning text-center rounded-0 mb-0" role="status">
-        Versión de prueba · Catálogo de demostración · Pagos en modo test de Stripe: no se cobra dinero real.
+      <div class="aviso-demo" role="status">
+        <i class="bi bi-info-circle" aria-hidden="true"></i>
+        <span>Versión de prueba · Catálogo de demostración · Pagos en modo test de Stripe: no se cobra dinero real.</span>
       </div>
     }
 
-    <div class="main-content">
+    <main id="contenido" class="main-content" tabindex="-1">
 
       <router-outlet></router-outlet>
 
-    </div>
+    </main>
 
     <app-footer></app-footer>
 

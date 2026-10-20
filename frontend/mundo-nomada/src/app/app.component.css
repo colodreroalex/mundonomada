@@ -1,10 +1,33 @@
 .app-container {
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh; /* Ocupa al menos la altura total del viewport */
-  }
-  
-  .main-content {
-    flex: 1; /* Se expande para ocupar el espacio disponible */
-  }
-  
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+.main-content {
+  flex: 1;
+  outline: none;
+  animation: aparecer 0.35s var(--ease);
+}
+
+.aviso-demo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--esp-2);
+  padding: 8px var(--gutter);
+  background: color-mix(in srgb, var(--color-aviso) 14%, var(--color-secundario));
+  color: var(--color-texto);
+  border-bottom: 1px solid color-mix(in srgb, var(--color-aviso) 30%, transparent);
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.aviso-demo .bi {
+  color: var(--color-aviso);
+  font-size: 0.95rem;
+  flex-shrink: 0;
+}
