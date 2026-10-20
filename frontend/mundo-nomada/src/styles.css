@@ -1051,3 +1051,343 @@ img[src$='sin-imagen.png'] {
   filter: invert(1);
   opacity: 0.22;
 }
+
+/* Con una ventana de diálogo abierta, la página de fondo no se desplaza */
+body:has(.dialogo) {
+  overflow: hidden;
+}
+
+/* =====================================================================
+   Pantallas de administración
+   ===================================================================== */
+.admin-pagina {
+  padding-block: var(--esp-5) var(--esp-6);
+}
+
+.admin-volver {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--esp-2);
+  min-height: var(--tactil);
+  margin-bottom: var(--esp-2);
+  font-weight: 600;
+}
+
+.admin-cabecera {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--esp-3);
+  margin-bottom: var(--esp-5);
+}
+
+.admin-cabecera h1 {
+  margin: 0;
+  font-size: var(--fs-h2);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--color-texto);
+}
+
+.admin-cabecera p {
+  margin: var(--esp-1) 0 0;
+  color: var(--color-texto-suave);
+}
+
+.admin-formulario {
+  max-width: 820px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-4);
+}
+
+.admin-campos {
+  display: grid;
+  gap: var(--esp-4);
+}
+
+@media (min-width: 768px) {
+  .admin-campos {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .admin-campos .completo {
+    grid-column: 1 / -1;
+  }
+}
+
+.admin-ayuda {
+  display: block;
+  margin-top: 6px;
+  font-size: var(--fs-xs);
+  color: var(--color-texto-suave);
+}
+
+.admin-error {
+  margin-top: 6px;
+  font-size: var(--fs-sm);
+  color: var(--color-error);
+}
+
+.admin-botones {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--esp-2);
+  padding-top: var(--esp-4);
+  border-top: 1px solid var(--color-borde);
+}
+
+@media (max-width: 575.98px) {
+  .admin-botones > * {
+    flex: 1 1 100%;
+  }
+}
+
+.admin-aviso {
+  display: flex;
+  gap: var(--esp-2);
+  max-width: 820px;
+  margin-bottom: var(--esp-4);
+}
+
+.form-control[type='file'] {
+  padding: 0.55rem 0.75rem;
+}
+
+.form-control::file-selector-button {
+  border: none;
+  border-radius: var(--radio-pill);
+  background: var(--color-primario-suave);
+  color: var(--color-primario);
+  font-weight: 600;
+  padding: 0.35rem 0.9rem;
+  margin-right: var(--esp-3);
+}
+
+.vista-previa {
+  width: 120px;
+  aspect-ratio: 4 / 5;
+  margin-top: var(--esp-3);
+  border-radius: var(--radio-sm);
+  overflow: hidden;
+  background: var(--color-arena);
+  border: 1px solid var(--color-borde);
+}
+
+.vista-previa img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Rejilla de tarjetas para listados de administración */
+.admin-rejilla {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
+  gap: var(--esp-3);
+}
+
+.admin-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-2);
+  padding: var(--esp-4);
+  background: var(--color-superficie);
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio);
+}
+
+.admin-item h3 {
+  margin: 0;
+  font-size: var(--fs-base);
+  font-weight: 700;
+}
+
+.admin-item p {
+  margin: 0;
+  font-size: var(--fs-sm);
+  color: var(--color-texto-suave);
+}
+
+.admin-item .admin-item-acciones {
+  display: flex;
+  gap: var(--esp-2);
+  margin-top: auto;
+  padding-top: var(--esp-2);
+}
+
+.btn-peligro {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--esp-2);
+  min-height: var(--tactil);
+  padding: 0.6rem 1.2rem;
+  border-radius: var(--radio-pill);
+  border: 1.5px solid color-mix(in srgb, var(--color-error) 45%, transparent);
+  background: transparent;
+  color: var(--color-error);
+  font-weight: 600;
+  transition: background-color var(--t-rapida) var(--ease);
+}
+
+.btn-peligro:hover {
+  background: color-mix(in srgb, var(--color-error) 12%, transparent);
+  color: var(--color-error);
+}
+
+.btn-peligro.lleno {
+  background: var(--color-error);
+  border-color: var(--color-error);
+  color: #fff;
+}
+
+.btn-peligro.lleno:hover {
+  filter: brightness(1.08);
+}
+
+/* =====================================================================
+   Páginas de información y legales (pie de página)
+   ===================================================================== */
+.pagina-info {
+  max-width: 920px;
+  padding-block: var(--esp-6) var(--esp-6);
+}
+
+.pagina-info > h1 {
+  margin: 0 0 var(--esp-6) !important;
+  text-align: left !important;
+  font-size: var(--fs-h1);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--color-texto) !important;
+}
+
+.pagina-info > h1::before {
+  content: 'Mundo Nómada';
+  display: block;
+  margin-bottom: var(--esp-2);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--color-primario);
+}
+
+/* Las columnas centradas de Bootstrap ocupan todo el ancho de la columna de lectura */
+.pagina-info .col-md-10.offset-md-1 {
+  width: 100%;
+  margin-left: 0;
+}
+
+.pagina-info .row.mb-5 {
+  margin-bottom: var(--esp-4) !important;
+}
+
+.pagina-info .card {
+  background: var(--color-superficie) !important;
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-lg);
+  box-shadow: none !important;
+}
+
+/* Cabeceras de sección: título con acento granate en vez de banda de color */
+.pagina-info .card-header.bg-primario {
+  position: relative;
+  background: transparent !important;
+  color: var(--color-texto) !important;
+  border-bottom: 1px solid var(--color-borde);
+  padding: var(--esp-4) var(--esp-5) var(--esp-4) calc(var(--esp-5) + 12px);
+}
+
+.pagina-info .card-header.bg-primario::before {
+  content: '';
+  position: absolute;
+  left: var(--esp-5);
+  top: 50%;
+  width: 4px;
+  height: 22px;
+  border-radius: 2px;
+  background: var(--color-marca);
+  transform: translateY(-50%);
+}
+
+.pagina-info .card-header.bg-primario h2,
+.pagina-info .card-header.bg-primario h3,
+.pagina-info .card-header.bg-primario h4 {
+  color: var(--color-texto) !important;
+  font-size: var(--fs-lg);
+  font-weight: 700;
+}
+
+.pagina-info .card-body {
+  padding: clamp(1.1rem, 0.9rem + 1vw, 1.75rem);
+}
+
+.pagina-info .card-body .lead {
+  font-size: var(--fs-lg);
+  line-height: 1.7;
+  text-align: left !important;
+  margin: 0;
+}
+
+.pagina-info h3.text-primario,
+.pagina-info h4.text-primario,
+.pagina-info h5.text-primario {
+  font-size: var(--fs-base);
+  font-weight: 700;
+  margin-top: var(--esp-4);
+}
+
+.pagina-info a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.pagina-info .btn-custom,
+.pagina-info .btn-secundario {
+  text-decoration: none;
+}
+
+.pagina-info table {
+  font-size: var(--fs-sm);
+}
+
+/* Preguntas frecuentes */
+.pagina-info .accordion {
+  --bs-accordion-bg: var(--color-superficie);
+  --bs-accordion-color: var(--color-texto);
+  --bs-accordion-border-color: var(--color-borde);
+  --bs-accordion-border-radius: var(--radio);
+  --bs-accordion-inner-border-radius: calc(var(--radio) - 1px);
+  --bs-accordion-btn-color: var(--color-texto);
+  --bs-accordion-btn-bg: var(--color-superficie);
+  --bs-accordion-active-color: var(--color-primario);
+  --bs-accordion-active-bg: var(--color-primario-suave);
+  --bs-accordion-btn-focus-box-shadow: 0 0 0 4px var(--color-primario-suave);
+  --bs-accordion-btn-padding-y: 1.1rem;
+}
+
+.pagina-info .accordion-button {
+  background-color: var(--color-superficie) !important;
+  color: var(--color-texto) !important;
+  font-weight: 600;
+  min-height: 56px;
+}
+
+.pagina-info .accordion-button:not(.collapsed) {
+  background-color: var(--color-primario-suave) !important;
+  color: var(--color-primario) !important;
+  box-shadow: none;
+}
+
+[data-bs-theme='dark'] .pagina-info .accordion-button::after {
+  filter: invert(1) brightness(1.6);
+}
+
+.pagina-info .accordion-body {
+  line-height: 1.7;
+  color: var(--color-texto);
+}

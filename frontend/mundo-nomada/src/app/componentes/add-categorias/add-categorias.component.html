@@ -1,8 +1,15 @@
-<div class="container mt-4">
-  <h2>Añadir Nueva Categoría</h2>
-  
+<div class="container admin-pagina">
+  <a class="admin-volver" routerLink="/adminPanel"><i class="bi bi-arrow-left" aria-hidden="true"></i>Admin Panel</a>
+
+  <div class="admin-cabecera">
+    <div>
+      <p class="cabecera-pagina-etiqueta">Categorías</p>
+      <h1>Añadir Nueva Categoría</h1>
+    </div>
+  </div>
+
   <!-- Bloque para notificaciones -->
-  <div *ngIf="notification" class="notification-banner alert alert-{{ notification.type }} text-center fade-in-out shadow-sm" role="alert">
+  <div *ngIf="notification" class="notification-banner alert alert-{{ notification.type }} fade-in-out" role="alert">
     <i class="bi" [ngClass]="{
       'bi-check-circle-fill': notification.type === 'success',
       'bi-exclamation-triangle-fill': notification.type === 'warning',
@@ -10,16 +17,22 @@
     }"></i>
     {{ notification.message }}
   </div>
-  
-  <form (ngSubmit)="addCategoria()">
-    <div class="mb-3">
-      <label>Nombre de la Categoría</label>
-      <input type="text" [(ngModel)]="categoria.Nombre" name="nombre" class="form-control" required>
+
+  <form (ngSubmit)="addCategoria()" class="panel-superficie admin-formulario">
+    <div>
+      <label for="nombre-categoria" class="form-label">Nombre de la Categoría</label>
+      <input id="nombre-categoria" type="text" [(ngModel)]="categoria.Nombre" name="nombre" class="form-control" required>
+      <small class="admin-ayuda">Aparecerá en el menú del catálogo. Máximo 50 caracteres.</small>
     </div>
-    <div class="mb-3">
-      <label>Descripción</label>
-      <textarea [(ngModel)]="categoria.Descripcion" name="descripcion" class="form-control" required></textarea>
+    <div>
+      <label for="descripcion-categoria" class="form-label">Descripción</label>
+      <textarea id="descripcion-categoria" [(ngModel)]="categoria.Descripcion" name="descripcion" class="form-control" rows="3" required></textarea>
     </div>
-    <button type="submit" class="btn btn-primary">Guardar</button>
+    <div class="admin-botones">
+      <a class="btn-secundario" routerLink="/adminPanel">Cancelar</a>
+      <button type="submit" class="btn-custom">
+        <i class="bi bi-check2" aria-hidden="true"></i>Guardar
+      </button>
+    </div>
   </form>
 </div>

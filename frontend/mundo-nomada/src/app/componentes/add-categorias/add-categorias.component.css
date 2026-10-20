@@ -1,17 +1,1 @@
-.container {
-  padding-top: var(--esp-6);
-  padding-bottom: var(--esp-6);
-}
-
-.btn {
-  background-color: var(--color-marca);
-  color: var(--color-sobre-marca);
-  border: none;
-  font-weight: 700;
-}
-
-.btn:hover {
-  background-color: var(--color-marca-hover);
-  color: var(--color-sobre-marca);
-  box-shadow: var(--sombra-2);
-}
+/* Estilos en styles.css (pantallas de administración) */

@@ -1,33 +1,41 @@
-<div class="container mt-5">
-  <div class="card p-4 shadow-sm" style="background-color: var(--color-secundario, #f7f7f7);">
-    <h2 class="card-title text-center mb-4" style="color: var(--color-primario, #791515);">
-      Editar Usuario
-    </h2>
+<div class="container admin-pagina">
+  <a class="admin-volver" [routerLink]="['/lista-usuarios']"><i class="bi bi-arrow-left" aria-hidden="true"></i>Gestión de Usuarios</a>
 
-    <div *ngIf="loadingData" class="text-center py-4">
-      <div class="spinner-border" style="color: var(--color-primario, #791515);" role="status">
-        <span class="visually-hidden">Cargando...</span>
-      </div>
-      <p class="mt-2">Cargando datos del usuario...</p>
+  <div class="admin-cabecera">
+    <div>
+      <p class="cabecera-pagina-etiqueta">Usuarios</p>
+      <h1>Editar Usuario</h1>
     </div>
+  </div>
 
-    <div *ngIf="success" class="alert alert-success">
-      <i class="fas fa-check-circle me-2"></i> {{ success }}
+  <div *ngIf="loadingData" class="text-center py-4">
+    <div class="spinner-border" role="status">
+      <span class="visually-hidden">Cargando...</span>
     </div>
+    <p class="mt-2 text-muted">Cargando datos del usuario...</p>
+  </div>
 
-    <div *ngIf="error" class="alert alert-danger">
-      <i class="fas fa-exclamation-circle me-2"></i> {{ error }}
+  <div *ngIf="success" class="alert alert-success admin-aviso">
+    <i class="fas fa-check-circle" aria-hidden="true"></i><span>{{ success }}</span>
+  </div>
+
+  <div *ngIf="error" class="alert alert-danger admin-aviso">
+    <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
+    <div>
+      {{ error }}
       <div class="mt-2">
-        <button type="button" class="btn btn-custom" (click)="retry()">
-          <i class="fas fa-sync-alt"></i> Reintentar
+        <button type="button" class="btn-custom btn-sm" (click)="retry()">
+          <i class="fas fa-sync-alt" aria-hidden="true"></i> Reintentar
         </button>
       </div>
     </div>
+  </div>
 
-    <form *ngIf="!loadingData && !error" [formGroup]="userForm" (ngSubmit)="onSubmit()">
-      <div class="mb-3">
+  <form *ngIf="!loadingData && !error" [formGroup]="userForm" (ngSubmit)="onSubmit()" class="panel-superficie admin-formulario">
+    <div class="admin-campos">
+      <div>
         <label for="name" class="form-label">Nombre</label>
-        <input type="text" class="form-control" id="name" formControlName="name"
+        <input type="text" class="form-control" id="name" formControlName="name" autocomplete="off"
               [ngClass]="{'is-invalid': userForm.get('name')?.invalid && userForm.get('name')?.touched}">
         <div *ngIf="userForm.get('name')?.invalid && userForm.get('name')?.touched" class="invalid-feedback">
           <span *ngIf="userForm.get('name')?.errors?.['required']">El nombre es obligatorio</span>
@@ -35,9 +43,9 @@
         </div>
       </div>
 
-      <div class="mb-3">
+      <div>
         <label for="email" class="form-label">Email</label>
-        <input type="email" class="form-control" id="email" formControlName="email"
+        <input type="email" class="form-control" id="email" formControlName="email" autocomplete="off" inputmode="email"
               [ngClass]="{'is-invalid': userForm.get('email')?.invalid && userForm.get('email')?.touched}">
         <div *ngIf="userForm.get('email')?.invalid && userForm.get('email')?.touched" class="invalid-feedback">
           <span *ngIf="userForm.get('email')?.errors?.['required']">El email es obligatorio</span>
@@ -45,13 +53,13 @@
         </div>
       </div>
 
-      <div class="mb-3">
-        <label for="password" class="form-label">Contraseña <span class="text-muted">(Dejar en blanco para mantener la actual)</span></label>
-        <input type="password" class="form-control" id="password" formControlName="password">
-        <div class="form-text">Si no desea cambiar la contraseña, deje este campo en blanco.</div>
+      <div>
+        <label for="password" class="form-label">Contraseña <span class="text-muted fw-normal">(Dejar en blanco para mantener la actual)</span></label>
+        <input type="password" class="form-control" id="password" formControlName="password" autocomplete="new-password">
+        <small class="admin-ayuda">Si no desea cambiar la contraseña, deje este campo en blanco.</small>
       </div>
 
-      <div class="mb-3">
+      <div>
         <label for="role" class="form-label">Rol</label>
         <select class="form-select" id="role" formControlName="role"
               [ngClass]="{'is-invalid': userForm.get('role')?.invalid && userForm.get('role')?.touched}">
@@ -62,16 +70,16 @@
           <span *ngIf="userForm.get('role')?.errors?.['required']">El rol es obligatorio</span>
         </div>
       </div>
+    </div>
 
-      <div class="d-flex justify-content-between mt-4">
-        <button type="button" class="btn btn-outline-secondary" [routerLink]="['/lista-usuarios']">
-          <i class="fas fa-arrow-left me-1"></i> Volver
-        </button>
-        <button type="submit" class="btn btn-custom" [disabled]="loading" [ngClass]="{'disabled': userForm.invalid && !loading}">
-          <span *ngIf="loading" class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
-          <i *ngIf="!loading" class="fas fa-save me-1"></i> Guardar Cambios
-        </button>
-      </div>
-    </form>
-  </div>
+    <div class="admin-botones">
+      <button type="button" class="btn-secundario" [routerLink]="['/lista-usuarios']">
+        <i class="fas fa-arrow-left" aria-hidden="true"></i> Volver
+      </button>
+      <button type="submit" class="btn-custom" [disabled]="loading" [ngClass]="{'disabled': userForm.invalid && !loading}">
+        <span *ngIf="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+        <i *ngIf="!loading" class="fas fa-save" aria-hidden="true"></i> Guardar Cambios
+      </button>
+    </div>
+  </form>
 </div>

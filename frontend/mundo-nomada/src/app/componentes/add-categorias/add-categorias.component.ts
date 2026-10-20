@@ -3,13 +3,13 @@ import { FormsModule } from '@angular/forms';
 import { CategoriasService } from '../../services/categorias.service';
 import { Categoria } from '../../../models/Categoria';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-add-categoria',
   templateUrl: './add-categorias.component.html',
   styleUrls: ['./add-categorias.component.css'], 
-  imports: [FormsModule, CommonModule],
+  imports: [FormsModule, CommonModule, RouterLink],
 })
 export class AddCategoriaComponent {
   categoria: Categoria = new Categoria(0, '', '');

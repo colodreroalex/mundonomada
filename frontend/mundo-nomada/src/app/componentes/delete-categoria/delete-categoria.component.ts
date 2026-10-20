@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { Categoria } from '../../../models/Categoria';
 import { CategoriasService } from '../../services/categorias.service';
 import { CommonModule } from '@angular/common';
@@ -6,7 +7,7 @@ import { CommonModule } from '@angular/common';
 @Component({
   selector: 'app-delete-categoria',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterLink],
   templateUrl: './delete-categoria.component.html',
   styleUrls: ['./delete-categoria.component.css']
 })

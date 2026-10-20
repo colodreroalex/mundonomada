@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { Producto } from '../../../models/Producto';
 import { ProductosService } from '../../services/productos.service';
 import { CommonModule } from '@angular/common';
@@ -7,7 +8,7 @@ import { FormsModule, NgForm } from '@angular/forms';
 @Component({
   selector: 'app-modificar-product',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './modificar-product.component.html',
   styleUrls: ['./modificar-product.component.css']
 })
@@ -32,6 +33,13 @@ export class ModificarProductComponent {
   }
 
   // Selecciona un producto y lo carga en el formulario
+  // En móvil el formulario queda debajo de la lista: se lleva la vista hasta él
+  irAlFormulario(): void {
+    if (window.innerWidth < 992) {
+      setTimeout(() => document.getElementById('editar-producto')?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+    }
+  }
+
   seleccionarProducto(producto: Producto) {
     // El backend espera el parámetro "ProductoID"
     this.productosService.seleccionar(producto).subscribe((result: any) => {

@@ -1,4 +1,4 @@
-import { Component, OnInit, DestroyRef, inject } from '@angular/core';
+import { Component, OnInit, DestroyRef, inject, HostListener } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
   FormBuilder,
@@ -23,6 +23,12 @@ import { OrderItem } from '../../../models/OrderItem';
 })
 export class PerfilUsuarioComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
+
+  // La ventana de detalle del pedido se cierra con Escape
+  @HostListener('document:keydown.escape')
+  cerrarDetallePedido(): void {
+    this.selectedOrder = null;
+  }
   currentUser: User | null = null;
   profileForm!: FormGroup;
   passwordForm!: FormGroup;

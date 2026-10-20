@@ -1,48 +1,64 @@
-<div class="container mt-5 mb-5">
-  <h1 class="text-center mb-4" style="color: var(--color-primario);">Pedidos</h1>
+<div class="container admin-pagina">
+  <a class="admin-volver" routerLink="/adminPanel"><i class="bi bi-arrow-left" aria-hidden="true"></i>Admin Panel</a>
 
-  <div class="d-flex flex-wrap gap-2 align-items-center justify-content-between mb-4">
-    <a class="btn btn-outline-secondary" routerLink="/adminPanel">← Volver al panel</a>
-    <div class="d-flex gap-2 align-items-center">
-      <label for="estado" class="mb-0">Estado:</label>
-      <select id="estado" class="form-select" [(ngModel)]="estado" (change)="cargar()">
-        <option *ngFor="let e of estados" [value]="e">{{ e || 'todos' }}</option>
-      </select>
+  <div class="admin-cabecera">
+    <div>
+      <p class="cabecera-pagina-etiqueta">Ventas</p>
+      <h1>Pedidos</h1>
     </div>
   </div>
 
+  <!-- Filtro por estado -->
+  <div class="filtros-estado" role="group" aria-label="Filtrar por estado">
+    <button type="button" *ngFor="let e of estados" class="filtro"
+            [class.activo]="estado === e" [attr.aria-pressed]="estado === e"
+            (click)="estado = e; cargar()">
+      {{ e || 'todos' }}
+    </button>
+  </div>
+
   <div *ngIf="error" class="alert alert-danger">{{ error }}</div>
-  <div *ngIf="loading" class="text-center my-5"><div class="spinner-border" role="status"></div></div>
-  <p *ngIf="!loading && !error && pedidos.length === 0" class="text-center text-muted">No hay pedidos con este estado.</p>
+  <div *ngIf="loading" class="text-center my-5"><div class="spinner-border" role="status"><span class="visually-hidden">Cargando...</span></div></div>
+  <div *ngIf="!loading && !error && pedidos.length === 0" class="vacio">
+    <div class="vacio-icono"><i class="bi bi-inbox" aria-hidden="true"></i></div>
+    <p>No hay pedidos con este estado.</p>
+  </div>
 
-  <div *ngFor="let p of pedidos" class="card p-3 mb-3 shadow-sm">
-    <div class="d-flex flex-wrap justify-content-between gap-2">
-      <div>
-        <h5 class="mb-1">MN-{{ p.id }} <span class="badge estado-{{ p.estado }}">{{ p.estado }}</span></h5>
-        <small class="text-muted">{{ p.fecha | date:'dd/MM/yyyy HH:mm' }} · {{ p.user_email }}</small>
-      </div>
-      <div class="text-end">
-        <strong>{{ p.total | currency:'EUR' }}</strong><br>
-        <small class="text-muted">IVA {{ p.iva | currency:'EUR' }} · envío {{ p.envio | currency:'EUR' }}</small>
-      </div>
-    </div>
+  <div class="lista-pedidos">
+    <article *ngFor="let p of pedidos" class="pedido">
+      <header class="pedido-cabecera">
+        <div>
+          <h2>MN-{{ p.id }} <span class="badge estado-{{ p.estado }}">{{ p.estado }}</span></h2>
+          <small>{{ p.fecha | date:'dd/MM/yyyy HH:mm' }} · {{ p.user_email }}</small>
+        </div>
+        <div class="pedido-importe">
+          <strong>{{ p.total | currency:'EUR' }}</strong>
+          <small>IVA {{ p.iva | currency:'EUR' }} · envío {{ p.envio | currency:'EUR' }}</small>
+        </div>
+      </header>
 
-    <div class="row mt-3">
-      <div class="col-md-6">
-        <ul class="mb-2">
-          <li *ngFor="let i of p.items">{{ i.cantidad }} × {{ i.nombre }} ({{ i.precio_unitario | currency:'EUR' }} sin IVA)</li>
+      <div class="pedido-cuerpo">
+        <ul class="pedido-lineas">
+          <li *ngFor="let i of p.items">
+            <span>{{ i.cantidad }} × {{ i.nombre }}</span>
+            <small>{{ i.precio_unitario | currency:'EUR' }} sin IVA</small>
+          </li>
         </ul>
+        <div class="pedido-envio">
+          <strong><i class="bi bi-truck" aria-hidden="true"></i> Enviar a: {{ p.shipping_name }}</strong>
+          <span>{{ p.shipping_address }}, {{ p.shipping_postal_code }} {{ p.shipping_city }} ({{ p.shipping_province }})</span>
+          <span>Tel. <a href="tel:{{ p.shipping_phone }}">{{ p.shipping_phone }}</a> · <a href="mailto:{{ p.shipping_email }}">{{ p.shipping_email }}</a></span>
+        </div>
       </div>
-      <div class="col-md-6 small">
-        <strong>Enviar a:</strong> {{ p.shipping_name }}<br>
-        {{ p.shipping_address }}, {{ p.shipping_postal_code }} {{ p.shipping_city }} ({{ p.shipping_province }})<br>
-        Tel. {{ p.shipping_phone }} · {{ p.shipping_email }}
-      </div>
-    </div>
 
-    <div class="d-flex gap-2 justify-content-end">
-      <button *ngIf="p.estado === 'pagado'" class="btn btn-custom" (click)="avanzar(p, 'enviado')">Marcar como enviado</button>
-      <button *ngIf="p.estado === 'enviado'" class="btn btn-custom" (click)="avanzar(p, 'completado')">Marcar como completado</button>
-    </div>
+      <footer class="pedido-acciones" *ngIf="p.estado === 'pagado' || p.estado === 'enviado'">
+        <button *ngIf="p.estado === 'pagado'" class="btn-custom" (click)="avanzar(p, 'enviado')">
+          <i class="bi bi-send" aria-hidden="true"></i>Marcar como enviado
+        </button>
+        <button *ngIf="p.estado === 'enviado'" class="btn-custom" (click)="avanzar(p, 'completado')">
+          <i class="bi bi-check2-all" aria-hidden="true"></i>Marcar como completado
+        </button>
+      </footer>
+    </article>
   </div>
 </div>

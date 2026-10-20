@@ -1,82 +1,64 @@
-<div class="container mt-5">
-  <div class="card p-4 shadow-sm" style="background-color: var(--color-secundario, #f7f7f7);">
-    <h2 class="card-title text-center mb-4" style="color: var(--color-primario, #791515);">
-      Gestión de Usuarios
-    </h2>
+<div class="container admin-pagina">
+  <a class="admin-volver" routerLink="/adminPanel"><i class="bi bi-arrow-left" aria-hidden="true"></i>Admin Panel</a>
 
-    <div class="d-flex justify-content-end mb-3">
-      <button class="btn btn-custom" [routerLink]="['/crear-usuario']">
-        <i class="fas fa-user-plus"></i> Añadir Usuario
-      </button>
+  <div class="admin-cabecera">
+    <div>
+      <p class="cabecera-pagina-etiqueta">Usuarios</p>
+      <h1>Gestión de Usuarios</h1>
     </div>
-
-    <div *ngIf="loading" class="text-center py-4">
-      <div class="spinner-border" style="color: var(--color-primario, #791515);" role="status">
-        <span class="visually-hidden">Cargando...</span>
-      </div>
-      <p class="mt-2">Cargando usuarios...</p>
-    </div>
-
-    <!-- Sistema de notificaciones mejorado -->
-    <div *ngIf="notification" class="notification-banner alert alert-{{ notification.type }} text-center fade-in-out shadow-sm" role="alert">
-      <i class="bi" [ngClass]="{
-        'bi-check-circle-fill': notification.type === 'success',
-        'bi-exclamation-triangle-fill': notification.type === 'warning',
-        'bi-x-circle-fill': notification.type === 'danger'
-      }"></i>
-      {{ notification.message }}
-    </div>
-
-    <div *ngIf="error" class="alert alert-danger">
-      <p><strong>Error:</strong> {{ error }}</p>
-      <button class="btn btn-custom mt-2" (click)="retryLoad()">
-        <i class="fas fa-sync-alt"></i> Reintentar
-      </button>
-    </div>
-
-    <div *ngIf="!loading && !error && users.length === 0" class="alert alert-info">
-      No se encontraron usuarios en el sistema.
-      <button class="btn btn-custom ms-3" [routerLink]="['/crear-usuario']">
-        <i class="fas fa-user-plus"></i> Crear nuevo usuario
-      </button>
-    </div>
-
-    <div *ngIf="!loading && !error && users.length > 0" class="table-responsive">
-      <table class="table table-striped table-hover">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Nombre</th>
-            <th>Email</th>
-            <th>Rol</th>
-            <th>Fecha de registro</th>
-            <th>Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let user of users">
-            <td>{{ user.id }}</td>
-            <td>{{ user.name }}</td>
-            <td>{{ user.email }}</td>
-            <td>
-              <span class="badge" [ngClass]="{'bg-danger': user.role === 'admin', 'bg-info': user.role === 'user'}" style="color: white;">
-                {{ user.role }}
-              </span>
-            </td>
-            <td>{{ user.created_at | date:'dd/MM/yyyy' }}</td>
-            <td>
-              <div class="btn-group">
-                <button class="btn btn-sm btn-outline-primary me-1" [routerLink]="['/editar-usuario', user.id]">
-                  <i class="fas fa-edit"></i> Editar
-                </button>
-                <button class="btn btn-sm btn-outline-danger" (click)="deleteUser(user.id)">
-                  <i class="fas fa-trash-alt"></i> Eliminar
-                </button>
-              </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+    <button class="btn-custom" [routerLink]="['/crear-usuario']">
+      <i class="fas fa-user-plus" aria-hidden="true"></i> Añadir Usuario
+    </button>
   </div>
+
+  <div *ngIf="loading" class="text-center py-4">
+    <div class="spinner-border" role="status">
+      <span class="visually-hidden">Cargando...</span>
+    </div>
+    <p class="mt-2 text-muted">Cargando usuarios...</p>
+  </div>
+
+  <div *ngIf="notification" class="notification-banner alert alert-{{ notification.type }} fade-in-out" role="alert">
+    <i class="bi" [ngClass]="{
+      'bi-check-circle-fill': notification.type === 'success',
+      'bi-exclamation-triangle-fill': notification.type === 'warning',
+      'bi-x-circle-fill': notification.type === 'danger'
+    }"></i>
+    {{ notification.message }}
+  </div>
+
+  <div *ngIf="error" class="alert alert-danger">
+    <p class="mb-2"><strong>Error:</strong> {{ error }}</p>
+    <button class="btn-custom btn-sm" (click)="retryLoad()">
+      <i class="fas fa-sync-alt" aria-hidden="true"></i> Reintentar
+    </button>
+  </div>
+
+  <div *ngIf="!loading && !error && users.length === 0" class="vacio">
+    <div class="vacio-icono"><i class="bi bi-people" aria-hidden="true"></i></div>
+    <p>No se encontraron usuarios en el sistema.</p>
+    <button class="btn-custom" [routerLink]="['/crear-usuario']">
+      <i class="fas fa-user-plus" aria-hidden="true"></i> Crear nuevo usuario
+    </button>
+  </div>
+
+  <ul *ngIf="!loading && !error && users.length > 0" class="lista-usuarios">
+    <li *ngFor="let user of users" class="usuario">
+      <span class="usuario-avatar" aria-hidden="true">{{ (user.name || '?').charAt(0).toUpperCase() }}</span>
+      <div class="usuario-datos">
+        <strong>{{ user.name }}</strong>
+        <span>{{ user.email }}</span>
+        <small>ID {{ user.id }} · Registro: {{ user.created_at | date:'dd/MM/yyyy' }}</small>
+      </div>
+      <span class="rol" [class.rol-admin]="user.role === 'admin'">{{ user.role }}</span>
+      <div class="usuario-acciones">
+        <button class="btn-secundario btn-sm" [routerLink]="['/editar-usuario', user.id]">
+          <i class="fas fa-edit" aria-hidden="true"></i> Editar
+        </button>
+        <button class="btn-peligro btn-sm" (click)="deleteUser(user.id)">
+          <i class="fas fa-trash-alt" aria-hidden="true"></i> Eliminar
+        </button>
+      </div>
+    </li>
+  </ul>
 </div>
