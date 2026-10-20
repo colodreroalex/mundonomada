@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { Producto } from '../../../models/Producto';
 import { ProductosService } from '../../services/productos.service';
@@ -12,7 +12,7 @@ import { Location } from '@angular/common';
 @Component({
   selector: 'app-detalle-producto',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterLink],
   templateUrl: './detalle-producto.component.html',
   styleUrls: ['./detalle-producto.component.css'],
 })
