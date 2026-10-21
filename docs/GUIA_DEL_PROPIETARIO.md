@@ -85,12 +85,13 @@ El editor responde "Success. No rows returned" aunque el cambio se haya aplicado
 
 **Imágenes:** se guardan dentro de la base de datos, así que deben ser ligeras.
 
-- Formato JPG o WebP, máximo 1200 px de ancho y menos de 300 KB.
+- JPG, PNG o WebP; la web las reduce sola a 1200 px antes de guardarlas.
 - Para reducirlas: https://squoosh.app (gratis).
 - Con muchos productos convendrá moverlas a un almacenamiento aparte (Supabase Storage): avisar cuando llegue el momento.
 
 **Tallas:** un producto lleva todas sus tallas, cada una con su stock. En el formulario, la tabla **Tallas y stock** tiene botones para rellenar S–XL, XS–XXL o 36–44 de una vez; las flechas cambian el orden en que las ve la clienta.
 
+- **Fotos:** en **Modificar producto → Foto** puedes subir, cambiar o quitar la foto de cualquier producto. Se reduce sola en el navegador (las del móvil sirven tal cual).
 - Bolsos, bisutería y complementos: arriba de la tabla elige **Talla única** (en lugar de **Con tallas**) y pon solo el stock. La ficha no muestra selector y se añaden al carrito directamente.
 - La clienta tiene que elegir talla antes de añadir al carrito. Las tallas agotadas se ven tachadas.
 - El mismo modelo en otro color es **otro producto**, porque necesita su propia foto.

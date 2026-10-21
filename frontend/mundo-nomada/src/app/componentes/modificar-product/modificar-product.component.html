@@ -74,6 +74,26 @@
           <small class="admin-ayuda">Deje este campo en blanco si el producto no tiene un color específico.</small>
         </div>
 
+        <div>
+          <span class="form-label d-block">Foto</span>
+          <div class="foto-editor">
+            <div class="vista-previa">
+              <img *ngIf="productoSeleccionado.imagen; else sinFoto" [src]="productoSeleccionado.imagen" alt="Foto actual del producto">
+              <ng-template #sinFoto><span class="vista-previa-vacia"><i class="bi bi-image" aria-hidden="true"></i></span></ng-template>
+            </div>
+            <div class="foto-acciones">
+              <label class="btn-secundario" for="mod-imagen">
+                <i class="bi bi-camera" aria-hidden="true"></i>{{ productoSeleccionado.imagen ? 'Cambiar foto' : 'Subir foto' }}
+              </label>
+              <input id="mod-imagen" type="file" class="visually-hidden" accept="image/jpeg,image/png,image/webp" (change)="cambiarFoto($event)">
+              <button type="button" class="btn-fantasma" *ngIf="productoSeleccionado.imagen" (click)="productoSeleccionado.imagen = ''">
+                <i class="bi bi-trash3" aria-hidden="true"></i>Quitar foto
+              </button>
+              <small class="admin-ayuda">{{ procesandoFoto ? 'Preparando la foto...' : 'Vertical (4:5). Se reduce sola antes de guardarla.' }}</small>
+            </div>
+          </div>
+        </div>
+
         <app-editor-tallas [variantes]="productoSeleccionado.variantes" prefijo="mod"></app-editor-tallas>
 
         <div class="admin-botones">

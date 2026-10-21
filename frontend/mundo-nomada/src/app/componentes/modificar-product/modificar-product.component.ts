@@ -5,6 +5,7 @@ import { ProductosService } from '../../services/productos.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule, NgForm } from '@angular/forms';
 import { EditorTallasComponent } from '../editor-tallas/editor-tallas.component';
+import { prepararImagenProducto } from '../../services/imagen-producto';
 
 @Component({
   selector: 'app-modificar-product',
@@ -18,6 +19,7 @@ export class ModificarProductComponent {
   productoSeleccionado: Producto | null = null;
   // Propiedad para notificaciones: type puede ser 'success', 'warning', 'danger', etc.
   notification: { message: string; type: string } | null = null;
+  procesandoFoto = false;
 
   constructor(private productosService: ProductosService) {
     this.recuperarTodos();
@@ -56,10 +58,31 @@ export class ModificarProductComponent {
     });
   }
 
+  /** Sustituye la foto del producto (se guarda al pulsar Modificar) */
+  async cambiarFoto(evento: Event): Promise<void> {
+    const entrada = evento.target as HTMLInputElement;
+    const archivo = entrada.files?.[0];
+    entrada.value = '';
+    if (!archivo || !this.productoSeleccionado) return;
+    this.procesandoFoto = true;
+    try {
+      this.productoSeleccionado.imagen = await prepararImagenProducto(archivo);
+    } catch (error) {
+      this.notification = { message: (error as Error).message, type: 'warning' };
+    } finally {
+      this.procesandoFoto = false;
+    }
+  }
+
   // Método para modificar el producto seleccionado
   modificarProducto(form: NgForm) {
     if (!this.productoSeleccionado) {
       this.notification = { message: 'No hay ningún producto seleccionado.', type: 'warning' };
+      return;
+    }
+
+    if (this.procesandoFoto) {
+      this.notification = { message: 'Espera a que termine de prepararse la foto.', type: 'warning' };
       return;
     }
 

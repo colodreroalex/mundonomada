@@ -123,3 +123,35 @@
   margin: 0;
   max-width: 32ch;
 }
+
+/* Foto del producto: vista previa y botones al lado */
+.foto-editor {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--esp-4);
+}
+
+.foto-editor .vista-previa {
+  margin-top: 0;
+  flex-shrink: 0;
+}
+
+.vista-previa-vacia {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  font-size: 1.6rem;
+  color: var(--color-texto-suave);
+}
+
+.foto-acciones {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--esp-2);
+}
+
+.foto-acciones label {
+  cursor: pointer;
+}

@@ -8,6 +8,7 @@ import { Categoria } from '../../../models/Categoria';
 import { CategoriasService } from '../../services/categorias.service';
 import { EditorTallasComponent } from '../editor-tallas/editor-tallas.component';
 import { Variante } from '../../../models/Variante';
+import { prepararImagenProducto } from '../../services/imagen-producto';
 
 @Component({
   selector: 'app-add-product',
@@ -34,16 +35,20 @@ export class AddProductComponent implements OnInit {
     this.cargarCategorias();
   }
 
-  onFileChange(event: any) {
-    const reader = new FileReader();
+  procesandoFoto = false;
 
-    if (event.target.files && event.target.files.length) {
-      const [file] = event.target.files;
-      reader.readAsDataURL(file);
-
-      reader.onload = () => {
-        this.imagenBase64 = reader.result as string;
-      };
+  // La foto se reduce en el navegador antes de enviarla (ver imagen-producto.ts)
+  async onFileChange(event: Event) {
+    const archivo = (event.target as HTMLInputElement).files?.[0];
+    if (!archivo) return;
+    this.procesandoFoto = true;
+    try {
+      this.imagenBase64 = await prepararImagenProducto(archivo);
+    } catch (error) {
+      this.imagenBase64 = '';
+      this.notification = { message: (error as Error).message, type: 'warning' };
+    } finally {
+      this.procesandoFoto = false;
     }
   }
 
@@ -63,6 +68,10 @@ export class AddProductComponent implements OnInit {
   }
 
   addProduct(form: NgForm) {
+    if (this.procesandoFoto) {
+      this.notification = { message: 'Espera a que termine de prepararse la foto.', type: 'warning' };
+      return;
+    }
     if (form.invalid) {
       this.notification = { message: 'Por favor, corrige los errores en el formulario.', type: 'warning' };
       return;

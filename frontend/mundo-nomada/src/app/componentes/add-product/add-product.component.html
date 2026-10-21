@@ -83,9 +83,9 @@
       <!-- Imagen del Producto -->
       <div>
         <label for="imagen" class="form-label">Imagen del Producto</label>
-        <input type="file" name="imagen" id="imagen" class="form-control" accept="image/*"
+        <input type="file" name="imagen" id="imagen" class="form-control" accept="image/jpeg,image/png,image/webp"
           (change)="onFileChange($event)">
-        <small class="admin-ayuda">JPG o WebP, vertical y de menos de 300 KB.</small>
+        <small class="admin-ayuda">{{ procesandoFoto ? 'Preparando la foto...' : 'Vertical (4:5). Se reduce sola antes de guardarla.' }}</small>
         <div class="vista-previa" *ngIf="imagenBase64">
           <img [src]="imagenBase64" alt="Vista previa de la imagen">
         </div>
