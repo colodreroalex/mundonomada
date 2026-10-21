@@ -175,80 +175,148 @@
   transition: opacity var(--t-media) var(--ease), transform var(--t-media) var(--ease);
 }
 
+/* Catálogo: categorías + colección destacada */
 .catalogo-panel {
-  width: min(560px, 90vw);
+  width: min(760px, 94vw);
+  padding: var(--esp-4);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 190px;
+  gap: var(--esp-4);
 }
 
-.catalogo-todo {
+.catalogo-etiqueta {
+  margin: 0 0 var(--esp-2);
+  padding-inline: var(--esp-3);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-texto-suave);
+}
+
+.catalogo-lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 2px var(--esp-2);
+}
+
+.catalogo-enlace {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0.55rem var(--esp-3);
+  border-radius: var(--radio-sm);
+  color: var(--color-texto);
+  transition: background var(--t-rapida) var(--ease), color var(--t-rapida) var(--ease);
+}
+
+.catalogo-nombre {
   display: flex;
   align-items: center;
-  gap: var(--esp-3);
-  padding: var(--esp-3) var(--esp-4);
-  border-radius: var(--radio-sm);
+  gap: 6px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.catalogo-nombre .bi {
+  font-size: 0.85em;
+  opacity: 0;
+  transform: translateX(-4px);
+  transition: opacity var(--t-rapida) var(--ease), transform var(--t-rapida) var(--ease);
+}
+
+.catalogo-enlace small {
+  color: var(--color-texto-suave);
+  font-size: var(--fs-xs);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.catalogo-enlace:hover,
+.catalogo-enlace:focus-visible {
   background: var(--color-primario-suave);
   color: var(--color-primario);
 }
 
-.catalogo-todo > .bi:first-child {
-  font-size: 1.3rem;
+.catalogo-enlace:hover .catalogo-nombre .bi,
+.catalogo-enlace:focus-visible .catalogo-nombre .bi {
+  opacity: 1;
+  transform: none;
 }
 
-.catalogo-todo span {
+.catalogo-destacado {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  min-height: 240px;
+  border-radius: var(--radio);
+  overflow: hidden;
+  color: #fff;
+  isolation: isolate;
+}
+
+.catalogo-destacado picture,
+.catalogo-destacado img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: -2;
+}
+
+.catalogo-destacado::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(180deg, rgba(40, 10, 10, 0) 30%, rgba(40, 10, 10, 0.82) 100%);
+}
+
+.catalogo-destacado-texto {
   display: flex;
   flex-direction: column;
-  line-height: 1.25;
+  gap: 2px;
+  padding: var(--esp-4);
 }
 
-.catalogo-todo small {
-  color: var(--color-texto-suave);
-  font-weight: 500;
+.catalogo-destacado-texto small {
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  opacity: 0.85;
 }
 
-.catalogo-todo:hover {
-  background: var(--color-primario-borde);
+.catalogo-destacado-texto strong {
+  font-size: 1.15rem;
+  line-height: 1.2;
 }
 
-.catalogo-categorias {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--esp-1);
-  margin-top: var(--esp-3);
-}
-
-.categoria-chip {
-  display: flex;
+.catalogo-destacado-cta {
+  display: inline-flex;
   align-items: center;
-  gap: var(--esp-3);
-  padding: var(--esp-2) var(--esp-3);
-  border-radius: var(--radio-sm);
-  color: var(--color-texto);
-  font-weight: 500;
+  gap: 6px;
+  margin-top: var(--esp-2);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
-.categoria-chip:hover {
-  background: var(--color-superficie-2);
-  color: var(--color-primario);
-}
+@media (max-width: 1100px) {
+  .catalogo-panel {
+    grid-template-columns: minmax(0, 1fr);
+  }
 
-/* Círculos de categoría al estilo de los destacados de Instagram */
-.categoria-circulo {
-  flex-shrink: 0;
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  background: var(--color-marca);
-  color: var(--color-sobre-marca);
-  font-weight: 700;
-  font-size: 0.9rem;
-  box-shadow: 0 0 0 2px var(--color-superficie), 0 0 0 3.5px var(--color-primario-borde);
-}
-
-.categoria-circulo.pequeno {
-  width: 28px;
-  height: 28px;
-  font-size: 0.75rem;
+  .catalogo-destacado {
+    min-height: 96px;
+    order: -1;
+  }
 }
 
 .usuario-panel {

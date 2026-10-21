@@ -222,6 +222,10 @@ export class MenuComponent implements OnInit, OnDestroy {
     return categoria.Nombre ?? (categoria as unknown as { nombre?: string }).nombre ?? '';
   }
 
+  descripcionCategoria(categoria: Categoria): string {
+    return categoria.Descripcion ?? (categoria as unknown as { descripcion?: string }).descripcion ?? '';
+  }
+
   inicial(nombre: string): string {
     return (nombre || '?').trim().charAt(0).toUpperCase();
   }

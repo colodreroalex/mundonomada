@@ -22,23 +22,30 @@
           Catálogo <i class="bi bi-chevron-down chevron" aria-hidden="true"></i>
         </button>
         <div id="catalogo-escritorio" class="desplegable-panel catalogo-panel" [class.abierto]="catalogoEscritorioAbierto">
-          <a class="catalogo-todo" routerLink="/mostrarProductos">
-            <i class="bi bi-grid-3x3-gap-fill" aria-hidden="true"></i>
-            <span>
-              <strong>Mostrar todos</strong>
-              <small>Toda la colección</small>
-            </span>
-            <i class="bi bi-arrow-right ms-auto" aria-hidden="true"></i>
-          </a>
-          <div class="catalogo-categorias" *ngIf="categorias.length > 0">
-            <a
-              *ngFor="let categoria of categorias"
-              class="categoria-chip"
-              [routerLink]="['/mostrarProductos', categoria.CategoriaID]">
-              <span class="categoria-circulo" aria-hidden="true">{{ inicial(nombreCategoria(categoria)) }}</span>
-              <span>{{ nombreCategoria(categoria) }}</span>
-            </a>
+          <div class="catalogo-columna">
+            <p class="catalogo-etiqueta">Categorías</p>
+            <ul class="catalogo-lista" *ngIf="categorias.length > 0; else sinCategorias">
+              <li *ngFor="let categoria of categorias">
+                <a class="catalogo-enlace" [routerLink]="['/mostrarProductos', categoria.CategoriaID]">
+                  <span class="catalogo-nombre">{{ nombreCategoria(categoria) }}<i class="bi bi-arrow-right" aria-hidden="true"></i></span>
+                  <small *ngIf="descripcionCategoria(categoria) as descripcion">{{ descripcion }}</small>
+                </a>
+              </li>
+            </ul>
+            <ng-template #sinCategorias><p class="catalogo-etiqueta">Pronto habrá categorías nuevas.</p></ng-template>
           </div>
+
+          <a class="catalogo-destacado" routerLink="/mostrarProductos">
+            <picture>
+              <source srcset="main/int_3.webp" type="image/webp">
+              <img src="main/int_3.jpeg" alt="" loading="lazy" decoding="async">
+            </picture>
+            <span class="catalogo-destacado-texto">
+              <small>Nueva temporada</small>
+              <strong>Toda la colección</strong>
+              <span class="catalogo-destacado-cta">Ver todo <i class="bi bi-arrow-right" aria-hidden="true"></i></span>
+            </span>
+          </a>
         </div>
       </div>
 
@@ -168,13 +175,12 @@
       <div id="panel-catalogo" class="panel-catalogo" [class.abierto]="catalogoPanelAbierto">
         <div class="panel-catalogo-interior">
           <a class="panel-subenlace" routerLink="/mostrarProductos">
-            <i class="bi bi-grid-3x3-gap-fill" aria-hidden="true"></i>Mostrar todos
+            <strong>Ver toda la colección</strong>
           </a>
           <a
             *ngFor="let categoria of categorias"
             class="panel-subenlace"
             [routerLink]="['/mostrarProductos', categoria.CategoriaID]">
-            <span class="categoria-circulo pequeno" aria-hidden="true">{{ inicial(nombreCategoria(categoria)) }}</span>
             {{ nombreCategoria(categoria) }}
           </a>
         </div>
