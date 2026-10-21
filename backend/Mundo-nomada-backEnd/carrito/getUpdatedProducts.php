@@ -1,8 +1,9 @@
 <?php
 declare(strict_types=1);
 
+/* Datos y stock por talla actualizados de los productos del carrito de un invitado. */
 require_once __DIR__ . '/../auth/seguridad.php';
-require_once __DIR__ . '/../conexion_postgres.php';
+require_once __DIR__ . '/../Productos/catalogo.php';
 
 aplicarCors(['POST']);
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -27,14 +28,8 @@ try {
     foreach ($ids as $indice => $id) {
         $parametros[':id' . $indice] = $id;
     }
-    $consulta = retornarConexionPostgres()->prepare(
-        'select id as "ProductoID", nombre, precio, descripcion, stock,
-                categoria_id as "categoriaID", imagen_url as imagen
-           from public.productos
-          where id in (' . implode(', ', array_keys($parametros)) . ') and stock > 0'
-    );
-    $consulta->execute($parametros);
-    responderJson(['resultado' => 'OK', 'products' => $consulta->fetchAll()]);
+    $productos = consultarProductos('p.id in (' . implode(', ', array_keys($parametros)) . ')', $parametros);
+    responderJson(['resultado' => 'OK', 'products' => $productos]);
 } catch (PDOException $error) {
     error_log('Error al consultar el stock: ' . $error->getMessage());
     responderJson(['resultado' => 'ERROR', 'mensaje' => 'No se pudo comprobar el stock.'], 500);

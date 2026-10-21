@@ -142,9 +142,11 @@ r = await anon.req('Productos/seleccionar.php?ProductoID=1%20or%201=1');
 log('F4 inyección SQL en ID', r.status === 400, `HTTP ${r.status}`);
 r = await anon.req('Productos/getProductosByCategoria.php?categoriaID=' + encodeURIComponent('1;select pg_sleep(3)'));
 log('F4 inyección SQL en categoría', r.status === 400, `HTTP ${r.status}`);
-const prodBase = { nombre: 'Prueba seg', precio: 10, descripcion: 'x', stock: 1, categoriaID: 1 };
+const prodBase = { nombre: 'Prueba seg', precio: 10, descripcion: 'x', categoriaID: 1, variantes: [{ talla: 'M', stock: 1 }] };
 for (const [n, extra] of [
-  ['precio 0', { precio: 0 }], ['precio enorme', { precio: 1e12 }], ['stock enorme', { stock: 2147483648 }],
+  ['precio 0', { precio: 0 }], ['precio enorme', { precio: 1e12 }], ['stock enorme', { variantes: [{ talla: 'M', stock: 2147483648 }] }],
+  ['sin tallas', { variantes: [] }], ['talla repetida', { variantes: [{ talla: 'M', stock: 1 }, { talla: 'm', stock: 2 }] }],
+  ['talla de 50 caracteres', { variantes: [{ talla: 't'.repeat(50), stock: 1 }] }], ['stock negativo', { variantes: [{ talla: 'S', stock: -1 }] }],
   ['nombre 5000', { nombre: 'n'.repeat(5000) }], ['imagen javascript:', { imagen: 'javascript:alert(1)' }],
   ['imagen SVG', { imagen: 'data:image/svg+xml;base64,' + Buffer.from('<svg onload="alert(1)"/>').toString('base64') }],
 ]) {
@@ -171,16 +173,35 @@ const sql = q => execFileSync('docker', ['exec', process.env.MN_DB_CONTAINER, 'p
 const comprador = cliente(), cmail = email('comprador');
 const reg = await comprador.req('auth/register.php', { body: { name: 'Comprador', email: cmail, password: PASS } });
 const uid = reg.json.id;
-const stockAntes = Number(sql('select stock from public.productos where id = (select min(id) from public.productos where stock >= 2)'));
-const pid = Number(sql('select min(id) from public.productos where stock >= 2'));
-await comprador.req('carrito/addToCart.php', { body: { producto_id: pid, cantidad: 1 } });
+const vid = Number(sql('select min(id) from public.producto_variantes where stock >= 2'));
+const pid = Number(sql('select producto_id from public.producto_variantes where id = ' + vid));
+const stockTalla = () => Number(sql('select stock from public.producto_variantes where id = ' + vid));
+const stockAntes = stockTalla();
+await comprador.req('carrito/addToCart.php', { body: { producto_id: pid, variante_id: vid, cantidad: 1 } });
 r = await comprador.req('checkout/createCheckoutSession.php', { body: { nombre: 'Ana', apellidos: 'Prueba', direccion: 'Calle 1', codigoPostal: '14850', ciudad: 'Baena', provincia: 'Córdoba', telefono: '600000000', email: cmail } });
 log('F5 pago fallido en Stripe no cobra (502)', r.status === 502, 'HTTP ' + r.status);
-log('F5 pago fallido devuelve el stock', Number(sql('select stock from public.productos where id = ' + pid)) === stockAntes, 'stock ' + sql('select stock from public.productos where id = ' + pid) + ' (antes ' + stockAntes + ')');
+log('F5 pago fallido devuelve el stock de la talla', stockTalla() === stockAntes, 'stock ' + stockTalla() + ' (antes ' + stockAntes + ')');
+// Pedido pendiente con una unidad reservada: si Stripe avisa de que caducó, se devuelve a su talla
+const sidExp = 'cs_test_' + randomBytes(12).toString('hex');
+const oidExp = sql("insert into public.orders (user_id,total,estado,payment_reference) values (" + uid + ",10,'pendiente','" + sidExp + "') returning id");
+sql('insert into public.order_items (order_id,producto_id,variante_id,talla,cantidad,precio_unitario) values (' + oidExp + ',' + pid + ',' + vid + ",'X',1,10)");
+sql('update public.producto_variantes set stock = stock - 1 where id = ' + vid);
+const plExp = JSON.stringify({ id: 'evt_e', type: 'checkout.session.expired', data: { object: { object: 'checkout.session', id: sidExp } } });
+await wh(plExp, firmar(plExp));
+log('F5 pago caducado devuelve la unidad a su talla', stockTalla() === stockAntes && sql('select estado from public.orders where id=' + oidExp) === 'cancelado', 'stock ' + stockTalla() + ' (antes ' + stockAntes + ')');
+// Tallas de otro producto: ni en el carrito ni al editar un producto
+const vidAjena = Number(sql('select min(id) from public.producto_variantes where producto_id <> ' + pid));
+r = await comprador.req('carrito/addToCart.php', { body: { producto_id: pid, variante_id: vidAjena, cantidad: 1 } });
+log('F4 carrito rechaza la talla de otro producto', r.status === 400, 'HTTP ' + r.status);
+const prodAjeno = Number(sql('select producto_id from public.producto_variantes where id = ' + vidAjena));
+r = await adm.req('Productos/seleccionar.php?ProductoID=' + pid);
+const editado = r.json.producto[0];
+r = await adm.req('Productos/modificar-productos.php', { body: { ...editado, id: pid, variantes: [...editado.variantes, { id: vidAjena, talla: 'ZZ', stock: 1 }] } });
+log('F4 editar producto no puede tocar tallas de otro', r.status === 409 && Number(sql('select producto_id from public.producto_variantes where id = ' + vidAjena)) === prodAjeno, 'HTTP ' + r.status);
 // Pedido pendiente simulado como si Stripe hubiera creado la sesión
 const sid = 'cs_test_' + randomBytes(12).toString('hex');
 const oid = sql("insert into public.orders (user_id,total,estado,payment_reference) values (" + uid + ",10,'pendiente','" + sid + "') returning id");
-sql('insert into public.order_items (order_id,producto_id,cantidad,precio_unitario) values (' + oid + ',' + pid + ',1,10)');
+sql('insert into public.order_items (order_id,producto_id,variante_id,talla,cantidad,precio_unitario) values (' + oid + ',' + pid + ',' + vid + ",'M',1,10)");
 const ev = (tipo, extra2 = {}) => JSON.stringify({ id: 'evt_' + randomBytes(6).toString('hex'), type: tipo, data: { object: { object: 'checkout.session', id: sid, payment_status: 'paid', payment_intent: 'pi_test', ...extra2 } } });
 let pl = ev('checkout.session.completed'); await wh(pl, firmar(pl));
 log('F5 completed marca pagado y vacía carrito', sql('select estado from public.orders where id=' + oid) === 'pagado' && sql('select count(*) from public.carrito where user_id=' + uid) === '0', sql('select estado from public.orders where id=' + oid));
@@ -194,6 +215,7 @@ pl = JSON.stringify({ id: 'evt_c', type: 'checkout.session.completed', data: { o
 log('F5 pago sobre pedido cancelado no lo reactiva', sql('select estado from public.orders where id=' + oid2) === 'cancelado', 'queda cancelado y se registra alerta para reembolso');
 r = await comprador.req('order_items/getOrderItems.php?order_id=' + oid);
 log('F3 el dueño sí ve sus líneas de pedido', r.json?.items?.length === 1, 'items=' + (r.json?.items?.length ?? 0));
+log('F5 la línea del pedido muestra la talla', / · Talla M$/.test(r.json?.items?.[0]?.nombre || ''), r.json?.items?.[0]?.nombre || '-');
 r = await u1.req('order_items/getOrderItems.php?order_id=' + oid);
 log('F3 otro usuario no ve ese pedido', !(r.json?.items?.length), 'items=' + (r.json?.items?.length ?? 0));
 const png = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';

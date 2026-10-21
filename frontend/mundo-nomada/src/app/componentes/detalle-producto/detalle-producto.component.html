@@ -48,34 +48,44 @@
           <div class="precio-fila">
             <span class="producto-precio">{{ producto.precio | currency:'EUR' }}</span>
 
-            <!-- Stock badge - mostramos "Agotado" cuando stock es 0 -->
-            <span *ngIf="producto.stock == 0" class="estado-stock agotado">
-              <i class="bi bi-x-circle-fill" aria-hidden="true"></i>Agotado
+            <span *ngIf="stockVisible == 0" class="estado-stock agotado">
+              <i class="bi bi-x-circle-fill" aria-hidden="true"></i>{{ tallaElegida && producto.stock > 0 ? 'Talla agotada' : 'Agotado' }}
             </span>
-            <!-- Stock badge - mostramos "Últimas unidades" cuando stock es entre 1 y 5 -->
-            <span *ngIf="producto.stock > 0 && producto.stock <= 5" class="estado-stock ultimas">
-              <i class="bi bi-exclamation-circle-fill" aria-hidden="true"></i>¡Últimas {{ producto.stock }} unidades!
+            <span *ngIf="stockVisible > 0 && stockVisible <= 5" class="estado-stock ultimas">
+              <i class="bi bi-exclamation-circle-fill" aria-hidden="true"></i>¡Últimas {{ stockVisible }} unidades!
             </span>
-            <!-- Stock badge - mostramos "En stock" cuando stock es mayor a 5 -->
-            <span *ngIf="producto.stock > 5" class="estado-stock disponible">
+            <span *ngIf="stockVisible > 5" class="estado-stock disponible">
               <i class="bi bi-check-circle-fill" aria-hidden="true"></i>En stock
             </span>
           </div>
 
-          <!-- Color y talla -->
-          <div class="opciones" *ngIf="producto.color || producto.talla">
+          <!-- Color y tallas -->
+          <div class="opciones" *ngIf="producto.color || tieneTallas">
             <div class="opcion" *ngIf="producto.color">
               <span class="opcion-etiqueta">Color</span>
               <span class="opcion-valor">{{ producto.color }}</span>
             </div>
-            <div class="opcion" *ngIf="producto.talla">
-              <span class="opcion-etiqueta">Talla</span>
-              <span class="opcion-valor talla">{{ producto.talla }}</span>
+            <div class="opcion" id="selector-tallas" *ngIf="tieneTallas" [class.aviso]="avisoTalla">
+              <span class="opcion-etiqueta" id="etiqueta-tallas">
+                Talla<ng-container *ngIf="tallaElegida">: <strong>{{ tallaElegida.talla }}</strong></ng-container>
+              </span>
+              <div class="tallas" role="radiogroup" aria-labelledby="etiqueta-tallas">
+                <button type="button" class="talla-boton" role="radio" *ngFor="let v of producto.variantes"
+                        [class.elegida]="tallaElegida?.id === v.id"
+                        [class.agotada]="v.stock <= 0"
+                        [attr.aria-checked]="tallaElegida?.id === v.id"
+                        [attr.aria-disabled]="v.stock <= 0"
+                        [attr.aria-label]="v.talla + (v.stock <= 0 ? ', agotada' : '')"
+                        (click)="elegirTalla(v)">
+                  {{ v.talla }}
+                </button>
+              </div>
+              <small class="aviso-talla" *ngIf="avisoTalla" role="alert">Elige una talla</small>
             </div>
           </div>
 
           <!-- Botón para agregar al carrito (escritorio y tablet) -->
-          <button class="btn-custom btn-lg w-100 boton-comprar" (click)="addToCart(producto)" [disabled]="producto.stock == 0">
+          <button class="btn-custom btn-lg w-100 boton-comprar" (click)="addToCart()" [disabled]="producto.stock == 0 || anadiendo">
             <i class="bi bi-bag-plus" aria-hidden="true"></i>
             <ng-container *ngIf="producto.stock > 0">Añadir al carrito</ng-container>
             <ng-container *ngIf="producto.stock == 0">Producto agotado</ng-container>
@@ -106,7 +116,7 @@
           <small>{{ producto.nombre }}</small>
           <strong>{{ producto.precio | currency:'EUR' }}</strong>
         </div>
-        <button class="btn-custom" (click)="addToCart(producto)" [disabled]="producto.stock == 0">
+        <button class="btn-custom" (click)="addToCart()" [disabled]="producto.stock == 0 || anadiendo">
           <i class="bi bi-bag-plus" aria-hidden="true"></i>
           <ng-container *ngIf="producto.stock > 0">Añadir</ng-container>
           <ng-container *ngIf="producto.stock == 0">Agotado</ng-container>

@@ -30,7 +30,7 @@
           <span class="fila-meta">
             <span>ID {{ prod.ProductoID }}</span>
             <span>Color: {{ prod.color || 'N/A' }}</span>
-            <span>Talla: {{ prod.talla || 'N/A' }}</span>
+            <span>Tallas: {{ resumenTallas(prod) }}</span>
           </span>
         </span>
         <span class="fila-datos">
@@ -50,27 +50,14 @@
           <div *ngIf="form.submitted && !productoSeleccionado?.nombre" class="admin-error">El nombre es obligatorio.</div>
         </div>
 
-        <div class="admin-campos">
-          <div>
-            <label for="mod-precio" class="form-label">Precio:</label>
-            <input id="mod-precio" type="number" class="form-control" [(ngModel)]="productoSeleccionado.precio" name="precio"
-                   required min="0.01" step="0.01" inputmode="decimal" #precioInput="ngModel" />
-            <small class="admin-ayuda">Sin IVA.</small>
-            <div *ngIf="form.submitted && !productoSeleccionado?.precio" class="admin-error">El precio es obligatorio.</div>
-            <div *ngIf="precioInput.errors?.['min'] && (precioInput.dirty || precioInput.touched)" class="admin-error">
-              El precio debe ser mayor que 0.
-            </div>
-          </div>
-          <div>
-            <label for="mod-stock" class="form-label">Stock:</label>
-            <input id="mod-stock" type="number" class="form-control" [(ngModel)]="productoSeleccionado.stock" name="stock"
-                   required min="0" inputmode="numeric" #stockInput="ngModel" />
-            <div *ngIf="form.submitted && (productoSeleccionado?.stock === null || productoSeleccionado?.stock === undefined)" class="admin-error">
-              El stock es obligatorio.
-            </div>
-            <div *ngIf="stockInput.errors?.['min'] && (stockInput.dirty || stockInput.touched)" class="admin-error">
-              El stock no puede ser menor que 0.
-            </div>
+        <div>
+          <label for="mod-precio" class="form-label">Precio:</label>
+          <input id="mod-precio" type="number" class="form-control" [(ngModel)]="productoSeleccionado.precio" name="precio"
+                 required min="0.01" step="0.01" inputmode="decimal" #precioInput="ngModel" />
+          <small class="admin-ayuda">Sin IVA.</small>
+          <div *ngIf="form.submitted && !productoSeleccionado?.precio" class="admin-error">El precio es obligatorio.</div>
+          <div *ngIf="precioInput.errors?.['min'] && (precioInput.dirty || precioInput.touched)" class="admin-error">
+            El precio debe ser mayor que 0.
           </div>
         </div>
 
@@ -80,23 +67,14 @@
           <div *ngIf="form.submitted && !productoSeleccionado?.descripcion" class="admin-error">La descripción es obligatoria.</div>
         </div>
 
-        <div class="admin-campos">
-          <div>
-            <label for="mod-color" class="form-label">Color (Opcional):</label>
-            <input id="mod-color" type="text" class="form-control" [ngModel]="productoSeleccionado && productoSeleccionado.color"
-                   (ngModelChange)="productoSeleccionado && (productoSeleccionado.color = $event)" name="color" />
-            <small class="admin-ayuda">Deje este campo en blanco si el producto no tiene un color específico.</small>
-          </div>
-          <div>
-            <label for="mod-talla" class="form-label">Talla (Opcional):</label>
-            <select id="mod-talla" class="form-select" [ngModel]="productoSeleccionado && productoSeleccionado.talla"
-                    (ngModelChange)="productoSeleccionado && (productoSeleccionado.talla = $event)" name="talla">
-              <option value="">Sin talla específica</option>
-              <option *ngFor="let talla of tallasDisponibles" [value]="talla">{{ talla }}</option>
-            </select>
-            <small class="admin-ayuda">Seleccione una talla si corresponde para este producto.</small>
-          </div>
+        <div>
+          <label for="mod-color" class="form-label">Color (Opcional):</label>
+          <input id="mod-color" type="text" class="form-control" [ngModel]="productoSeleccionado && productoSeleccionado.color"
+                 (ngModelChange)="productoSeleccionado && (productoSeleccionado.color = $event)" name="color" />
+          <small class="admin-ayuda">Deje este campo en blanco si el producto no tiene un color específico.</small>
         </div>
+
+        <app-editor-tallas [variantes]="productoSeleccionado.variantes" prefijo="mod"></app-editor-tallas>
 
         <div class="admin-botones">
           <button class="btn-custom" type="submit"><i class="bi bi-check2" aria-hidden="true"></i>Modificar</button>
@@ -107,7 +85,7 @@
     <ng-template #sinSeleccion>
       <div class="sin-seleccion">
         <i class="bi bi-hand-index" aria-hidden="true"></i>
-        <p>Selecciona un producto para editar su nombre, precio, stock, color o talla.</p>
+        <p>Selecciona un producto para editar su nombre, precio, color, tallas y stock.</p>
       </div>
     </ng-template>
   </div>

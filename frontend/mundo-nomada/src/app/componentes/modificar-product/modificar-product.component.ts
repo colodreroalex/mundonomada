@@ -4,11 +4,12 @@ import { Producto } from '../../../models/Producto';
 import { ProductosService } from '../../services/productos.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule, NgForm } from '@angular/forms';
+import { EditorTallasComponent } from '../editor-tallas/editor-tallas.component';
 
 @Component({
   selector: 'app-modificar-product',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, EditorTallasComponent],
   templateUrl: './modificar-product.component.html',
   styleUrls: ['./modificar-product.component.css']
 })
@@ -17,9 +18,6 @@ export class ModificarProductComponent {
   productoSeleccionado: Producto | null = null;
   // Propiedad para notificaciones: type puede ser 'success', 'warning', 'danger', etc.
   notification: { message: string; type: string } | null = null;
-  
-  // Opciones disponibles para tallas
-  tallasDisponibles: string[] = ['Unica', 'S', 'M', 'L', 'XL'];
 
   constructor(private productosService: ProductosService) {
     this.recuperarTodos();
@@ -32,6 +30,11 @@ export class ModificarProductComponent {
     });
   }
 
+  /** "S · M · L" para la lista de productos */
+  resumenTallas(producto: Producto): string {
+    return (producto.variantes || []).map((v) => v.talla).join(' · ') || 'Sin tallas';
+  }
+
   // Selecciona un producto y lo carga en el formulario
   // En móvil el formulario queda debajo de la lista: se lleva la vista hasta él
   irAlFormulario(): void {
@@ -41,10 +44,11 @@ export class ModificarProductComponent {
   }
 
   seleccionarProducto(producto: Producto) {
-    // El backend espera el parámetro "ProductoID"
     this.productosService.seleccionar(producto).subscribe((result: any) => {
       if (result && result.length > 0) {
-        this.productoSeleccionado = result[0];
+        const p = result[0];
+        // Copia de las tallas para poder editarlas sin tocar la lista
+        this.productoSeleccionado = { ...p, variantes: (p.variantes || []).map((v: any) => ({ ...v })) };
       } else {
         this.notification = { message: 'Producto no encontrado', type: 'warning' };
         setTimeout(() => this.notification = null, 2000);
@@ -64,27 +68,23 @@ export class ModificarProductComponent {
       return;
     }
 
-    // Validación adicional para el precio
     if (this.productoSeleccionado.precio <= 0) {
       this.notification = { message: 'El precio debe ser mayor que 0.', type: 'warning' };
       return;
     }
 
-    // Validación adicional para el stock
-    if (this.productoSeleccionado.stock < 0) {
-      this.notification = { message: 'El stock no puede ser menor que 0.', type: 'warning' };
+    const errorTallas = EditorTallasComponent.validar(this.productoSeleccionado.variantes);
+    if (errorTallas) {
+      this.notification = { message: errorTallas, type: 'warning' };
       return;
     }
 
-    // Asegurar que los campos opcionales tengan un valor adecuado
     const productoModificado: Producto = {
       ...this.productoSeleccionado,
       color: this.productoSeleccionado.color || null,
-      talla: this.productoSeleccionado.talla || null
+      variantes: EditorTallasComponent.paraEnviar(this.productoSeleccionado.variantes)
     };
 
-    // Procedemos directamente a modificar el producto sin verificar duplicados
-    // ya que estamos editando un producto existente, no creando uno nuevo
     this.productosService.modificarProducto(productoModificado).subscribe({
       next: (response: any) => {
         if (response.resultado === 'OK') {
@@ -98,23 +98,16 @@ export class ModificarProductComponent {
       },
       error: (error) => {
         console.error('Error en la comunicación:', error);
-        // Intentar extraer el mensaje de error específico
         let errorMessage = 'Error en la comunicación con el servidor';
-        
         if (error instanceof Error) {
-          // Si es un error de JavaScript normal, usamos su mensaje
           errorMessage = error.message;
         } else if (error.error && error.error.mensaje) {
-          // Si es un HttpErrorResponse con un mensaje específico
           errorMessage = error.error.mensaje;
         } else if (typeof error === 'string') {
-          // Si el error es directamente un string
           errorMessage = error;
         }
-        
         this.notification = { message: errorMessage, type: 'danger' };
       }
     });
   }
 }
-

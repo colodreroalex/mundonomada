@@ -1,0 +1,75 @@
+<fieldset class="tallas">
+  <legend class="form-label">Tallas y stock</legend>
+
+  <!-- Tipo de producto: con tallas o talla única -->
+  <div class="tallas-modo" role="radiogroup" [attr.aria-label]="'Tipo de tallas'">
+    <button type="button" role="radio" class="tallas-modo-opcion"
+            [class.activo]="!esTallaUnica" [attr.aria-checked]="!esTallaUnica" (click)="ponerConTallas()">
+      <i class="bi bi-rulers" aria-hidden="true"></i>Con tallas
+    </button>
+    <button type="button" role="radio" class="tallas-modo-opcion"
+            [class.activo]="esTallaUnica" [attr.aria-checked]="esTallaUnica" (click)="ponerTallaUnica()">
+      <i class="bi bi-bag" aria-hidden="true"></i>Talla única
+    </button>
+  </div>
+
+  <!-- Talla única: solo hace falta el stock -->
+  <div class="tallas-unica" *ngIf="esTallaUnica; else conTallas">
+    <label class="form-label" [for]="prefijo + '-stock-unica'">Stock</label>
+    <input type="number" class="form-control" min="0" max="100000" step="1" inputmode="numeric" required
+           [id]="prefijo + '-stock-unica'" [name]="prefijo + '-stock-unica'" [(ngModel)]="variantes[0].stock">
+    <small class="admin-ayuda">Para bolsos, bisutería y complementos: la clienta lo añade al carrito sin elegir talla.</small>
+  </div>
+
+  <ng-template #conTallas>
+    <div class="tallas-conjuntos">
+      <span class="admin-ayuda">Rellenar con:</span>
+      <button type="button" class="tallas-chip" *ngFor="let c of conjuntos" (click)="usarConjunto(c.tallas)">
+        {{ c.etiqueta }}
+      </button>
+    </div>
+
+    <datalist [id]="prefijo + '-sugerencias'">
+      <option *ngFor="let s of sugerencias" [value]="s"></option>
+    </datalist>
+
+    <div class="tallas-tabla" role="table" aria-label="Tallas del producto">
+      <div class="tallas-fila tallas-cabecera" role="row" *ngIf="variantes.length">
+        <span role="columnheader">Talla</span>
+        <span role="columnheader">Stock</span>
+        <span role="columnheader"><span class="visually-hidden">Acciones</span></span>
+      </div>
+
+      <div class="tallas-fila" role="row" *ngFor="let v of variantes; let i = index; let primero = first; let ultimo = last">
+        <input type="text" class="form-control" maxlength="10" required
+               [id]="prefijo + '-nombre-' + i" [name]="prefijo + '-nombre-' + i"
+               [attr.list]="prefijo + '-sugerencias'"
+               [(ngModel)]="v.talla" placeholder="M" autocomplete="off"
+               [attr.aria-label]="'Nombre de la talla ' + (i + 1)">
+        <input type="number" class="form-control" min="0" max="100000" step="1" inputmode="numeric" required
+               [id]="prefijo + '-stock-' + i" [name]="prefijo + '-stock-' + i"
+               [(ngModel)]="v.stock"
+               [attr.aria-label]="'Stock de la talla ' + (v.talla || i + 1)">
+        <div class="tallas-acciones">
+          <button type="button" class="tallas-icono" (click)="mover(i, -1)" [disabled]="primero" aria-label="Subir talla">
+            <i class="bi bi-arrow-up" aria-hidden="true"></i>
+          </button>
+          <button type="button" class="tallas-icono" (click)="mover(i, 1)" [disabled]="ultimo" aria-label="Bajar talla">
+            <i class="bi bi-arrow-down" aria-hidden="true"></i>
+          </button>
+          <button type="button" class="tallas-icono peligro" (click)="quitar(i)" [attr.aria-label]="'Quitar talla ' + (v.talla || i + 1)">
+            <i class="bi bi-trash3" aria-hidden="true"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="tallas-pie">
+      <button type="button" class="btn-secundario" (click)="anadir()">
+        <i class="bi bi-plus-lg" aria-hidden="true"></i>Añadir talla
+      </button>
+      <span class="admin-ayuda">Stock total: <strong>{{ stockTotal }}</strong> unidades</span>
+    </div>
+    <small class="admin-ayuda">El orden de la tabla es el que verá la clienta.</small>
+  </ng-template>
+</fieldset>

@@ -1,0 +1,136 @@
+.tallas {
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio);
+  padding: 1rem;
+  margin: 0;
+  min-width: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.tallas legend {
+  float: none;
+  width: auto;
+  padding: 0 0.35rem;
+  margin: 0;
+  font-size: var(--fs-base);
+}
+
+.tallas-modo {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  padding: 4px;
+  border-radius: var(--radio-sm);
+  background: var(--color-arena);
+}
+
+.tallas-modo-opcion {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  min-height: var(--tactil);
+  border: 0;
+  border-radius: calc(var(--radio-sm) - 2px);
+  background: transparent;
+  color: var(--color-texto-suave);
+  font-weight: 600;
+  transition: background var(--t-rapida) var(--ease), color var(--t-rapida) var(--ease);
+}
+
+.tallas-modo-opcion.activo {
+  background: var(--color-superficie);
+  color: var(--color-primario);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+.tallas-unica {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.tallas-unica input {
+  max-width: 220px;
+}
+
+.tallas-conjuntos {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.tallas-chip {
+  border: 1px solid var(--color-primario-borde);
+  background: var(--color-primario-suave);
+  color: var(--color-primario);
+  border-radius: var(--radio-pill);
+  padding: 0.3rem 0.8rem;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  min-height: 36px;
+  transition: background var(--t-rapida) var(--ease);
+}
+
+.tallas-chip:hover {
+  background: var(--color-primario-borde);
+}
+
+.tallas-tabla {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.tallas-fila {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.tallas-cabecera {
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-texto-suave);
+}
+
+.tallas-acciones {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.tallas-icono {
+  width: 40px;
+  height: 40px;
+  display: inline-grid;
+  place-items: center;
+  border: 1px solid var(--color-borde);
+  background: var(--color-superficie);
+  color: var(--color-texto);
+  border-radius: var(--radio-sm);
+}
+
+.tallas-icono:disabled {
+  opacity: 0.35;
+}
+
+.tallas-icono.peligro {
+  color: var(--color-error);
+}
+
+.tallas-pie {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+@media (max-width: 420px) {
+  .tallas-acciones .tallas-icono:not(.peligro) {
+    display: none;
+  }
+}

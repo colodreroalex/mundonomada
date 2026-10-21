@@ -27,9 +27,15 @@ No compartas en el chat contraseñas, claves, tokens, datos bancarios ni documen
 
 ---
 
-## Antes de desplegar la versión con facturas
+## Antes de desplegar la versión con tallas
 
-En Supabase → **SQL Editor**, ejecuta `supabase/migrations/20261021090000_invoice_numbers.sql` **antes** de pulsar *Deploy latest commit* en Render. La migración numera los pedidos que ya estaban cobrados. Si se despliega antes, los pagos se quedan sin confirmar hasta que se aplique (Stripe reintenta el aviso solo, así que no se pierde ninguno).
+1. En Supabase → **SQL Editor**, pega y ejecuta todo `supabase/migrations/20261022090000_product_variants.sql`. Cada producto actual pasa a tener una talla con su stock de ahora (o "Única" si no tenía talla), y los carritos y pedidos existentes se enlazan a ella.
+2. Justo después, en Render pulsa **Deploy latest commit**. Entre los dos pasos la tienda puede fallar unos minutos, porque la versión antigua aún busca el stock en el producto.
+3. Comprobación: `select count(*) from public.producto_variantes;` debe dar al menos tantas filas como productos hay.
+
+## Despliegue de la versión con facturas (hecho)
+
+La migración `supabase/migrations/20261021090000_invoice_numbers.sql` ya está aplicada en Supabase.
 
 ## Pasos completados (referencia)
 
@@ -62,9 +68,9 @@ El editor responde "Success. No rows returned" aunque el cambio se haya aplicado
 | Nombre | Nombre corto y claro | Blusa lino bordada |
 | Precio | **Sin IVA**: la web suma el 21 % | Para que cueste 29,95 €, pon **24,75** (29,95 ÷ 1,21) |
 | Descripción | Material, medidas, cuidados | 100 % lino, lavar a 30 °C |
-| Stock | Unidades reales disponibles | 3 |
 | Categoría | Debe existir antes | Blusas, Bolsos, Accesorios |
-| Color / Talla | Opcional | Blanco / M |
+| Color | Opcional | Blanco |
+| Tallas y stock | Cada talla con sus unidades reales | S: 2, M: 3, L: 1 |
 | Imagen | Foto del producto | Ver abajo |
 
 **Imágenes:** se guardan dentro de la base de datos, así que deben ser ligeras.
@@ -73,13 +79,19 @@ El editor responde "Success. No rows returned" aunque el cambio se haya aplicado
 - Para reducirlas: https://squoosh.app (gratis).
 - Con muchos productos convendrá moverlas a un almacenamiento aparte (Supabase Storage): avisar cuando llegue el momento.
 
-**Tallas:** cada talla es un producto distinto con su propio stock (por ejemplo "Blusa lino – S" y "Blusa lino – M"). La web todavía no tiene variantes.
+**Tallas:** un producto lleva todas sus tallas, cada una con su stock. En el formulario, la tabla **Tallas y stock** tiene botones para rellenar S–XL, XS–XXL o 36–44 de una vez; las flechas cambian el orden en que las ve la clienta.
+
+- Bolsos, bisutería y complementos: arriba de la tabla elige **Talla única** (en lugar de **Con tallas**) y pon solo el stock. La ficha no muestra selector y se añaden al carrito directamente.
+- La clienta tiene que elegir talla antes de añadir al carrito. Las tallas agotadas se ven tachadas.
+- El mismo modelo en otro color es **otro producto**, porque necesita su propia foto.
+- Para dejar de vender una talla, ponle stock 0 o bórrala de la tabla. Los pedidos antiguos conservan la talla que se compró.
+- Para intercambiar los nombres de dos tallas, hazlo en dos pasos (la web no permite que dos tallas se llamen igual ni un momento).
 
 ### 6.2 Crear el catálogo
 
 1. Admin Panel → **Agregar categoría**, una por tipo de producto.
 2. Admin Panel → **Agregar producto**, uno por uno.
-3. Abre el catálogo como cliente y revisa precios, fotos y stock.
+3. Abre el catálogo como cliente y revisa precios, fotos, tallas y stock.
 
 ### 6.3 Productos de prueba
 
@@ -196,7 +208,7 @@ Render → **Environment** → `MUNDONOMADA_PRODUCTION` = `1` → **Save, rebuil
 
 1. Haz una compra real pequeña con tu propia tarjeta.
 2. Comprueba que el pedido aparece **pagado** en Admin → Pedidos, que llega el justificante y que el stock baja.
-3. Reembólsala en Stripe → **Pagos** → el pago → **Reembolsar**, y vuelve a subir el stock del producto desde **Modificar producto**.
+3. Reembólsala en Stripe → **Pagos** → el pago → **Reembolsar**, y vuelve a subir el stock de esa talla desde **Modificar producto**.
 
 **Hecho cuando:** la compra real se ha cobrado, aparece en Pedidos y se ha reembolsado correctamente. La tienda está abierta.
 
@@ -205,6 +217,6 @@ Render → **Environment** → `MUNDONOMADA_PRODUCTION` = `1` → **Save, rebuil
 ## Uso diario
 
 - **Nuevos pedidos:** Admin → Pedidos, filtro **pagado**. Prepara el paquete y pulsa **Marcar como enviado**; cuando llegue, **Marcar como completado**.
-- **Reembolsos y cancelaciones de pedidos pagados:** se hacen en el panel de Stripe. Después ajusta el stock desde **Modificar producto** si la prenda vuelve a la tienda.
+- **Reembolsos y cancelaciones de pedidos pagados:** se hacen en el panel de Stripe. Después ajusta el stock de la talla desde **Modificar producto** si la prenda vuelve a la tienda.
 - **Pedidos "pendiente" o "cancelado":** son pagos que el cliente no terminó. El stock se devuelve solo cuando Stripe los caduca (unos 30 minutos).
 - **Copias de seguridad:** con Supabase Pro son diarias. Antes de cambios grandes en el catálogo, descarga una copia desde Supabase → Database → Backups.

@@ -59,12 +59,13 @@ foreach ($abiertos->fetchAll() as $abierto) {
 try {
     $pdo->beginTransaction();
     $consulta = $pdo->prepare(
-        'select c.producto_id, c.cantidad, p.nombre, p.precio, p.stock, p.imagen_url
+        'select c.producto_id, c.variante_id, v.talla, c.cantidad, p.nombre, p.precio, v.stock, p.imagen_url
            from public.carrito c
            join public.productos p on p.id = c.producto_id
+           join public.producto_variantes v on v.id = c.variante_id
           where c.user_id = :user_id
-          order by p.id
-          for update of p'
+          order by v.id
+          for update of v'
     );
     $consulta->execute([':user_id' => $userId]);
     $lineas = $consulta->fetchAll();
@@ -73,7 +74,7 @@ try {
     }
     $sinStock = array_filter($lineas, fn($l) => (int) $l['stock'] < (int) $l['cantidad']);
     if ($sinStock !== []) {
-        throw new RuntimeException('No hay stock suficiente de: ' . implode(', ', array_column($sinStock, 'nombre')) . '.');
+        throw new RuntimeException('No hay stock suficiente de: ' . implode(', ', array_map('nombreLinea', $sinStock)) . '.');
     }
 
     $importes = calcularImportesPedido($lineas);
@@ -102,16 +103,17 @@ try {
     $orderId = (int) $pedido->fetchColumn();
 
     $item = $pdo->prepare(
-        'insert into public.order_items (order_id, producto_id, cantidad, precio_unitario)
-         values (:order_id, :producto_id, :cantidad, :precio)'
+        'insert into public.order_items (order_id, producto_id, variante_id, talla, cantidad, precio_unitario)
+         values (:order_id, :producto_id, :variante_id, :talla, :cantidad, :precio)'
     );
-    $reserva = $pdo->prepare('update public.productos set stock = stock - :cantidad where id = :id');
+    $reserva = $pdo->prepare('update public.producto_variantes set stock = stock - :cantidad where id = :id');
     foreach ($lineas as $linea) {
         $item->execute([
             ':order_id' => $orderId, ':producto_id' => $linea['producto_id'],
+            ':variante_id' => $linea['variante_id'], ':talla' => $linea['talla'],
             ':cantidad' => $linea['cantidad'], ':precio' => $linea['precio'],
         ]);
-        $reserva->execute([':cantidad' => $linea['cantidad'], ':id' => $linea['producto_id']]);
+        $reserva->execute([':cantidad' => $linea['cantidad'], ':id' => $linea['variante_id']]);
     }
     $pdo->commit();
 } catch (RuntimeException $error) {
@@ -138,7 +140,7 @@ $datos = [
     'line_items' => [],
 ];
 foreach ($lineas as $linea) {
-    $producto = ['name' => $linea['nombre']];
+    $producto = ['name' => nombreLinea($linea)];
     if (str_starts_with((string) $linea['imagen_url'], 'https://')) {
         $producto['images'] = [$linea['imagen_url']];
     }

@@ -48,7 +48,7 @@
               </div>
               <div class="cart-item-details">
                 <span class="item-title">{{ item.producto?.nombre }}</span>
-                <span class="quantity">Cantidad: {{ item.cantidad }}</span>
+                <span class="quantity"><ng-container *ngIf="tallaVisible(item.talla) as talla">Talla {{ talla }} · </ng-container>Cantidad: {{ item.cantidad }}</span>
               </div>
               <span class="price">{{ ((item.producto?.precio || 0) * item.cantidad) | currency:'EUR' }}</span>
             </li>

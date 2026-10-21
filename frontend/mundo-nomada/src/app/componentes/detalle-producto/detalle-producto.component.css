@@ -139,15 +139,51 @@
   font-weight: 600;
 }
 
-.opcion-valor.talla {
+/* Selector de tallas */
+.tallas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--esp-2);
+}
+
+.talla-boton {
   min-width: var(--tactil);
   min-height: var(--tactil);
   padding: 0 var(--esp-3);
   display: inline-grid;
   place-items: center;
-  border: 1.5px solid var(--color-primario);
+  border: 1.5px solid var(--color-borde);
   border-radius: var(--radio-sm);
-  color: var(--color-primario);
+  background: var(--color-superficie);
+  color: var(--color-texto);
+  font-weight: 600;
+  transition: border-color var(--t-rapida) var(--ease), background var(--t-rapida) var(--ease);
+}
+
+.talla-boton:hover:not(.agotada) {
+  border-color: var(--color-primario);
+}
+
+.talla-boton.elegida {
+  border-color: var(--color-primario);
+  background: var(--color-marca);
+  color: var(--color-sobre-marca);
+}
+
+.talla-boton.agotada {
+  color: var(--color-texto-suave);
+  text-decoration: line-through;
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.opcion.aviso .talla-boton:not(.agotada) {
+  border-color: var(--color-error);
+}
+
+.aviso-talla {
+  color: var(--color-error);
+  font-weight: 600;
 }
 
 .boton-comprar {

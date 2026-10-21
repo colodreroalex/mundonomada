@@ -50,26 +50,24 @@ function imagenValida($valor): ?string
     return null;
 }
 
-/** Valida los campos de un producto o responde 400. */
+/** Valida los campos comunes de un producto o responde 400. */
 function datosProducto(array $d): array
 {
     $nombre = textoValido($d['nombre'] ?? null, 100);
     $descripcion = textoValido($d['descripcion'] ?? null, 2000, false);
     $color = textoValido($d['color'] ?? null, 50, false);
-    $talla = textoValido($d['talla'] ?? null, 10, false);
     $precio = filter_var($d['precio'] ?? null, FILTER_VALIDATE_FLOAT);
-    $stock = filter_var($d['stock'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 0, 'max_range' => 100000]]);
     $categoria = filter_var($d['categoriaID'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
     $imagen = imagenValida($d['imagen'] ?? null);
 
-    if ($nombre === null || $descripcion === null || $color === null || $talla === null) {
-        responderJson(['resultado' => 'ERROR', 'mensaje' => 'Revisa los textos: nombre (máx. 100), descripción (máx. 2000), color (máx. 50) y talla (máx. 10).'], 400);
+    if ($nombre === null || $descripcion === null || $color === null) {
+        responderJson(['resultado' => 'ERROR', 'mensaje' => 'Revisa los textos: nombre (máx. 100), descripción (máx. 2000) y color (máx. 50).'], 400);
     }
     if ($precio === false || $precio < 0.01 || $precio > 99999.99 || round($precio, 2) != $precio) {
         responderJson(['resultado' => 'ERROR', 'mensaje' => 'El precio debe estar entre 0,01 y 99.999,99 € con dos decimales como máximo.'], 400);
     }
-    if ($stock === false || $categoria === false) {
-        responderJson(['resultado' => 'ERROR', 'mensaje' => 'Revisa el stock (0 a 100.000) y la categoría.'], 400);
+    if ($categoria === false) {
+        responderJson(['resultado' => 'ERROR', 'mensaje' => 'Revisa la categoría.'], 400);
     }
     if ($imagen === null) {
         responderJson(['resultado' => 'ERROR', 'mensaje' => 'Imagen no válida: usa JPG, PNG, WebP o GIF de hasta 1,5 MB.'], 400);
@@ -79,10 +77,80 @@ function datosProducto(array $d): array
         ':n' => $nombre,
         ':p' => $precio,
         ':d' => $descripcion !== '' ? $descripcion : null,
-        ':s' => $stock,
         ':c' => $categoria,
         ':i' => $imagen !== '' ? $imagen : null,
         ':co' => $color !== '' ? $color : null,
-        ':t' => $talla !== '' ? $talla : null,
     ];
+}
+
+/**
+ * Valida la lista de tallas de un producto o responde 400.
+ * Cada talla llega como {id?: variante existente, talla, stock} y se devuelve
+ * en el mismo orden, que es el que verá la clienta.
+ */
+function variantesProducto(array $d): array
+{
+    $lista = $d['variantes'] ?? null;
+    if (!is_array($lista) || !array_is_list($lista) || count($lista) < 1 || count($lista) > 30) {
+        responderJson(['resultado' => 'ERROR', 'mensaje' => 'Añade entre 1 y 30 tallas (usa "Única" si el producto no tiene tallas).'], 400);
+    }
+
+    $variantes = [];
+    $vistas = [];
+    foreach ($lista as $v) {
+        $v = is_array($v) ? $v : [];
+        $talla = textoValido($v['talla'] ?? null, 10);
+        $stock = filter_var($v['stock'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 0, 'max_range' => 100000]]);
+        $id = ($v['id'] ?? null) === null || ($v['id'] ?? '') === ''
+            ? null
+            : filter_var($v['id'], FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+        if ($talla === null || $stock === false || $id === false) {
+            responderJson(['resultado' => 'ERROR', 'mensaje' => 'Revisa las tallas: nombre de hasta 10 caracteres y stock de 0 a 100.000.'], 400);
+        }
+        $clave = mb_strtolower($talla);
+        if (isset($vistas[$clave])) {
+            responderJson(['resultado' => 'ERROR', 'mensaje' => "La talla \"$talla\" está repetida."], 400);
+        }
+        $vistas[$clave] = true;
+        $variantes[] = ['id' => $id, 'talla' => $talla, 'stock' => $stock];
+    }
+    return $variantes;
+}
+
+/**
+ * Deja las tallas del producto exactamente como en $variantes, dentro de la
+ * transacción abierta: borra las que faltan, actualiza las existentes y crea las nuevas.
+ *
+ * @throws RuntimeException si una talla enviada no es de este producto.
+ */
+function guardarVariantes(PDO $pdo, int $productoId, array $variantes): void
+{
+    $actuales = $pdo->prepare('select id from public.producto_variantes where producto_id = :p for update');
+    $actuales->execute([':p' => $productoId]);
+    $existentes = array_map('intval', $actuales->fetchAll(PDO::FETCH_COLUMN));
+
+    $conservar = array_values(array_filter(array_column($variantes, 'id')));
+    if (array_diff($conservar, $existentes) !== []) {
+        throw new RuntimeException('Una de las tallas no pertenece a este producto. Recarga la página.');
+    }
+
+    $borrar = $pdo->prepare('delete from public.producto_variantes where id = :id');
+    foreach (array_diff($existentes, $conservar) as $id) {
+        $borrar->execute([':id' => $id]);
+    }
+
+    $actualizar = $pdo->prepare(
+        'update public.producto_variantes set talla = :t, stock = :s, orden = :o where id = :id and producto_id = :p'
+    );
+    $crear = $pdo->prepare(
+        'insert into public.producto_variantes (producto_id, talla, stock, orden) values (:p, :t, :s, :o)'
+    );
+    foreach ($variantes as $orden => $v) {
+        $valores = [':p' => $productoId, ':t' => $v['talla'], ':s' => $v['stock'], ':o' => $orden];
+        if ($v['id'] !== null) {
+            $actualizar->execute($valores + [':id' => $v['id']]);
+        } else {
+            $crear->execute($valores);
+        }
+    }
 }

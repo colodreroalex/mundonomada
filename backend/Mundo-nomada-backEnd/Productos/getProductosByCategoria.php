@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../auth/seguridad.php';
-require_once __DIR__ . '/../conexion_postgres.php';
+require_once __DIR__ . '/catalogo.php';
 
 aplicarCors(['GET']);
 if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
@@ -14,13 +14,10 @@ if ($categoriaId === false || $categoriaId <= 0) {
 }
 
 try {
-    $consulta = retornarConexionPostgres()->prepare(
-        'select id as "ProductoID", nombre, precio, descripcion, stock,
-                categoria_id as "categoriaID", imagen_url as imagen, color, talla
-           from public.productos where categoria_id = :categoria_id order by id'
-    );
-    $consulta->execute([':categoria_id' => $categoriaId]);
-    responderJson(['resultado' => 'OK', 'productos' => $consulta->fetchAll()]);
+    responderJson([
+        'resultado' => 'OK',
+        'productos' => consultarProductos('p.categoria_id = :categoria_id', [':categoria_id' => $categoriaId]),
+    ]);
 } catch (PDOException $error) {
     error_log('Error al listar productos por categoría: ' . $error->getMessage());
     responderJson(['resultado' => 'ERROR', 'mensaje' => 'No se pudieron consultar los productos.'], 500);

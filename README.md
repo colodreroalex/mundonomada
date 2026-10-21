@@ -15,7 +15,7 @@ con pagos por **Stripe Checkout**. Angular y PHP se sirven desde un único conte
 | `backend/` (resto) | Configuración de Apache, PHP y arranque del contenedor |
 | `supabase/migrations` | Esquema de la base de datos, versionado ([guía](supabase/README.md)) |
 | `database/seeds` | Catálogo de demostración para entornos de prueba |
-| `tools/` | `smoke-test.mjs` (41 comprobaciones funcionales) y `security-test.mjs` (pruebas de seguridad) |
+| `tools/` | `smoke-test.mjs` (49 comprobaciones funcionales) y `security-test.mjs` (pruebas de seguridad) |
 | `docs/` | Guía de la propietaria, despliegue, estado y seguridad |
 
 ## Documentación

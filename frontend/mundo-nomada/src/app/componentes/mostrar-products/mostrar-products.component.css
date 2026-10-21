@@ -356,6 +356,15 @@
   color: var(--color-primario);
 }
 
+.product-tallas {
+  margin: 4px 0 0;
+  font-size: var(--fs-xs);
+  color: var(--color-texto-suave);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 /* ---------- Esqueletos ---------- */
 .tarjeta-esqueleto {
   display: flex;

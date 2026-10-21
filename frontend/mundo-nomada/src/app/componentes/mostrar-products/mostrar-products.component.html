@@ -102,7 +102,7 @@
                     class="btn-addcart"
                     [disabled]="producto.stock === 0"
                     (click)="addToCart($event, producto)"
-                    [attr.aria-label]="'Añadir ' + producto.nombre + ' al carrito'">
+                    [attr.aria-label]="(producto.variantes.length > 1 ? 'Elegir talla de ' : 'Añadir ') + producto.nombre + (producto.variantes.length > 1 ? '' : ' al carrito')">
               <i class="bi bi-bag-plus" aria-hidden="true"></i>
             </button>
           </div>
@@ -116,6 +116,7 @@
             <div class="product-price-container">
               <span class="product-price">{{ producto.precio | currency:'EUR' }}</span>
             </div>
+            <p class="product-tallas" *ngIf="tallasDisponibles(producto) as tallas">Tallas: {{ tallas }}</p>
           </div>
         </article>
       </div>

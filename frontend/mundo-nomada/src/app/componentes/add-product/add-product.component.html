@@ -10,7 +10,7 @@
 
   <div class="alert alert-info admin-aviso" role="alert">
     <i class="bi bi-info-circle-fill" aria-hidden="true"></i>
-    <span><strong>Información importante:</strong> No se puede crear un producto con la misma combinación de nombre, color y talla.</span>
+    <span><strong>Información importante:</strong> Cada producto lleva todas sus tallas, cada una con su stock. Un mismo modelo en otro color es otro producto.</span>
   </div>
 
   <!-- Bloque para notificaciones -->
@@ -57,33 +57,12 @@
         </div>
       </div>
 
-      <!-- Stock -->
-      <div>
-        <label for="stock" class="form-label">Stock</label>
-        <input type="number" name="stock" [(ngModel)]="prod.stock" id="stock" class="form-control"
-          placeholder="Ingrese el stock disponible" required min="0" inputmode="numeric" #stock="ngModel">
-        <div *ngIf="stock.invalid && (stock.touched || productForm.submitted)" class="admin-error">
-          <div *ngIf="stock.errors?.['required']">El stock es obligatorio.</div>
-          <div *ngIf="stock.errors?.['min']">El stock no puede ser negativo.</div>
-        </div>
-      </div>
-
       <!-- Color (Opcional) -->
       <div>
         <label for="color" class="form-label">Color (Opcional)</label>
         <input type="text" name="color" [(ngModel)]="prod.color" id="color" class="form-control"
           placeholder="Especifique el color del producto">
         <small class="admin-ayuda">Deje este campo en blanco si el producto no tiene un color específico.</small>
-      </div>
-
-      <!-- Talla (Opcional) -->
-      <div>
-        <label for="talla" class="form-label">Talla (Opcional)</label>
-        <select name="talla" [(ngModel)]="prod.talla" id="talla" class="form-select">
-          <option value="">Sin talla específica</option>
-          <option *ngFor="let talla of tallasDisponibles" [value]="talla">{{ talla }}</option>
-        </select>
-        <small class="admin-ayuda">Seleccione una talla si corresponde para este producto.</small>
       </div>
 
       <!-- Categoría -->
@@ -110,6 +89,11 @@
         <div class="vista-previa" *ngIf="imagenBase64">
           <img [src]="imagenBase64" alt="Vista previa de la imagen">
         </div>
+      </div>
+
+      <!-- Tallas y stock -->
+      <div class="completo">
+        <app-editor-tallas [variantes]="variantes" prefijo="alta"></app-editor-tallas>
       </div>
     </div>
 

@@ -3,12 +3,10 @@ import { CarritoService } from '../../services/carrito.service';
 import { AuthService } from '../../services/auth.service';
 import { CommonModule } from '@angular/common';
 import { Carrito } from '../../../models/Carrito';
+import { tallaVisible } from '../../../models/Variante';
 import { User } from '../../../models/Users';
 import { RouterLink } from '@angular/router';
-import { HttpClient } from '@angular/common/http';
-import { Producto } from '../../../models/Producto';
 import { Subscription } from 'rxjs';
-import { apiBaseUrl } from '../../config/api.config';
 
 @Component({
   selector: 'app-carrito',
@@ -38,7 +36,10 @@ export class CarritoComponent implements OnInit, OnDestroy {
 
   private subscription: Subscription = new Subscription();
 
-  constructor(private carritoService: CarritoService, private authService: AuthService, private http: HttpClient) {}
+  constructor(private carritoService: CarritoService, private authService: AuthService) {}
+
+  readonly tallaVisible = tallaVisible;
+  porLinea = (_: number, item: Carrito) => item.id;
 
   ngOnInit(): void {
     this.subscription.add(this.authService.getCurrentUserObservable().subscribe((user) => {
@@ -76,108 +77,23 @@ export class CarritoComponent implements OnInit, OnDestroy {
   }
   
   refreshCart(userId: number): void {
-    // Para usuarios invitados, forzar una actualización de los datos del servidor
+    // Invitados: se comprueba el stock de cada talla en el servidor
     if (userId === 0 && this.carrito.length > 0) {
-      // Obtener IDs de productos en el carrito
-      const productIds = this.carrito.map(item => item.producto_id);
-      
-      // Obtener productos que ya han sido comprados previamente
-      const purchasedProductIds = this.carritoService.getGuestPurchasedProducts();
-      console.log('Productos previamente comprados:', purchasedProductIds);
-      
-      // Llamar directamente a la API para obtener información actualizada
-      this.http.post<any>(`${apiBaseUrl}carrito/getUpdatedProducts.php`, { ids: productIds }, { withCredentials: true })
-        .subscribe({
-          next: (response) => {
-            console.log('Refresh Cart Response:', response);
-            
-            // Si la respuesta está vacía o no contiene productos, limpiar el carrito local
-            if (!response || !response.products || response.products.length === 0) {
-              console.warn('No se encontraron productos en el servidor. Limpiando carrito local.');
-              this.carrito = [];
-              this.carritoService.saveLocalCart([]);
-              this.notification = {
-                message: 'El carrito se ha vaciado porque los productos ya no están disponibles.',
-                type: 'warning'
-              };
-              setTimeout(() => this.notification = null, 3000);
-              
-              // Recalcular total (que será 0)
-              this.loadTotal(userId);
-              return;
-            }
-            
-            // Continuar con la lógica normal si hay productos
-            const productsMap = new Map<number, Producto>();
-            response.products.forEach((p: any) => {
-              const producto = new Producto(
-                p.ProductoID,
-                p.nombre,
-                p.precio,
-                p.descripcion,
-                p.stock,
-                p.categoriaID,
-                p.imagen
-              );
-              productsMap.set(p.ProductoID, producto);
-            });
-            
-            // Verificar si hay cambios en el stock
-            let stockChanged = false;
-            const cartaActualizado = this.carrito.filter(item => {
-              // Filtrar productos que ya han sido comprados
-              if (purchasedProductIds.includes(item.producto_id)) {
-                console.log(`Producto ${item.producto_id} ya fue comprado, eliminando del carrito.`);
-                stockChanged = true;
-                return false;
-              }
-              
-              // Si el producto existe en la respuesta del servidor
-              if (productsMap.has(item.producto_id)) {
-                const productoActualizado = productsMap.get(item.producto_id);
-                // Comprobar si el stock ha cambiado
-                if (item.producto && productoActualizado && item.producto.stock !== productoActualizado.stock) {
-                  stockChanged = true;
-                }
-                // Actualizar la información del producto
-                if (productoActualizado) {
-                  item.producto = productoActualizado;
-                  // Solo mantener productos con stock > 0
-                  return item.producto.stock > 0;
-                }
-              }
-              // Si el producto no existe en el servidor, marcamos que hubo cambio y lo eliminamos
-              stockChanged = true;
-              return false;
-            });
-            
-            // Si algún producto fue eliminado por falta de stock
-            if (cartaActualizado.length !== this.carrito.length) {
-              stockChanged = true;
-            }
-            
-            // Actualizar el carrito solo si hubo cambios
-            if (stockChanged) {
-              this.carrito = cartaActualizado;
-              // Actualizar localStorage
-              this.carritoService.saveLocalCart(cartaActualizado);
-              // Mostrar notificación
-              this.notification = {
-                message: 'El inventario ha cambiado. Se ha actualizado su carrito.',
-                type: 'warning'
-              };
-              setTimeout(() => this.notification = null, 3000);
-              
-              // Recalcular total
-              this.loadTotal(userId);
-            }
-            
-            console.log('Carrito actualizado automáticamente:', this.carrito);
-          },
-          error: (err) => {
-            console.error('Error al actualizar el carrito con datos recientes:', err);
-          }
-        });
+      this.carritoService.actualizarCarritoInvitado(this.carrito).subscribe({
+        next: ({ items, cambiado }) => {
+          if (!cambiado) return;
+          this.carrito = items;
+          this.loadTotal(userId);
+          this.notification = {
+            message: items.length === 0
+              ? 'El carrito se ha vaciado porque los productos ya no están disponibles.'
+              : 'El inventario ha cambiado. Se ha actualizado su carrito.',
+            type: 'warning'
+          };
+          setTimeout(() => this.notification = null, 3000);
+        },
+        error: (err) => console.error('Error al actualizar el carrito con datos recientes:', err)
+      });
     } else {
       // Para usuarios registrados, usar el método normal
       this.carritoService.getCart(userId).subscribe({
@@ -214,43 +130,16 @@ export class CarritoComponent implements OnInit, OnDestroy {
     }
   }
 
-  // Detecta cambios en el stock de productos
+  // Detecta cambios de stock o líneas que desaparecen (cada talla es una línea)
   detectStockChanges(oldCart: Carrito[], newCart: Carrito[]): boolean {
     if (!oldCart || !newCart) return false;
-    
-    // Mapear productos antiguos por ID para fácil comparación
-    const oldProductMap = new Map<number, number>();
-    oldCart.forEach(item => {
-      if (item.producto) {
-        oldProductMap.set(item.producto.ProductoID, item.producto.stock);
-      }
-    });
-    
-    // Verificar si algún producto tiene stock diferente
-    for (const item of newCart) {
-      if (item.producto && oldProductMap.has(item.producto.ProductoID)) {
-        const oldStock = oldProductMap.get(item.producto.ProductoID);
-        if (oldStock !== item.producto.stock) {
-          return true;
-        }
-      }
+    const anteriores = new Map(oldCart.map((item) => [item.id, item.producto?.stock]));
+    if (oldCart.some((item) => !newCart.some((nuevo) => nuevo.id === item.id))) {
+      return true;
     }
-    
-    // Verificar si hay productos que ya no están en el carrito nuevo
-    for (const item of oldCart) {
-      if (item.producto) {
-        const exists = newCart.some(newItem => 
-          newItem.producto && newItem.producto.ProductoID === item.producto?.ProductoID
-        );
-        if (!exists) {
-          return true;
-        }
-      }
-    }
-    
-    return false;
+    return newCart.some((item) => anteriores.has(item.id) && anteriores.get(item.id) !== item.producto?.stock);
   }
-  
+
   loadCarrito(userId: number): void {
     this.loading = true;
     this.carritoService.getCart(userId).subscribe({

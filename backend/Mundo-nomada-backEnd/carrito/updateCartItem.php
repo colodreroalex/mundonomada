@@ -13,8 +13,8 @@ try {
     $conexion = retornarConexionPostgres();
     $conexion->beginTransaction();
     $consulta = $conexion->prepare(
-        'select p.stock from public.carrito c join public.productos p on p.id = c.producto_id
-          where c.id = :cart_id and c.user_id = :user_id for update of c, p'
+        'select v.stock from public.carrito c join public.producto_variantes v on v.id = c.variante_id
+          where c.id = :cart_id and c.user_id = :user_id for update of c, v'
     );
     $consulta->execute([':cart_id' => $cartId, ':user_id' => $userId]);
     $linea = $consulta->fetch();

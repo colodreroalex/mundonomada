@@ -59,6 +59,13 @@ function calcularImportesPedido(array $lineas): array
     ];
 }
 
+/** Nombre de una línea para Stripe y los avisos: "Blusa lino · Talla M" (sin talla si es "Única"). */
+function nombreLinea(array $linea): string
+{
+    $talla = trim((string) ($linea['talla'] ?? ''));
+    return $talla === '' || mb_strtolower($talla) === 'única' ? (string) $linea['nombre'] : $linea['nombre'] . ' · Talla ' . $talla;
+}
+
 function precioConIvaCentimos($precio): int
 {
     return (int) round(((int) round(((float) $precio) * 100)) * (100 + IVA_PORCENTAJE) / 100);
@@ -146,9 +153,9 @@ function liberarPedido(PDO $pdo, int $orderId): bool
             return false;
         }
         $pdo->prepare(
-            'update public.productos p set stock = p.stock + oi.cantidad
+            'update public.producto_variantes v set stock = v.stock + oi.cantidad
                from public.order_items oi
-              where oi.order_id = :id and oi.producto_id = p.id'
+              where oi.order_id = :id and oi.variante_id = v.id'
         )->execute([':id' => $orderId]);
         $pdo->commit();
         return true;
@@ -190,7 +197,7 @@ function confirmarPagoPedido(PDO $pdo, string $sessionId, ?string $paymentIntent
 
             $pdo->prepare(
                 'delete from public.carrito c using public.order_items oi
-                  where oi.order_id = :order_id and c.producto_id = oi.producto_id and c.user_id = :user_id'
+                  where oi.order_id = :order_id and c.variante_id = oi.variante_id and c.user_id = :user_id'
             )->execute([':order_id' => $fila['id'], ':user_id' => $fila['user_id']]);
         } else {
             $estado = $pdo->prepare('select id, estado from public.orders where payment_reference = :sid');

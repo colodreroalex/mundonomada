@@ -45,13 +45,14 @@
           <div></div>
         </div>
 
-        <article class="cart-item" *ngFor="let item of carrito">
+        <article class="cart-item" *ngFor="let item of carrito; trackBy: porLinea">
           <a class="product-image" [routerLink]="['/producto', item.producto_id]">
             <img [src]="item.producto?.imagen" alt="{{ item.producto?.nombre }}" loading="lazy" />
           </a>
 
           <div class="product-details">
             <a class="product-nombre" [routerLink]="['/producto', item.producto_id]">{{ item.producto?.nombre }}</a>
+            <span class="product-talla" *ngIf="tallaVisible(item.talla) as talla">Talla {{ talla }}</span>
             <span class="product-precio-unidad">{{ item.producto?.precio | currency:'EUR' }}</span>
           </div>
 

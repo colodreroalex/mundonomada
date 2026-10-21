@@ -4,6 +4,7 @@ import { Carrito } from '../../models/Carrito';
 import { map, Observable, switchMap, throwError, of, forkJoin, Subject } from 'rxjs';
 import { tap, catchError } from 'rxjs/operators';
 import { Producto } from '../../models/Producto';
+import { Variante } from '../../models/Variante';
 import { apiBaseUrl } from '../config/api.config';
 
 @Injectable({
@@ -12,7 +13,7 @@ import { apiBaseUrl } from '../config/api.config';
 export class CarritoService {
   url = `${apiBaseUrl}carrito/`;
   private LOCAL_CART_KEY = 'guestCart';
-  
+
   // Constantes para cálculos
   public readonly IVA_PORCENTAJE: number = 21;
   public readonly ENVIO_GRATIS_MINIMO: number = 60;
@@ -20,7 +21,7 @@ export class CarritoService {
 
   // Subject para notificar cuando se completa una compra para usuario invitado
   private guestPurchaseCompleted = new Subject<void>();
-  
+
   // Observable para suscribirse a la finalización de compra de invitado
   public guestPurchaseCompleted$ = this.guestPurchaseCompleted.asObservable();
 
@@ -81,16 +82,7 @@ export class CarritoService {
       .pipe(
         map(response => {
           if (response && response.resultado === 'OK' && response.products && response.products.length > 0) {
-            const p = response.products[0];
-            return new Producto(
-              p.ProductoID,
-              p.nombre,
-              p.precio,
-              p.descripcion,
-              p.stock,
-              p.categoriaID,
-              p.imagen
-            );
+            return this.productoDesdeApi(response.products[0]);
           } else {
             // Si el producto ya no existe o no está disponible, lanzamos un error
             console.error('Producto no disponible en servidor:', productoID);
@@ -104,6 +96,76 @@ export class CarritoService {
       );
   }
 
+  /** Convierte un producto de la API (con sus tallas) en un Producto. */
+  productoDesdeApi(p: any): Producto {
+    const variantes: Variante[] = (p.variantes || []).map((v: any) => ({ id: Number(v.id), talla: v.talla, stock: Number(v.stock) || 0 }));
+    return new Producto(p.ProductoID, p.nombre, p.precio, p.descripcion, Number(p.stock) || 0, p.categoriaID, p.imagen, p.color ?? null, variantes);
+  }
+
+  /**
+   * Talla de una línea del carrito dentro de las tallas actuales del producto.
+   * Las líneas antiguas sin talla solo valen si el producto tiene una única talla.
+   */
+  varianteDeLinea(producto: Producto, varianteId: number | null): Variante | undefined {
+    if (varianteId == null) {
+      return producto.variantes.length === 1 ? producto.variantes[0] : undefined;
+    }
+    return producto.variantes.find((v) => v.id === varianteId);
+  }
+
+  /**
+   * Producto tal como se guarda en una línea del carrito: el stock es el de su
+   * talla, que es el que limita cuántas unidades se pueden comprar.
+   */
+  private productoDeLinea(producto: Producto, variante: Variante): Producto {
+    return { ...producto, stock: variante.stock, variantes: [] };
+  }
+
+  /**
+   * Comprueba el carrito de invitado contra el stock actual de cada talla.
+   * Quita las líneas cuyo producto o talla ya no existe o está agotado.
+   */
+  actualizarCarritoInvitado(items: Carrito[]): Observable<{ items: Carrito[]; cambiado: boolean }> {
+    if (items.length === 0) {
+      return of({ items, cambiado: false });
+    }
+    const ids = [...new Set(items.map((i) => i.producto_id))];
+    return this.http.post<any>(`${this.url}getUpdatedProducts.php`, { ids }, { withCredentials: true }).pipe(
+      map((response) => {
+        const productos = new Map<number, Producto>();
+        for (const p of response?.products || []) {
+          const producto = this.productoDesdeApi(p);
+          productos.set(producto.ProductoID, producto);
+        }
+        let cambiado = false;
+        const actualizados: Carrito[] = [];
+        for (const item of items) {
+          const producto = productos.get(item.producto_id);
+          const variante = producto && this.varianteDeLinea(producto, item.variante_id);
+          if (!producto || !variante || variante.stock <= 0) {
+            cambiado = true;
+            continue;
+          }
+          if (item.producto?.stock !== variante.stock || item.variante_id !== variante.id || item.cantidad > variante.stock) {
+            cambiado = true;
+          }
+          actualizados.push({
+            ...item,
+            variante_id: variante.id ?? null,
+            talla: variante.talla,
+            cantidad: Math.min(item.cantidad, variante.stock),
+            producto: this.productoDeLinea(producto, variante),
+          });
+        }
+        if (cambiado) {
+          this.saveLocalCart(actualizados);
+          this.cambios.next();
+        }
+        return { items: actualizados, cambiado };
+      })
+    );
+  }
+
   /**
    * Añade un producto al carrito.
    * Si el user_id es 0 o nulo, se guarda en localStorage.
@@ -113,41 +175,35 @@ export class CarritoService {
     if (!carrito.user_id || carrito.user_id === 0) {
       return this.verificarStockActualizado(carrito.producto_id).pipe(
         switchMap(productoActualizado => {
-          // Actualizar el objeto producto con información reciente
-          carrito.producto = productoActualizado;
-          
-          // Verificar si hay stock suficiente
-          if (productoActualizado.stock < carrito.cantidad) {
-            return throwError(() => ({
-              mensaje: 'No quedan suficientes unidades disponibles para este producto.',
-              stock: productoActualizado.stock
-            }));
+          const variante = this.varianteDeLinea(productoActualizado, carrito.variante_id);
+          if (!variante) {
+            return throwError(() => ({ mensaje: 'Elige una talla.' }));
           }
-          
-          // Continuar con el proceso normal para invitados
+          const sinStock = { mensaje: 'No quedan suficientes unidades disponibles de esta talla.', stock: variante.stock };
+          carrito.variante_id = variante.id ?? null;
+          carrito.talla = variante.talla;
+          carrito.producto = this.productoDeLinea(productoActualizado, variante);
+
+          if (variante.stock < carrito.cantidad) {
+            return throwError(() => sinStock);
+          }
+
+          // Cada talla es una línea distinta del carrito
           const guestCart = this.getLocalCart();
-          const index = guestCart.findIndex(
-            (item) => item.producto_id === carrito.producto_id
-          );
-          
+          const index = guestCart.findIndex((item) => item.variante_id === carrito.variante_id);
+
           if (index >= 0) {
-            // Verificar que la suma no exceda el stock actualizado
-            if (guestCart[index].cantidad + carrito.cantidad > productoActualizado.stock) {
-              return throwError(() => ({
-                mensaje: 'No quedan suficientes unidades disponibles para este producto.',
-                stock: productoActualizado.stock
-              }));
-            } else {
-              guestCart[index].cantidad += carrito.cantidad;
-              // Actualizar el producto con la información de stock más reciente
-              guestCart[index].producto = productoActualizado;
+            if (guestCart[index].cantidad + carrito.cantidad > variante.stock) {
+              return throwError(() => sinStock);
             }
+            guestCart[index].cantidad += carrito.cantidad;
+            guestCart[index].producto = carrito.producto;
           } else {
             // Generamos un ID ficticio
             carrito.id = new Date().getTime();
             guestCart.push(carrito);
           }
-          
+
           this.saveLocalCart(guestCart);
           return of({ resultado: 'OK', mensaje: 'Añadido al carrito local' });
         })
@@ -156,6 +212,7 @@ export class CarritoService {
       // Usuario autenticado: usar backend
       return this.http.post<any>(`${this.url}addToCart.php`, {
         producto_id: carrito.producto_id,
+        variante_id: carrito.variante_id,
         cantidad: carrito.cantidad,
       }, { withCredentials: true })
         .pipe(
@@ -182,7 +239,7 @@ export class CarritoService {
     if (!userId || userId === 0) {
       const guestCart = this.getLocalCart();
       // Ya no filtramos productos previamente comprados para permitir recompras
-      
+
       return new Observable((observer) => {
         observer.next(guestCart);
         observer.complete();
@@ -202,21 +259,25 @@ export class CarritoService {
           map((items: any[]) => {
             return items
               .map((item) => {
+                // El stock que llega es el de la talla de esta línea
                 const producto: Producto = new Producto(
                   item.ProductoID,
                   item.nombre,
                   item.precio,
                   item.descripcion,
-                  item.stock,
+                  Number(item.stock) || 0,
                   item.categoriaID,
-                  item.imagen
+                  item.imagen,
+                  item.color ?? null
                 );
                 return new Carrito(
                   item.cart_id,
                   userId,
                   item.ProductoID,
                   item.cantidad,
-                  producto
+                  producto,
+                  Number(item.variante_id),
+                  item.talla
                 );
               })
               .filter((item) => item.producto && item.producto.stock > 0);
@@ -367,6 +428,7 @@ export class CarritoService {
     const migrationObservables = guestCart.map((item) => {
       return this.http.post<any>(`${this.url}addToCart.php`, {
         producto_id: item.producto_id,
+        variante_id: item.variante_id ?? null,
         cantidad: item.cantidad,
       }, { withCredentials: true });
     });
@@ -377,7 +439,7 @@ export class CarritoService {
         this.removeLocalCart(); // Usar removeLocalCart en lugar de saveLocalCart para eliminar completamente
         this.clearGuestPurchasedProducts(); // Limpiar registro de productos comprados
         localStorage.removeItem('lastCartSync'); // Eliminar cualquier timestamp de sincronización
-        
+
         // Limpiar cualquier otro dato de localStorage relacionado con el carrito
         // que pueda estar causando problemas
         try {
@@ -416,12 +478,12 @@ export class CarritoService {
           if (items.length === 0) {
             return of({ resultado: 'OK', mensaje: 'Carrito ya está vacío.' });
           }
-          
+
           // Crear observables para eliminar cada ítem del carrito
-          const deleteObservables = items.map(item => 
+          const deleteObservables = items.map(item =>
             this.removeItem(item.id, userId)
           );
-          
+
           // Ejecutar todas las eliminaciones en paralelo
           return forkJoin(deleteObservables).pipe(
             map(() => ({ resultado: 'OK', mensaje: 'Carrito limpiado correctamente.' })),
@@ -458,16 +520,16 @@ export class CarritoService {
    * @param subtotal Subtotal del pedido (suma de productos sin IVA ni envío)
    * @returns Objeto con todos los importes calculados
    */
-  calcularTotalesPedido(subtotal: number): { 
-    subtotal: number; 
-    iva: number; 
-    envio: number; 
-    totalConIvaYEnvio: number; 
+  calcularTotalesPedido(subtotal: number): {
+    subtotal: number;
+    iva: number;
+    envio: number;
+    totalConIvaYEnvio: number;
   } {
     const iva = this.calcularIVA(subtotal);
     const envio = this.calcularEnvio(subtotal);
     const totalConIvaYEnvio = subtotal + iva + envio;
-    
+
     return {
       subtotal,
       iva,
@@ -491,11 +553,11 @@ export class CarritoService {
    */
   saveGuestPurchasedProducts(productIds: number[]): void {
     if (!productIds || productIds.length === 0) return;
-    
+
     // Obtener los productos ya registrados y añadir los nuevos
     const currentPurchased = this.getGuestPurchasedProducts();
     const updatedPurchased = [...new Set([...currentPurchased, ...productIds])];
-    
+
     // Guardar el listado actualizado en localStorage
     localStorage.setItem(this.GUEST_PURCHASED_KEY, JSON.stringify(updatedPurchased));
     console.log('Productos marcados como comprados:', updatedPurchased);

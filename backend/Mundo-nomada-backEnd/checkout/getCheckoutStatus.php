@@ -23,9 +23,9 @@ try {
         responderJson(['resultado' => 'ERROR', 'mensaje' => 'Pedido no encontrado.'], 404);
     }
     $items = $pdo->prepare(
-        'select oi.producto_id, p.nombre, oi.cantidad, oi.precio_unitario
+        "select oi.producto_id, p.nombre || case when coalesce(oi.talla, '') in ('', 'Única', 'única') then '' else ' · Talla ' || oi.talla end as nombre, oi.talla, oi.cantidad, oi.precio_unitario
            from public.order_items oi join public.productos p on p.id = oi.producto_id
-          where oi.order_id = :id order by oi.id'
+          where oi.order_id = :id order by oi.id"
     );
     $items->execute([':id' => $pedido['id']]);
     responderJson(['resultado' => 'OK', 'pedido' => $pedido, 'items' => $items->fetchAll()]);

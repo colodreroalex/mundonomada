@@ -85,11 +85,10 @@ export class ProductosService {
       nombre: producto.nombre,
       precio: producto.precio,
       descripcion: producto.descripcion,
-      stock: producto.stock,
       categoriaID: producto.categoriaID,
       imagen: producto.imagen,
       color: producto.color,
-      talla: producto.talla
+      variantes: producto.variantes
     };
     
     return this.http.post<any>(
@@ -203,7 +202,7 @@ export class ProductosService {
     );
   }
 
-  // Verificar si existe un producto con el mismo nombre, color y talla
+  // Verificar si existe un producto con el mismo nombre y color (las tallas van dentro del producto)
   verificarProductoDuplicado(producto: Producto): Observable<boolean> {
     // Si estamos modificando un producto existente, no deberíamos validar
     // contra el mismo producto. Por eso verificamos si tiene ProductoID.
@@ -212,11 +211,10 @@ export class ProductosService {
     
     return this.recuperarTodos().pipe(
       map(productos => {
-        // Filtramos por productos con el mismo nombre, color y talla
+        // Filtramos por productos con el mismo nombre y color (las tallas van dentro del producto)
         const duplicados = productos.filter(p => 
           p.nombre.toLowerCase() === producto.nombre.toLowerCase() &&
           p.color?.toLowerCase() === producto.color?.toLowerCase() &&
-          p.talla?.toLowerCase() === producto.talla?.toLowerCase() &&
           // Si es un producto existente, excluimos el mismo producto de la validación
           // Si es un producto nuevo, cualquier coincidencia es un duplicado
           (esProductoExistente ? p.ProductoID !== producto.ProductoID : true)

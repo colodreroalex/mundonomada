@@ -5,6 +5,7 @@ import { AuthService } from '../../services/auth.service';
 import { OrdersService, EstadoCheckout } from '../../services/orders.service';
 import { Carrito } from '../../../models/Carrito';
 import { Producto } from '../../../models/Producto';
+import { tallaVisible } from '../../../models/Variante';
 import { User } from '../../../models/Users';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
@@ -49,6 +50,8 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   // Suscripciones
   private subscriptions: Subscription[] = [];
   private pollTimer: ReturnType<typeof setTimeout> | null = null;
+
+  readonly tallaVisible = tallaVisible;
 
   constructor(
     private carritoService: CarritoService,

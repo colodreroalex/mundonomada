@@ -29,13 +29,16 @@
 .cart-lineas {
   display: flex;
   flex-direction: column;
+  /* Las líneas pasan a formato tabla según el ancho de esta columna, no de la
+     pantalla: junto al resumen (992–1200 px) no caben las seis columnas */
+  container: lineas / inline-size;
 }
 
 .cart-header {
   display: none;
 }
 
-@media (min-width: 768px) {
+@container lineas (min-width: 700px) {
   .cart-header {
     display: grid;
     grid-template-columns: 88px minmax(0, 1fr) 100px 132px 100px 48px;
@@ -67,7 +70,7 @@
   animation: aparecer 0.35s var(--ease) both;
 }
 
-@media (min-width: 768px) {
+@container lineas (min-width: 700px) {
   .cart-item {
     grid-template-columns: 88px minmax(0, 1fr) 100px 132px 100px 48px;
     grid-template-areas: 'img info precio cantidad total quitar';
@@ -99,7 +102,7 @@
   align-self: end;
 }
 
-@media (min-width: 768px) {
+@container lineas (min-width: 700px) {
   .product-details { align-self: center; }
 }
 
@@ -113,12 +116,18 @@
   color: var(--color-primario);
 }
 
+.product-talla {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--color-texto);
+}
+
 .product-precio-unidad {
   font-size: var(--fs-sm);
   color: var(--color-texto-suave);
 }
 
-@media (min-width: 768px) {
+@container lineas (min-width: 700px) {
   .product-precio-unidad { display: none; }
 }
 
@@ -128,7 +137,7 @@
   color: var(--color-texto-suave);
 }
 
-@media (min-width: 768px) {
+@container lineas (min-width: 700px) {
   .cart-item-price { display: block; }
 }
 
@@ -180,7 +189,7 @@
   font-variant-numeric: tabular-nums;
 }
 
-@media (min-width: 768px) {
+@container lineas (min-width: 700px) {
   .cart-item-total {
     align-self: center;
     padding-top: 0;
@@ -193,7 +202,7 @@
   align-self: start;
 }
 
-@media (min-width: 768px) {
+@container lineas (min-width: 700px) {
   .cart-item-actions { align-self: center; }
 }
 

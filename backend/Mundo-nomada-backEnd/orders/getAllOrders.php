@@ -18,7 +18,7 @@ try {
                 o.payment_intent, o.shipping_name, o.shipping_address, o.shipping_postal_code,
                 o.shipping_city, o.shipping_province, o.shipping_phone, o.shipping_email,
                 u.email as user_email,
-                coalesce((select json_agg(json_build_object('nombre', p.nombre, 'cantidad', oi.cantidad,
+                coalesce((select json_agg(json_build_object('nombre', p.nombre || case when coalesce(oi.talla, '') in ('', 'Única', 'única') then '' else ' · Talla ' || oi.talla end, 'cantidad', oi.cantidad,
                                   'precio_unitario', oi.precio_unitario) order by oi.id)
                             from public.order_items oi join public.productos p on p.id = oi.producto_id
                            where oi.order_id = o.id), '[]') as items

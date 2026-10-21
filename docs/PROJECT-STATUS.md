@@ -1,6 +1,6 @@
 # Estado del proyecto
 
-Última revisión: 20 de octubre de 2026.
+Última revisión: 21 de octubre de 2026.
 
 ## Publicado en pruebas
 
@@ -8,7 +8,8 @@ https://mundo-nomada-test.onrender.com: Render (Frankfurt, detrás de Cloudflare
 PostgreSQL (Irlanda). Rama desplegada: `codex/render-deployment`.
 
 **Tienda**
-- Catálogo, ficha de producto, carrito con control de stock en el servidor.
+- Catálogo, ficha de producto con selector de tallas (cada talla con su stock), carrito con control
+  de stock por talla en el servidor.
 - Registro, acceso, sesión persistente con rotación de token, perfil e historial de pedidos.
 - Checkout con Stripe Checkout en modo test: el servidor calcula importes, reserva stock y solo el
   webhook firmado marca el pedido como pagado. El formulario se rellena con el último envío.
@@ -16,7 +17,7 @@ PostgreSQL (Irlanda). Rama desplegada: `codex/render-deployment`.
   justificante hasta completar los datos fiscales (`src/app/config/datos-fiscales.ts`).
 
 **Administración**
-- Productos (con validación de imagen y precio), categorías, usuarios y pedidos (pagado → enviado →
+- Productos con su tabla de tallas y stock (con validación de imagen y precio), categorías, usuarios y pedidos (pagado → enviado →
   completado), con descarga de facturas.
 
 **Diseño**
@@ -25,6 +26,11 @@ PostgreSQL (Irlanda). Rama desplegada: `codex/render-deployment`.
 **Seguridad** (auditoría del 20 de octubre: [informe](seguridad/INFORME-PENTEST.md))
 - Sesiones revalidadas contra la base de datos, límites por IP y por cuenta, CSP estricta, HSTS,
   SRI, validación de entradas, dependencias actualizadas y pruebas automáticas en `tools/`.
+
+## Pendiente de desplegar
+
+- Tallas: aplicar `supabase/migrations/20261022090000_product_variants.sql` en Supabase y desplegar
+  justo después (pasos en la [guía](GUIA_DEL_PROPIETARIO.md#antes-de-desplegar-la-versión-con-tallas)).
 
 ## Pendiente para vender
 

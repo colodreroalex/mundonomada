@@ -5,12 +5,14 @@ $userId = usuarioSesionCarrito(['GET']);
 
 try {
     $conexion = retornarConexionPostgres();
+    // "stock" es el de la talla elegida, que es el que limita la cantidad
     $consulta = $conexion->prepare(
-        'select c.id as cart_id, c.cantidad, p.id as "ProductoID", p.nombre,
-                p.precio, p.descripcion, p.stock, p.categoria_id as "categoriaID",
-                p.imagen_url as imagen
+        'select c.id as cart_id, c.cantidad, p.id as "ProductoID", c.variante_id, v.talla, p.nombre,
+                p.precio, p.descripcion, v.stock, p.categoria_id as "categoriaID",
+                p.imagen_url as imagen, p.color
            from public.carrito c
            join public.productos p on p.id = c.producto_id
+           join public.producto_variantes v on v.id = c.variante_id
           where c.user_id = :user_id
           order by c.id'
     );

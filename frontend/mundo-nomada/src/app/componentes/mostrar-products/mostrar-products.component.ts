@@ -2,6 +2,7 @@ import { Component, OnInit, DestroyRef, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 import { Producto } from '../../../models/Producto';
+import { tallaVisible } from '../../../models/Variante';
 import { ProductosService } from '../../services/productos.service';
 import { CarritoService } from '../../services/carrito.service';
 import { AuthService } from '../../services/auth.service';
@@ -96,106 +97,44 @@ export class MostrarProductsComponent implements OnInit {
     this.router.navigate(['/producto', producto.ProductoID]);
   }
 
-  // Método para añadir el producto al carrito
+  /** Tallas con stock, para la tarjeta: "S · M · L" (vacío si es talla única) */
+  tallasDisponibles(producto: Producto): string {
+    const tallas = (producto.variantes || []).filter((v) => v.stock > 0).map((v) => tallaVisible(v.talla)).filter(Boolean);
+    return tallas.join(' · ');
+  }
+
+  private avisar(message: string, type: string): void {
+    this.notification = { message, type };
+    setTimeout(() => this.notification = null, 2000);
+  }
+
+  // Añadir desde la tarjeta: directo si solo hay una talla; si hay varias, se elige en la ficha
   addToCart(event: Event, producto: Producto): void {
-    // Evitar que el click en el botón se propague al contenedor (card)
     event.stopPropagation();
-
-    // Si no hay usuario logueado, se tratará como invitado (userId = 0)
-    const userId = this.currentUser ? this.currentUser.id : 0;
-
-    // Verificar stock disponible
-    if (producto.stock === 0) {
-      this.notification = {
-        message: 'El producto no tiene stock disponible.',
-        type: 'warning',
-      };
-      setTimeout(() => this.notification = null, 2000);
+    const variantes = producto.variantes || [];
+    if (producto.stock <= 0) {
+      this.avisar('El producto no tiene stock disponible.', 'warning');
+      return;
+    }
+    if (variantes.length !== 1) {
+      this.router.navigate(['/producto', producto.ProductoID]);
       return;
     }
 
-    // Para usuarios invitados, solicitar verificación en tiempo real del stock
-    if (userId === 0) {
-      this.loading = true;
-      this.carritoService.verificarStockActualizado(producto.ProductoID).subscribe({
-        next: (productoActualizado) => {
-          this.loading = false;
-          
-          // Si no hay stock, mostrar mensaje y salir
-          if (productoActualizado.stock === 0) {
-            this.notification = {
-              message: 'El producto ya no tiene stock disponible.',
-              type: 'warning',
-            };
-            setTimeout(() => this.notification = null, 2000);
-            return;
-          }
-          
-          // Continuar con el proceso de agregar al carrito con la información actualizada
-          this.procesarAgregarAlCarrito(userId, productoActualizado);
-        },
-        error: (err) => {
-          this.loading = false;
-          console.error('Error al verificar stock actualizado:', err);
-          // Continuar con el proceso usando los datos actuales, aunque no sean los más recientes
-          this.procesarAgregarAlCarrito(userId, producto);
-        }
-      });
-    } else {
-      // Para usuarios registrados, continuar normalmente
-      this.procesarAgregarAlCarrito(userId, producto);
-    }
-  }
-  
-  // Método auxiliar para continuar el proceso de agregar al carrito
-  procesarAgregarAlCarrito(userId: number, producto: Producto): void {
-    // Consultar el carrito actual (para validar si ya está añadido, etc.)
+    const variante = variantes[0];
+    const userId = this.currentUser ? this.currentUser.id : 0;
     this.carritoService.getCart(userId).subscribe((cartItems: Carrito[]) => {
-      const existingCartItem = cartItems.find(
-        (item) => item.producto_id === producto.ProductoID
-      );
-      const currentQuantity = existingCartItem ? existingCartItem.cantidad : 0;
-      if (currentQuantity >= producto.stock) {
-        this.notification = {
-          message: 'No quedan más unidades disponibles para este producto.',
-          type: 'warning',
-        };
-        setTimeout(() => this.notification = null, 2000);
+      const enCarrito = cartItems.find((item) => item.variante_id === variante.id)?.cantidad ?? 0;
+      if (enCarrito >= variante.stock) {
+        this.avisar('No quedan más unidades disponibles para este producto.', 'warning');
         return;
       }
-
-      // Crear el objeto Carrito y añadirlo
-      const carritoItem: Carrito = new Carrito(
-        0,              // ID (se asignará en backend o se genera para localStorage)
-        userId,         // 0 si es invitado
-        producto.ProductoID,
-        1,              // Se añade 1 unidad
-        producto        // Objeto completo del producto
-      );
-
-      this.carritoService.addToCart(carritoItem).subscribe({
-        next: (response: any) => {
-          // Se espera que el backend devuelva un objeto con la propiedad "resultado"
-          if (response && response.resultado === 'OK') {
-            this.notification = {
-              message: 'Producto añadido al carrito',
-              type: 'success',
-            };
-          } else {
-            this.notification = {
-              message: 'Producto añadido al carrito',
-              type: 'success',
-            };
-          }
-          setTimeout(() => this.notification = null, 2000);
-        },
+      const linea = new Carrito(0, userId, producto.ProductoID, 1, producto, variante.id ?? null, variante.talla);
+      this.carritoService.addToCart(linea).subscribe({
+        next: () => this.avisar('Producto añadido al carrito', 'success'),
         error: (err) => {
           console.error(err);
-          this.notification = {
-            message: 'Ocurrió un error al añadir el producto al carrito',
-            type: 'danger',
-          };
-          setTimeout(() => this.notification = null, 2000);
+          this.avisar(err?.mensaje || err?.error?.mensaje || 'Ocurrió un error al añadir el producto al carrito', 'danger');
         }
       });
     });

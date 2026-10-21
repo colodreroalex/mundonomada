@@ -12,20 +12,32 @@ if ($id === false) {
     responderJson(['resultado' => 'ERROR', 'mensaje' => 'Producto no válido.'], 400);
 }
 $datos = datosProducto($d);
+$variantes = variantesProducto($d);
 
+$pdo = retornarConexionPostgres();
 try {
-    $q = retornarConexionPostgres()->prepare(
+    $pdo->beginTransaction();
+    $q = $pdo->prepare(
         'update public.productos
-            set nombre = :n, precio = :p, descripcion = :d, stock = :s, categoria_id = :c,
-                imagen_url = :i, color = :co, talla = :t
+            set nombre = :n, precio = :p, descripcion = :d, categoria_id = :c, imagen_url = :i, color = :co
           where id = :id'
     );
     $q->execute($datos + [':id' => $id]);
     if ($q->rowCount() !== 1) {
+        $pdo->rollBack();
         responderJson(['resultado' => 'ERROR', 'mensaje' => 'El producto no existe.'], 404);
     }
+    guardarVariantes($pdo, $id, $variantes);
+    $pdo->commit();
     responderJson(['resultado' => 'OK', 'mensaje' => 'Producto actualizado correctamente.']);
 } catch (PDOException $e) {
+    if ($pdo->inTransaction()) { $pdo->rollBack(); }
+    if ($e->getCode() === '23505') {
+        responderJson(['resultado' => 'ERROR', 'mensaje' => 'Dos tallas no pueden llamarse igual. Si estás intercambiando nombres, hazlo en dos pasos.'], 409);
+    }
     error_log('Error producto: ' . $e->getMessage());
     responderJson(['resultado' => 'ERROR', 'mensaje' => 'No se pudo actualizar el producto.'], 400);
+} catch (RuntimeException $e) {
+    if ($pdo->inTransaction()) { $pdo->rollBack(); }
+    responderJson(['resultado' => 'ERROR', 'mensaje' => $e->getMessage()], 409);
 }

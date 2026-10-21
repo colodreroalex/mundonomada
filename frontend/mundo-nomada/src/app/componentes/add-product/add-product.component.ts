@@ -6,22 +6,23 @@ import { Producto } from '../../../models/Producto';
 import { ProductosService } from '../../services/productos.service';
 import { Categoria } from '../../../models/Categoria';
 import { CategoriasService } from '../../services/categorias.service';
+import { EditorTallasComponent } from '../editor-tallas/editor-tallas.component';
+import { Variante } from '../../../models/Variante';
 
 @Component({
   selector: 'app-add-product',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, EditorTallasComponent],
   templateUrl: './add-product.component.html',
   styleUrls: ['./add-product.component.css'],
 })
 export class AddProductComponent implements OnInit {
-  prod: Producto = new Producto(0, '', 0, '', 0, 0, '', '', null);
+  prod: Producto = new Producto(0, '', 0, '', 0, 0, '', '');
+  // Se empieza con las tallas más habituales; se pueden cambiar o dejar "Única"
+  variantes: Variante[] = ['S', 'M', 'L', 'XL'].map((talla) => ({ id: null, talla, stock: 0 }));
   categorias: Categoria[] = [];
   notification: { message: string; type: string } | null = null;
   imagenBase64: string = '';
-
-  // Opciones disponibles para tallas
-  tallasDisponibles: string[] = ['Unica', 'S', 'M', 'L', 'XL'];
 
   constructor(
     private productosService: ProductosService,
@@ -66,24 +67,30 @@ export class AddProductComponent implements OnInit {
       this.notification = { message: 'Por favor, corrige los errores en el formulario.', type: 'warning' };
       return;
     }
-    
+    const errorTallas = EditorTallasComponent.validar(this.variantes);
+    if (errorTallas) {
+      this.notification = { message: errorTallas, type: 'warning' };
+      return;
+    }
+
+    const variantes = EditorTallasComponent.paraEnviar(this.variantes);
     const producto: Producto = {
       ProductoID: 0, 
       nombre: form.value.nombre,
       precio: form.value.precio,
       descripcion: form.value.descripcion,
-      stock: form.value.stock,
+      stock: variantes.reduce((total, v) => total + v.stock, 0),
       categoriaID: form.value.categoriaID,
       imagen: this.imagenBase64,
-      color: form.value.color || null,  
-      talla: form.value.talla || null   
+      color: form.value.color || null,
+      variantes
     };
     
-    // Verificar si ya existe un producto con la misma combinación de nombre, color y talla
+    // Verificar si ya existe un producto con el mismo nombre y color
     this.productosService.verificarProductoDuplicado(producto).subscribe(existeDuplicado => {
       if (existeDuplicado) {
         this.notification = { 
-          message: 'Ya existe un producto con el mismo nombre, color y talla. Por favor, modifique alguno de estos valores para crear un producto distinto.', 
+          message: 'Ya existe un producto con el mismo nombre y color. Añade las tallas a ese producto en lugar de crear otro.', 
           type: 'danger' 
         };
         return;
@@ -104,7 +111,7 @@ export class AddProductComponent implements OnInit {
         },
         error: (error) => {
           console.error('Error al agregar producto:', error);
-          this.notification = { message: 'Error al agregar el producto', type: 'danger' };
+          this.notification = { message: error?.error?.mensaje || 'Error al agregar el producto', type: 'danger' };
         }
       });
     });
