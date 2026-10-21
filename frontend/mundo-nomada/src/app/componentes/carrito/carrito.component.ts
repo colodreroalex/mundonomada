@@ -61,7 +61,7 @@ export class CarritoComponent implements OnInit, OnDestroy {
         }
       }, refreshInterval);
     }));
-    
+
     // Subscribirse a la notificación de finalización de compra de invitado
     this.subscription.add(
       this.carritoService.guestPurchaseCompleted$.subscribe(() => {
@@ -75,7 +75,7 @@ export class CarritoComponent implements OnInit, OnDestroy {
       })
     );
   }
-  
+
   refreshCart(userId: number): void {
     // Invitados: se comprueba el stock de cada talla en el servidor
     if (userId === 0 && this.carrito.length > 0) {
@@ -101,7 +101,7 @@ export class CarritoComponent implements OnInit, OnDestroy {
           // Verificar si hay cambios en el carrito
           const stockChanged = this.detectStockChanges(this.carrito, data);
           this.carrito = data;
-          
+
           // Recalcular total si hubo cambios
           if (stockChanged) {
             this.loadTotal(userId);
@@ -111,7 +111,7 @@ export class CarritoComponent implements OnInit, OnDestroy {
             };
             setTimeout(() => this.notification = null, 3000);
           }
-          
+
           console.log('Carrito actualizado automáticamente:', this.carrito);
         },
         error: (err) => {
@@ -175,15 +175,14 @@ export class CarritoComponent implements OnInit, OnDestroy {
 
   // Método para calcular todos los totales: IVA, envío y total final
   calcularTotales(): void {
-    // Calcular el IVA (21% del subtotal)
-    this.iva = this.subtotal * (this.ivaPorcentaje / 100);
-    
+
     // Determinar si aplica costo de envío
     this.envio = this.subtotal >= this.envioGratisMinimo ? 0 : this.costoEnvioNormal;
-    
-    // Calcular el total final (subtotal + IVA + envío)
-    this.totalConIvaYEnvio = this.subtotal + this.iva + this.envio;
-    
+
+    // Los precios ya llevan IVA: el total es productos + envío
+    this.totalConIvaYEnvio = this.subtotal + this.envio;
+    this.iva = this.carritoService.calcularIVA(this.totalConIvaYEnvio);
+
     // Mantener el total actual para compatibilidad con el código existente
     this.total = this.subtotal;
   }
@@ -218,7 +217,7 @@ export class CarritoComponent implements OnInit, OnDestroy {
       setTimeout(() => this.notification = null, 1500);
     }
   }
-  
+
   // Decrementa la cantidad y actualiza el carrito
   decrement(item: Carrito): void {
     if (item.cantidad > 1) {

@@ -181,6 +181,11 @@ await comprador.req('carrito/addToCart.php', { body: { producto_id: pid, variant
 r = await comprador.req('checkout/createCheckoutSession.php', { body: { nombre: 'Ana', apellidos: 'Prueba', direccion: 'Calle 1', codigoPostal: '14850', ciudad: 'Baena', provincia: 'Córdoba', telefono: '600000000', email: cmail } });
 log('F5 pago fallido en Stripe no cobra (502)', r.status === 502, 'HTTP ' + r.status);
 log('F5 pago fallido devuelve el stock de la talla', stockTalla() === stockAntes, 'stock ' + stockTalla() + ' (antes ' + stockAntes + ')');
+// Importes con IVA incluido: total = productos + envío; el IVA es la parte incluida en el total
+const imp = sql("select subtotal || '|' || envio || '|' || total || '|' || iva || '|' || precios_con_iva from public.orders where user_id = " + uid + ' order by id desc limit 1').split('|');
+const [sub, env, tot, ivaInc] = imp.slice(0, 4).map(Number);
+const precio = Number(sql('select precio from public.productos where id = ' + pid));
+log('F5 importes con IVA incluido', sub === precio && Math.abs(sub + env - tot) < 0.005 && Math.abs(ivaInc - (tot - Math.round(tot / 1.21 * 100) / 100)) < 0.005 && imp[4] === 'true', imp.join(' | '));
 // Pedido pendiente con una unidad reservada: si Stripe avisa de que caducó, se devuelve a su talla
 const sidExp = 'cs_test_' + randomBytes(12).toString('hex');
 const oidExp = sql("insert into public.orders (user_id,total,estado,payment_reference) values (" + uid + ",10,'pendiente','" + sidExp + "') returning id");

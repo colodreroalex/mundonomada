@@ -56,13 +56,13 @@
 
           <dl class="totales">
             <div><dt>Subtotal:</dt><dd>{{ subtotal | currency:'EUR' }}</dd></div>
-            <div><dt>IVA (21%):</dt><dd>{{ iva | currency:'EUR' }}</dd></div>
             <div>
               <dt>Envío:</dt>
               <dd [ngClass]="{'shipping-free': envio === 0}">{{ envio === 0 ? 'Gratis' : (envio | currency:'EUR') }}</dd>
             </div>
             <div class="total-fila"><dt>Total:</dt><dd class="final-total">{{ totalConIvaYEnvio | currency:'EUR' }}</dd></div>
           </dl>
+          <p class="iva-incluido">IVA incluido</p>
         </details>
 
         <!-- Pago (escritorio) -->
@@ -309,16 +309,15 @@
                   <td class="text-end">{{orderData?.total | currency:'EUR':'symbol':'1.2-2'}}</td>
                 </tr>
                 <tr>
-                  <td colspan="3" class="text-end"><strong>IVA (21%)</strong></td>
-                  <td class="text-end">{{orderData?.iva | currency:'EUR':'symbol':'1.2-2'}}</td>
-                </tr>
-                <tr>
                   <td colspan="3" class="text-end"><strong>Gastos de envío</strong></td>
                   <td class="text-end">{{orderData?.envio | currency:'EUR':'symbol':'1.2-2'}}</td>
                 </tr>
                 <tr class="fila-total">
                   <td colspan="3" class="text-end"><strong>Total</strong></td>
                   <td class="text-end">{{orderData?.totalConIvaYEnvio | currency:'EUR':'symbol':'1.2-2'}}</td>
+                </tr>
+                <tr>
+                  <td colspan="4" class="text-end iva-incluido">IVA incluido ({{orderData?.iva | currency:'EUR':'symbol':'1.2-2'}})</td>
                 </tr>
               </tfoot>
             </table>

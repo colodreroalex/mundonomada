@@ -11,6 +11,7 @@ PostgreSQL (Irlanda). Rama desplegada: `codex/render-deployment`.
 - Catálogo, ficha de producto con selector de tallas (cada talla con su stock), carrito con control
   de stock por talla en el servidor.
 - Registro, acceso, sesión persistente con rotación de token, perfil e historial de pedidos.
+- Precios con IVA incluido en toda la tienda; la factura desglosa base e IVA.
 - Checkout con Stripe Checkout en modo test: el servidor calcula importes, reserva stock y solo el
   webhook firmado marca el pedido como pagado. El formulario se rellena con el último envío.
 - Factura simplificada en PDF con numeración correlativa anual (F2026-000001); se emite como
@@ -29,6 +30,8 @@ PostgreSQL (Irlanda). Rama desplegada: `codex/render-deployment`.
 
 ## Pendiente de desplegar
 
+- Precios con IVA incluido: aplicar `supabase/migrations/20261022120000_prices_with_vat.sql` y desplegar
+  justo después (pasos en la guía).
 - Tallas: aplicar `supabase/migrations/20261022090000_product_variants.sql` en Supabase y desplegar
   justo después (pasos en la [guía](GUIA_DEL_PROPIETARIO.md#antes-de-desplegar-la-versión-con-tallas)).
 

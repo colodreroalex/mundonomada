@@ -27,6 +27,16 @@ No compartas en el chat contraseñas, claves, tokens, datos bancarios ni documen
 
 ---
 
+## Antes de desplegar la versión con precios con IVA incluido
+
+La tienda pasa a mostrar y guardar el **precio final con IVA** (como Zara o cualquier tienda online). El IVA ya no aparece en el carrito, solo una nota "IVA incluido", y la factura lo desglosa al final.
+
+1. En Supabase → **SQL Editor**, ejecuta `supabase/migrations/20261022120000_prices_with_vat.sql`. Multiplica los precios actuales por 1,21 (por ejemplo, 24,90 pasa a 30,13). Los pedidos ya hechos no cambian y sus facturas siguen cuadrando.
+2. Justo después, en Render, **Deploy latest commit**. Entre los dos pasos la web antigua sumaría el IVA dos veces, así que no los separes.
+3. Repasa los precios en **Modificar producto** y redondéalos a tu gusto (30,13 → 29,95).
+
+Si la migración de tallas (abajo) aún no estaba aplicada, ejecuta primero la de tallas y después esta, y despliega una sola vez al final.
+
 ## Antes de desplegar la versión con tallas
 
 1. En Supabase → **SQL Editor**, pega y ejecuta todo `supabase/migrations/20261022090000_product_variants.sql`. Cada producto actual pasa a tener una talla con su stock de ahora (o "Única" si no tenía talla), y los carritos y pedidos existentes se enlazan a ella.
@@ -66,7 +76,7 @@ El editor responde "Success. No rows returned" aunque el cambio se haya aplicado
 | Campo | Qué poner | Ejemplo |
 |---|---|---|
 | Nombre | Nombre corto y claro | Blusa lino bordada |
-| Precio | **Sin IVA**: la web suma el 21 % | Para que cueste 29,95 €, pon **24,75** (29,95 ÷ 1,21) |
+| Precio | **Precio final con IVA incluido**, el que paga la clienta | 29,95 |
 | Descripción | Material, medidas, cuidados | 100 % lino, lavar a 30 °C |
 | Categoría | Debe existir antes | Blusas, Bolsos, Accesorios |
 | Color | Opcional | Blanco |

@@ -50,7 +50,7 @@
         <label for="precio" class="form-label">Precio</label>
         <input type="number" name="precio" [(ngModel)]="prod.precio" id="precio" class="form-control"
           placeholder="Escriba el precio" required min="0.01" step="0.01" inputmode="decimal" #precio="ngModel">
-        <small class="admin-ayuda">Sin IVA: la tienda añade el 21 % al mostrarlo.</small>
+        <small class="admin-ayuda">Precio final con IVA incluido: el que ve y paga la clienta.</small>
         <div *ngIf="precio.invalid && (precio.touched || productForm.submitted)" class="admin-error">
           <div *ngIf="precio.errors?.['required']">El precio es obligatorio.</div>
           <div *ngIf="precio.errors?.['min']">El precio debe ser mayor que 0.</div>

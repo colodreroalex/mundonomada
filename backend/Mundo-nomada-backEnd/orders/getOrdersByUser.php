@@ -13,7 +13,7 @@ if (!$id) {
 try {
     // Incluye los datos de factura y envío para poder descargar la factura desde el perfil
     $q = retornarConexionPostgres()->prepare(
-        'select id, fecha, total, subtotal, iva, envio, estado, paid_at, invoice_number, invoice_date,
+        'select id, fecha, total, subtotal, iva, envio, precios_con_iva, estado, paid_at, invoice_number, invoice_date,
                 shipping_name, shipping_address, shipping_postal_code, shipping_city, shipping_province,
                 shipping_phone, shipping_email
            from public.orders where user_id = :id order by fecha desc'

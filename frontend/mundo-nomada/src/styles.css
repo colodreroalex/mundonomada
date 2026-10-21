@@ -1391,3 +1391,11 @@ body:has(.dialogo) {
   line-height: 1.7;
   color: var(--color-texto);
 }
+
+/* "IVA incluido" bajo los totales: los precios de la tienda ya lo llevan */
+.iva-incluido {
+  margin: 4px 0 0;
+  text-align: right;
+  font-size: var(--fs-xs);
+  color: var(--color-texto-suave);
+}

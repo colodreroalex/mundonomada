@@ -81,9 +81,9 @@ try {
     $pedido = $pdo->prepare(
         "insert into public.orders (user_id, total, subtotal, iva, envio, estado, shipping_name,
                 shipping_address, shipping_postal_code, shipping_city, shipping_province,
-                shipping_phone, shipping_email)
+                shipping_phone, shipping_email, precios_con_iva)
          values (:user_id, :total, :subtotal, :iva, :envio, 'pendiente', :nombre,
-                :direccion, :cp, :ciudad, :provincia, :telefono, :email)
+                :direccion, :cp, :ciudad, :provincia, :telefono, :email, true)
          returning id"
     );
     $pedido->execute([
@@ -148,7 +148,7 @@ foreach ($lineas as $linea) {
         'quantity' => (int) $linea['cantidad'],
         'price_data' => [
             'currency' => 'eur',
-            'unit_amount' => precioConIvaCentimos($linea['precio']),
+            'unit_amount' => precioCentimos($linea['precio']),
             'product_data' => $producto,
         ],
     ];

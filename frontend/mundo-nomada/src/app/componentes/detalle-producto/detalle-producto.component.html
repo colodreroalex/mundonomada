@@ -46,7 +46,7 @@
           <h1 class="producto-nombre">{{ producto.nombre }}</h1>
 
           <div class="precio-fila">
-            <span class="producto-precio">{{ producto.precio | currency:'EUR' }}</span>
+            <span class="producto-precio">{{ producto.precio | currency:'EUR' }}<small class="precio-iva">IVA incluido</small></span>
 
             <span *ngIf="stockVisible == 0" class="estado-stock agotado">
               <i class="bi bi-x-circle-fill" aria-hidden="true"></i>{{ tallaElegida && producto.stock > 0 ? 'Talla agotada' : 'Agotado' }}

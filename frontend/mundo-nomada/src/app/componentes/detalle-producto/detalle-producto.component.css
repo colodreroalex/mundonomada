@@ -88,6 +88,13 @@
   color: var(--color-primario);
 }
 
+.precio-iva {
+  display: block;
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  color: var(--color-texto-suave);
+}
+
 .estado-stock {
   display: inline-flex;
   align-items: center;

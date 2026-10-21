@@ -5,7 +5,7 @@ import { DATOS_FISCALES, datosFiscalesCompletos } from '../config/datos-fiscales
 export interface LineaFactura {
   descripcion: string;
   cantidad: number;
-  /** Precio unitario sin IVA, como se guarda en la base de datos */
+  /** Precio unitario tal como se guardó en el pedido (con o sin IVA, ver preciosConIva) */
   precioUnitario: number;
 }
 
@@ -17,6 +17,11 @@ export interface DatosFactura {
   /** Referencia del pedido (MN-12) */
   pedido: string;
   lineas: LineaFactura[];
+  /**
+   * true: las líneas llevan el IVA incluido (pedidos actuales).
+   * false: pedidos anteriores, con las líneas sin IVA.
+   */
+  preciosConIva: boolean;
   /** Gastos de envío con IVA incluido, tal como se cobran */
   envio: number;
   /** Total cobrado (fuente: servidor) */
@@ -39,6 +44,7 @@ export interface PedidoParaFactura {
   fecha: string;
   total: number | string;
   envio?: number | string | null;
+  precios_con_iva?: boolean | null;
   paid_at?: string | null;
   invoice_number?: string | null;
   invoice_date?: string | null;
@@ -61,6 +67,7 @@ export function facturaDesdePedido(
     fecha: new Date(pedido.invoice_date || pedido.paid_at || pedido.fecha),
     pedido: `MN-${pedido.id}`,
     lineas: lineas.map((l) => ({ descripcion: l.nombre, cantidad: Number(l.cantidad), precioUnitario: Number(l.precio_unitario) })),
+    preciosConIva: !!pedido.precios_con_iva,
     envio: Number(pedido.envio ?? 0),
     total: Number(pedido.total),
     cliente: {
@@ -120,16 +127,21 @@ export class PdfService {
   }
 
   /**
-   * Base imponible y cuota. Los productos se guardan sin IVA; los gastos de
-   * envío se cobran con IVA incluido, así que se desglosan. El total es el
-   * que cobró el servidor y la cuota es la diferencia, para que cuadre exacto.
+   * Base imponible y cuota. El total es el que cobró el servidor y la cuota es
+   * la diferencia, para que cuadre exacto.
+   * - Pedidos actuales: precios con IVA incluido; la base es total ÷ 1,21.
+   * - Pedidos anteriores: productos sin IVA y envío con IVA, que se desglosa.
    */
   private calcularImportes(datos: DatosFactura, iva: number) {
     const redondear = (n: number) => Math.round(n * 100) / 100;
+    const total = redondear(datos.total);
+    if (datos.preciosConIva) {
+      const base = redondear(total / (1 + iva / 100));
+      return { base, cuota: redondear(total - base), total, envioBase: datos.envio };
+    }
     const baseProductos = redondear(datos.lineas.reduce((suma, l) => suma + redondear(l.precioUnitario * l.cantidad), 0));
     const envioBase = redondear(datos.envio / (1 + iva / 100));
     const base = redondear(baseProductos + envioBase);
-    const total = redondear(datos.total);
     return { base, cuota: redondear(total - base), total, envioBase };
   }
 
@@ -243,8 +255,8 @@ export class PdfService {
       pdf.setTextColor(255, 255, 255);
       pdf.text('DESCRIPCIÓN', MARGEN + 4, posY + 5.8);
       pdf.text('CANT.', col.cantidad, posY + 5.8, { align: 'right' });
-      pdf.text('PRECIO S/IVA', col.precio, posY + 5.8, { align: 'right' });
-      pdf.text('IMPORTE S/IVA', col.importe - 4, posY + 5.8, { align: 'right' });
+      pdf.text(datos.preciosConIva ? 'PRECIO' : 'PRECIO S/IVA', col.precio, posY + 5.8, { align: 'right' });
+      pdf.text(datos.preciosConIva ? 'IMPORTE' : 'IMPORTE S/IVA', col.importe - 4, posY + 5.8, { align: 'right' });
       return posY + 9;
     };
 

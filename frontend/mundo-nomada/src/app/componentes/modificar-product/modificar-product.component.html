@@ -54,7 +54,7 @@
           <label for="mod-precio" class="form-label">Precio:</label>
           <input id="mod-precio" type="number" class="form-control" [(ngModel)]="productoSeleccionado.precio" name="precio"
                  required min="0.01" step="0.01" inputmode="decimal" #precioInput="ngModel" />
-          <small class="admin-ayuda">Sin IVA.</small>
+          <small class="admin-ayuda">Con IVA incluido.</small>
           <div *ngIf="form.submitted && !productoSeleccionado?.precio" class="admin-error">El precio es obligatorio.</div>
           <div *ngIf="precioInput.errors?.['min'] && (precioInput.dirty || precioInput.touched)" class="admin-error">
             El precio debe ser mayor que 0.

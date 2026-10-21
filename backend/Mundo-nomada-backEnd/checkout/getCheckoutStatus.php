@@ -13,7 +13,7 @@ if (!preg_match('/^cs_(test|live)_[A-Za-z0-9]{10,200}$/', $sessionId)) {
 try {
     $pdo = retornarConexionPostgres();
     $consulta = $pdo->prepare(
-        'select id, fecha, estado, subtotal, iva, envio, total, paid_at, invoice_number, invoice_date, shipping_name, shipping_address,
+        'select id, fecha, estado, subtotal, iva, envio, precios_con_iva, total, paid_at, invoice_number, invoice_date, shipping_name, shipping_address,
                 shipping_postal_code, shipping_city, shipping_province, shipping_phone, shipping_email
            from public.orders where payment_reference = :sid and user_id = :user_id'
     );

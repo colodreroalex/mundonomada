@@ -411,7 +411,8 @@
         <span>Total:</span>
         <strong>{{ selectedOrder.total | currency:'EUR' }}</strong>
       </div>
-      <p class="nota-importes">Precios de los productos sin IVA. El total incluye IVA<span *ngIf="selectedOrder.envio && selectedOrder.envio > 0"> y {{ selectedOrder.envio | currency:'EUR' }} de envío</span>.</p>
+      <p class="nota-importes" *ngIf="selectedOrder.precios_con_iva">Precios con IVA incluido<span *ngIf="selectedOrder.envio && selectedOrder.envio > 0">. El total incluye {{ selectedOrder.envio | currency:'EUR' }} de envío</span>.</p>
+      <p class="nota-importes" *ngIf="!selectedOrder.precios_con_iva">Precios de los productos sin IVA. El total incluye IVA<span *ngIf="selectedOrder.envio && selectedOrder.envio > 0"> y {{ selectedOrder.envio | currency:'EUR' }} de envío</span>.</p>
     </div>
 
     <footer class="dialogo-pie">

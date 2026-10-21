@@ -35,27 +35,28 @@ function urlPublicaTienda(): string
 }
 
 /**
- * Calcula importes en céntimos a partir de precios sin IVA guardados en la BBDD.
- * Mismas reglas que muestra el frontend: 21 % de IVA y 3,50 € de envío por
- * debajo de 60 € de subtotal.
+ * Calcula importes en céntimos a partir de los precios de la BBDD, que llevan
+ * el IVA incluido (PVP). Mismas reglas que muestra el frontend: 3,50 € de envío
+ * (IVA incluido) por debajo de 60 € en productos.
+ *
+ * - subtotal: productos, IVA incluido
+ * - iva: cuota de IVA que va incluida en el total (productos y envío), para la factura
  */
 function calcularImportesPedido(array $lineas): array
 {
     $subtotal = 0;
-    $conIva = 0;
     foreach ($lineas as $linea) {
-        $neto = (int) round(((float) $linea['precio']) * 100);
-        $bruto = (int) round($neto * (100 + IVA_PORCENTAJE) / 100);
-        $subtotal += $neto * (int) $linea['cantidad'];
-        $conIva += $bruto * (int) $linea['cantidad'];
+        $subtotal += precioCentimos($linea['precio']) * (int) $linea['cantidad'];
     }
     $envio = $subtotal >= ENVIO_GRATIS_MINIMO_CENTIMOS ? 0 : COSTO_ENVIO_CENTIMOS;
+    $total = $subtotal + $envio;
+    $base = (int) round($total * 100 / (100 + IVA_PORCENTAJE));
 
     return [
         'subtotal' => $subtotal,
-        'iva' => $conIva - $subtotal,
+        'iva' => $total - $base,
         'envio' => $envio,
-        'total' => $conIva + $envio,
+        'total' => $total,
     ];
 }
 
@@ -66,9 +67,10 @@ function nombreLinea(array $linea): string
     return $talla === '' || mb_strtolower($talla) === 'única' ? (string) $linea['nombre'] : $linea['nombre'] . ' · Talla ' . $talla;
 }
 
-function precioConIvaCentimos($precio): int
+/** Precio de la BBDD (con IVA) en céntimos */
+function precioCentimos($precio): int
 {
-    return (int) round(((int) round(((float) $precio) * 100)) * (100 + IVA_PORCENTAJE) / 100);
+    return (int) round(((float) $precio) * 100);
 }
 
 /** @throws RuntimeException si Stripe no responde o rechaza la petición. */

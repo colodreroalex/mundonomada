@@ -32,6 +32,8 @@ export interface PedidoCheckout {
   subtotal: number;
   iva: number;
   envio: number;
+  /** true si los precios del pedido llevan IVA incluido (los pedidos antiguos, no) */
+  precios_con_iva?: boolean | null;
   total: number;
   shipping_name: string;
   shipping_address: string;

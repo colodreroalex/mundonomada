@@ -8,6 +8,8 @@ export interface Pedido {
   subtotal?: number | null;
   iva?: number | null;
   envio?: number | null;
+  /** true en los pedidos hechos con precios con IVA incluido (los antiguos, sin IVA) */
+  precios_con_iva?: boolean | null;
   paid_at?: string | null;
   invoice_number?: string | null;
   invoice_date?: string | null;

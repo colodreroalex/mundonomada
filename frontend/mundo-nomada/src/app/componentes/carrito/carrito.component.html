@@ -123,10 +123,6 @@
             <dd>{{ subtotal | currency:'EUR' }}</dd>
           </div>
           <div>
-            <dt>IVA ({{ ivaPorcentaje }}%):</dt>
-            <dd>{{ iva | currency:'EUR' }}</dd>
-          </div>
-          <div>
             <dt>Gastos de envío:</dt>
             <dd *ngIf="envio > 0">{{ envio | currency:'EUR' }}</dd>
             <dd *ngIf="envio === 0" class="gratis">Gratis</dd>
@@ -136,6 +132,7 @@
             <dd class="total-price">{{ totalConIvaYEnvio | currency:'EUR' }}</dd>
           </div>
         </dl>
+        <p class="iva-incluido">IVA incluido</p>
 
         <button routerLink="/checkout" class="btn-custom btn-lg w-100 boton-finalizar">
           <i class="bi bi-lock" aria-hidden="true"></i>Finalizar pedido

@@ -33,7 +33,7 @@
         </div>
         <div class="pedido-importe">
           <strong>{{ p.total | currency:'EUR' }}</strong>
-          <small>IVA {{ p.iva | currency:'EUR' }} · envío {{ p.envio | currency:'EUR' }}</small>
+          <small>IVA incl. {{ p.iva | currency:'EUR' }} · envío {{ p.envio | currency:'EUR' }}</small>
         </div>
       </header>
 
@@ -41,7 +41,7 @@
         <ul class="pedido-lineas">
           <li *ngFor="let i of p.items">
             <span>{{ i.cantidad }} × {{ i.nombre }}</span>
-            <small>{{ i.precio_unitario | currency:'EUR' }} sin IVA</small>
+            <small>{{ i.precio_unitario | currency:'EUR' }}{{ p.precios_con_iva ? '' : ' sin IVA' }}</small>
           </li>
         </ul>
         <div class="pedido-envio">

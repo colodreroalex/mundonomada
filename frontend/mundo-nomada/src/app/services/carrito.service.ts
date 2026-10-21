@@ -497,13 +497,9 @@ export class CarritoService {
     }
   }
 
-  /**
-   * Calcula el IVA sobre un importe dado
-   * @param importe Importe sobre el que calcular el IVA
-   * @returns El importe del IVA calculado
-   */
+  /** IVA que va incluido en un importe con IVA (los precios de la tienda lo llevan) */
   calcularIVA(importe: number): number {
-    return importe * (this.IVA_PORCENTAJE / 100);
+    return Math.round((importe - importe / (1 + this.IVA_PORCENTAJE / 100)) * 100) / 100;
   }
 
   /**
@@ -516,8 +512,9 @@ export class CarritoService {
   }
 
   /**
-   * Calcula todos los valores del pedido (subtotal, IVA, envío y total)
-   * @param subtotal Subtotal del pedido (suma de productos sin IVA ni envío)
+   * Calcula los importes del pedido. Los precios llevan el IVA incluido:
+   * total = productos + envío, e iva es la parte del total que corresponde al IVA.
+   * @param subtotal Suma de los productos (IVA incluido, sin envío)
    * @returns Objeto con todos los importes calculados
    */
   calcularTotalesPedido(subtotal: number): {
@@ -526,9 +523,9 @@ export class CarritoService {
     envio: number;
     totalConIvaYEnvio: number;
   } {
-    const iva = this.calcularIVA(subtotal);
     const envio = this.calcularEnvio(subtotal);
-    const totalConIvaYEnvio = subtotal + iva + envio;
+    const totalConIvaYEnvio = subtotal + envio;
+    const iva = this.calcularIVA(totalConIvaYEnvio);
 
     return {
       subtotal,

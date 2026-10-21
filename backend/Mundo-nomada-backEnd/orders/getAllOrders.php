@@ -14,7 +14,7 @@ if ($estado !== '' && !in_array($estado, ['pendiente', 'pagado', 'enviado', 'com
 try {
     $pdo = retornarConexionPostgres();
     $consulta = $pdo->prepare(
-        "select o.id, o.fecha, o.estado, o.total, o.subtotal, o.iva, o.envio, o.paid_at, o.invoice_number, o.invoice_date,
+        "select o.id, o.fecha, o.estado, o.total, o.subtotal, o.iva, o.envio, o.precios_con_iva, o.paid_at, o.invoice_number, o.invoice_date,
                 o.payment_intent, o.shipping_name, o.shipping_address, o.shipping_postal_code,
                 o.shipping_city, o.shipping_province, o.shipping_phone, o.shipping_email,
                 u.email as user_email,
