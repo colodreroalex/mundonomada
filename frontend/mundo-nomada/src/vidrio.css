@@ -471,7 +471,7 @@ html[data-estilo='vidrio'] .shipping-form .form-control {
    Cuenta: acceso, registro y perfil
    (todo aquí: el CSS del perfil ya pasa del aviso de presupuesto)
    ===================================================================== */
-html[data-estilo='vidrio'] :is(.panel-superficie, .auth-tarjeta, .perfil-cabecera, .dialogo) {
+html[data-estilo='vidrio'] :is(.panel-superficie, .perfil-cabecera, .dialogo) {
   background: var(--vidrio-fondo-fuerte);
   border: 1px solid var(--vidrio-borde);
   box-shadow: var(--vidrio-brillo), var(--vidrio-sombra);
@@ -479,8 +479,31 @@ html[data-estilo='vidrio'] :is(.panel-superficie, .auth-tarjeta, .perfil-cabecer
   backdrop-filter: var(--vidrio-filtro);
 }
 
-html[data-estilo='vidrio'] :is(.auth-tarjeta, .dialogo) {
+html[data-estilo='vidrio'] .dialogo {
   box-shadow: var(--vidrio-brillo), var(--vidrio-sombra-alta);
+}
+
+/* La tarjeta de registro contiene un aviso con position: fixed: el vidrio va
+   en una capa ::before para no convertir la tarjeta en su contenedor. */
+html[data-estilo='vidrio'] .auth-tarjeta {
+  position: relative;
+  isolation: isolate;
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+}
+
+html[data-estilo='vidrio'] .auth-tarjeta::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  z-index: -1;
+  border-radius: inherit;
+  background: var(--vidrio-fondo-fuerte);
+  border: 1px solid var(--vidrio-borde);
+  box-shadow: var(--vidrio-brillo), var(--vidrio-sombra-alta);
+  -webkit-backdrop-filter: var(--vidrio-filtro);
+  backdrop-filter: var(--vidrio-filtro);
 }
 
 /* Acceso y registro: brillos más presentes detrás de la tarjeta */
@@ -641,4 +664,136 @@ html[data-estilo='vidrio'] .grafica-globo {
 html[data-estilo='vidrio'] .grafica-punto {
   box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.85), 0 0 0 7px var(--color-primario-suave),
     0 6px 14px -4px color-mix(in srgb, var(--color-marca) 70%, transparent);
+}
+
+/* =====================================================================
+   Avisos, acordeones, pie y páginas de información
+   ===================================================================== */
+/* Avisos flotantes: vidrio fuerte, conservando el borde izquierdo de color */
+html[data-estilo='vidrio'] .notification-banner {
+  background: var(--vidrio-fondo-fuerte);
+  border-top-color: var(--vidrio-borde);
+  border-right-color: var(--vidrio-borde);
+  border-bottom-color: var(--vidrio-borde);
+  box-shadow: var(--vidrio-brillo), var(--vidrio-sombra-alta) !important;
+  -webkit-backdrop-filter: var(--vidrio-filtro);
+  backdrop-filter: var(--vidrio-filtro);
+}
+
+/* Bootstrap: ventanas modales (si se usan) y acordeón de preguntas frecuentes */
+html[data-estilo='vidrio'] .modal-content {
+  --bs-modal-bg: var(--vidrio-fondo-fuerte);
+  border: 1px solid var(--vidrio-borde);
+  border-radius: var(--radio-lg);
+  box-shadow: var(--vidrio-brillo), var(--vidrio-sombra-alta);
+  -webkit-backdrop-filter: var(--vidrio-filtro);
+  backdrop-filter: var(--vidrio-filtro);
+}
+
+html[data-estilo='vidrio'] .pagina-info .accordion {
+  --bs-accordion-bg: var(--vidrio-fondo-fuerte);
+  --bs-accordion-border-color: var(--vidrio-borde);
+}
+
+html[data-estilo='vidrio'] .pagina-info .accordion-item {
+  box-shadow: var(--vidrio-brillo);
+}
+
+html[data-estilo='vidrio'] .pagina-info .accordion-button:not(.collapsed) {
+  background-color: color-mix(in srgb, var(--color-primario-suave) 80%, var(--vidrio-fondo-fuerte)) !important;
+}
+
+html[data-estilo='vidrio'] .pagina-info .accordion-button {
+  background-color: transparent !important;
+}
+
+/* Páginas legales e informativas: vidrio fuerte, la lectura manda */
+html[data-estilo='vidrio'] .pagina-info .card {
+  background: var(--vidrio-fondo-fuerte) !important;
+  border-color: var(--vidrio-borde);
+  box-shadow: var(--vidrio-brillo), var(--sombra-1) !important;
+}
+
+html[data-estilo='vidrio'] .pagina-info .card-header.bg-primario {
+  border-bottom-color: var(--vidrio-linea);
+}
+
+/* Pie: fondo sólido; botón de WhatsApp y redes como vidrio */
+html[data-estilo='vidrio'] .boton-whatsapp {
+  background: color-mix(in srgb, var(--color-sobre-marca) 92%, transparent);
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8), 0 10px 26px -12px rgba(0, 0, 0, 0.45);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+
+html[data-estilo='vidrio'] .social-links a:not(:hover) {
+  background: color-mix(in srgb, var(--color-superficie) 60%, transparent);
+  box-shadow: var(--vidrio-brillo);
+}
+
+/* =====================================================================
+   Alternativas: el vidrio nunca debe empeorar la lectura
+   (al final del archivo para que ganen a todo lo anterior)
+   ===================================================================== */
+/* Sin desenfoque disponible o con "reducir transparencia": superficies sólidas */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  html[data-estilo='vidrio'] {
+    --vidrio-fondo: var(--color-superficie);
+    --vidrio-fondo-fuerte: var(--color-superficie);
+    --vidrio-fondo-sutil: var(--color-superficie-2);
+    --vidrio-oscuro: rgba(20, 10, 8, 0.78);
+  }
+
+  html[data-estilo='vidrio'] .cabecera::before,
+  html[data-estilo='vidrio'] :is(.desplegable-panel, .pestana:not(.activa)) {
+    background: var(--color-superficie);
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  html[data-estilo='vidrio'] {
+    --vidrio-fondo: var(--color-superficie);
+    --vidrio-fondo-fuerte: var(--color-superficie);
+    --vidrio-fondo-sutil: var(--color-superficie-2);
+    --vidrio-oscuro: rgba(20, 10, 8, 0.78);
+  }
+
+  html[data-estilo='vidrio'] .cabecera::before,
+  html[data-estilo='vidrio'] :is(.desplegable-panel, .pestana:not(.activa)) {
+    background: var(--color-superficie);
+  }
+
+  html[data-estilo='vidrio'] *,
+  html[data-estilo='vidrio'] *::before {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+}
+
+/* Alto contraste del sistema: sin efectos, los bordes se ven */
+@media (forced-colors: active) {
+  html[data-estilo='vidrio'] body::before {
+    display: none;
+  }
+
+  html[data-estilo='vidrio'] *,
+  html[data-estilo='vidrio'] *::before {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+    box-shadow: none !important;
+  }
+}
+
+@media print {
+  html[data-estilo='vidrio'] body::before {
+    display: none;
+  }
+
+  html[data-estilo='vidrio'] *,
+  html[data-estilo='vidrio'] *::before {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+    box-shadow: none !important;
+  }
 }
