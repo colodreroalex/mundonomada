@@ -147,7 +147,9 @@ export class MenuComponent implements OnInit, OnDestroy {
     this.panelAbierto = false;
     document.body.classList.remove('sin-scroll');
     if (devolverFoco) {
-      this.botonMenu?.nativeElement.focus();
+      // Sin desplazar: el botón está en la cabecera fija y, por el scroll-padding-top
+      // de la página, el navegador subía hasta arriba al devolverle el foco
+      this.botonMenu?.nativeElement.focus({ preventScroll: true });
     }
   }
 
