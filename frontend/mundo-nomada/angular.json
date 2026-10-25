@@ -29,7 +29,8 @@
             "styles": [
               "node_modules/bootstrap/dist/css/bootstrap.min.css",
               "src/styles.css",
-              "src/vidrio.css"
+              "src/vidrio.css",
+              "node_modules/lenis/dist/lenis.css"
             ],
             "scripts": [
               "node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"
@@ -95,7 +96,8 @@
             ],
             "styles": [
               "src/styles.css",
-              "src/vidrio.css"
+              "src/vidrio.css",
+              "node_modules/lenis/dist/lenis.css"
             ],
             "scripts": []
           }
