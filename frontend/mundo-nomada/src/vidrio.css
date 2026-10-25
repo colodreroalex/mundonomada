@@ -317,3 +317,152 @@ html[data-estilo='vidrio'] .service-icon {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 0 0 1px var(--color-primario-borde),
     0 8px 18px -10px color-mix(in srgb, var(--color-marca) 60%, transparent);
 }
+
+/* =====================================================================
+   Catálogo, ficha, carrito y checkout
+   ===================================================================== */
+/* Paneles con texto o formularios: vidrio fuerte. Las barras fijas de móvil
+   están fuera de estos paneles, así que el desenfoque no las descoloca. */
+html[data-estilo='vidrio'] :is(.cart-lineas, .cart-totals, .resumen, .pago-escritorio, .shipping-form, .estado-vacio, .no-encontrado, .vacio) {
+  background: var(--vidrio-fondo-fuerte);
+  border: 1px solid var(--vidrio-borde);
+  border-radius: var(--radio-lg);
+  box-shadow: var(--vidrio-brillo), var(--vidrio-sombra);
+  -webkit-backdrop-filter: var(--vidrio-filtro);
+  backdrop-filter: var(--vidrio-filtro);
+}
+
+html[data-estilo='vidrio'] :is(.estado-vacio, .no-encontrado, .vacio) {
+  border-style: solid;
+}
+
+/* Barras de compra fijas en móvil */
+html[data-estilo='vidrio'] :is(.barra-compra, .barra-total, .barra-pago) {
+  background: var(--vidrio-fondo-fuerte);
+  border-top: 1px solid var(--vidrio-borde);
+  border-radius: var(--radio-lg) var(--radio-lg) 0 0;
+  box-shadow: var(--vidrio-brillo), 0 -14px 34px -16px rgba(40, 20, 15, 0.35);
+  -webkit-backdrop-filter: var(--vidrio-filtro);
+  backdrop-filter: var(--vidrio-filtro);
+}
+
+/* Separadores más suaves dentro del vidrio */
+html[data-estilo='vidrio'] :is(.filters-bar, .opciones, .cart-header, .cart-item, .admin-botones, .auth-alternativa) {
+  border-color: var(--vidrio-linea);
+}
+
+/* ---------- Catálogo (mostrar-products) ---------- */
+/* Etiquetas sobre la foto: translúcidas sin desenfoque (hay una por tarjeta) */
+html[data-estilo='vidrio'] .product-tag:not(.tag-ultimas):not(.tag-agotado) {
+  background: var(--vidrio-fondo-fuerte);
+  border: 1px solid var(--vidrio-borde);
+  box-shadow: var(--vidrio-brillo), 0 4px 12px -6px rgba(40, 20, 15, 0.35);
+}
+
+html[data-estilo='vidrio'] :is(.tag-ultimas, .tag-agotado, .btn-addcart) {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 6px 16px -8px rgba(40, 20, 15, 0.5);
+}
+
+/* Vista rápida: solo aparece con ratón, de una en una */
+html[data-estilo='vidrio'] .btn-quickview {
+  background: var(--vidrio-fondo);
+  border: 1px solid var(--vidrio-borde);
+  box-shadow: var(--vidrio-brillo), var(--vidrio-sombra);
+  -webkit-backdrop-filter: var(--vidrio-filtro);
+  backdrop-filter: var(--vidrio-filtro);
+}
+
+/* Paginación en píldoras translúcidas */
+html[data-estilo='vidrio'] .pagination {
+  --bs-pagination-bg: var(--vidrio-fondo-fuerte);
+  --bs-pagination-border-color: var(--vidrio-borde);
+  --bs-pagination-disabled-bg: var(--vidrio-fondo-sutil);
+}
+
+html[data-estilo='vidrio'] .page-link {
+  box-shadow: var(--vidrio-brillo), var(--sombra-1);
+}
+
+html[data-estilo='vidrio'] .page-item.active .page-link {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 6px 16px -8px rgba(40, 20, 15, 0.5);
+}
+
+/* ---------- Ficha (detalle-producto) ---------- */
+html[data-estilo='vidrio'] .detalle-info {
+  position: relative;
+  padding: clamp(1.25rem, 0.9rem + 1.5vw, 2rem);
+  background: var(--vidrio-fondo-fuerte);
+  border: 1px solid var(--vidrio-borde);
+  border-radius: var(--radio-lg);
+  box-shadow: var(--vidrio-brillo), var(--vidrio-sombra);
+  -webkit-backdrop-filter: var(--vidrio-filtro);
+  backdrop-filter: var(--vidrio-filtro);
+}
+
+/* En móvil la ficha sube como una hoja de vidrio sobre el final de la foto */
+@media (max-width: 767.98px) {
+  html[data-estilo='vidrio'] .detalle-info {
+    margin-top: calc(-1 * var(--esp-7));
+  }
+}
+
+html[data-estilo='vidrio'] .talla-boton {
+  background: color-mix(in srgb, var(--color-superficie) 70%, transparent);
+  border-color: var(--vidrio-linea);
+  border-radius: var(--radio-pill);
+  box-shadow: var(--vidrio-brillo);
+}
+
+html[data-estilo='vidrio'] .talla-boton.elegida {
+  border-color: var(--color-marca);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 6px 16px -8px color-mix(in srgb, var(--color-marca) 80%, transparent);
+}
+
+html[data-estilo='vidrio'] .ventajas li {
+  background: color-mix(in srgb, var(--color-superficie) 60%, transparent);
+  border-color: var(--vidrio-linea);
+  border-radius: var(--radio);
+  box-shadow: var(--vidrio-brillo);
+}
+
+/* ---------- Carrito ---------- */
+html[data-estilo='vidrio'] .cart-lineas {
+  padding: var(--esp-2) clamp(1rem, 0.6rem + 1.5vw, 1.75rem);
+}
+
+html[data-estilo='vidrio'] .cart-lineas .cart-header {
+  padding-top: var(--esp-3);
+}
+
+html[data-estilo='vidrio'] .cart-lineas .cart-item:last-of-type {
+  border-bottom: none;
+}
+
+html[data-estilo='vidrio'] .quantity-control {
+  background: color-mix(in srgb, var(--color-superficie) 70%, transparent);
+  border-color: var(--vidrio-linea);
+  box-shadow: var(--vidrio-brillo);
+}
+
+html[data-estilo='vidrio'] :is(.continue-shopping, .secure-payment) {
+  background: color-mix(in srgb, var(--color-arena) 55%, transparent);
+  border: 1px solid var(--vidrio-borde);
+  box-shadow: var(--vidrio-brillo);
+}
+
+/* Barra de envío gratis: pista de vidrio y relleno granate */
+html[data-estilo='vidrio'] .progreso {
+  background: color-mix(in srgb, var(--color-arena) 70%, transparent);
+  box-shadow: inset 0 1px 2px rgba(40, 20, 15, 0.16), 0 1px 0 var(--vidrio-borde);
+}
+
+html[data-estilo='vidrio'] .progreso-barra {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  transition: width 600ms var(--ease);
+}
+
+/* ---------- Checkout ---------- */
+/* Los campos siguen sólidos para leerse bien */
+html[data-estilo='vidrio'] .shipping-form .form-control {
+  box-shadow: var(--vidrio-brillo);
+}
