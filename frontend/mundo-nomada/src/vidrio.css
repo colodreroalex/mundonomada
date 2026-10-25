@@ -466,3 +466,111 @@ html[data-estilo='vidrio'] .progreso-barra {
 html[data-estilo='vidrio'] .shipping-form .form-control {
   box-shadow: var(--vidrio-brillo);
 }
+
+/* =====================================================================
+   Cuenta: acceso, registro y perfil
+   (todo aquí: el CSS del perfil ya pasa del aviso de presupuesto)
+   ===================================================================== */
+html[data-estilo='vidrio'] :is(.panel-superficie, .auth-tarjeta, .perfil-cabecera, .dialogo) {
+  background: var(--vidrio-fondo-fuerte);
+  border: 1px solid var(--vidrio-borde);
+  box-shadow: var(--vidrio-brillo), var(--vidrio-sombra);
+  -webkit-backdrop-filter: var(--vidrio-filtro);
+  backdrop-filter: var(--vidrio-filtro);
+}
+
+html[data-estilo='vidrio'] :is(.auth-tarjeta, .dialogo) {
+  box-shadow: var(--vidrio-brillo), var(--vidrio-sombra-alta);
+}
+
+/* Acceso y registro: brillos más presentes detrás de la tarjeta */
+html[data-estilo='vidrio'] .auth-pagina {
+  background:
+    radial-gradient(34rem 26rem at 78% 12%, color-mix(in srgb, var(--color-marca) 20%, transparent), transparent 70%),
+    radial-gradient(30rem 24rem at 18% 88%, color-mix(in srgb, var(--color-marca) 12%, var(--color-arena)), transparent 70%);
+}
+
+/* Ventana de detalle de pedido */
+html[data-estilo='vidrio'] .dialogo-fondo {
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+}
+
+html[data-estilo='vidrio'] :is(.dialogo-cabecera, .dialogo-pie) {
+  border-color: var(--vidrio-linea);
+}
+
+/* Menú de la cuenta: pestañas en móvil, columna en escritorio */
+html[data-estilo='vidrio'] .pestana {
+  background: color-mix(in srgb, var(--color-superficie) 62%, transparent);
+  border-color: var(--vidrio-borde);
+  box-shadow: var(--vidrio-brillo), var(--sombra-1);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+
+html[data-estilo='vidrio'] .pestana.activa {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 6px 16px -8px color-mix(in srgb, var(--color-marca) 80%, transparent);
+}
+
+@media (min-width: 992px) {
+  html[data-estilo='vidrio'] .perfil-menu {
+    background: var(--vidrio-fondo-fuerte);
+    border: 1px solid var(--vidrio-borde);
+    box-shadow: var(--vidrio-brillo), var(--vidrio-sombra);
+    -webkit-backdrop-filter: var(--vidrio-filtro);
+    backdrop-filter: var(--vidrio-filtro);
+  }
+
+  /* Dentro del panel ya hay desenfoque: las pestañas no llevan el suyo */
+  html[data-estilo='vidrio'] .pestana {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  html[data-estilo='vidrio'] .pestana:hover {
+    background: color-mix(in srgb, var(--color-superficie) 70%, transparent);
+  }
+
+  html[data-estilo='vidrio'] .pestana.activa {
+    background: var(--color-primario-suave);
+    box-shadow: var(--vidrio-brillo), 0 0 0 1px var(--color-primario-borde);
+  }
+}
+
+/* Estadísticas como tarjetas de cifras */
+html[data-estilo='vidrio'] .estadisticas li {
+  padding: var(--esp-3);
+  border-radius: var(--radio);
+  background: color-mix(in srgb, var(--color-superficie) 58%, transparent);
+  border: 1px solid var(--vidrio-linea);
+  box-shadow: var(--vidrio-brillo);
+}
+
+html[data-estilo='vidrio'] .estadisticas strong {
+  font-size: var(--fs-base);
+}
+
+html[data-estilo='vidrio'] :is(.stat-icon, .vacio-icono) {
+  background: color-mix(in srgb, var(--color-marca) 10%, var(--vidrio-fondo-sutil));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 0 0 1px var(--color-primario-borde);
+}
+
+/* Elementos repetidos o secundarios dentro de los paneles: sin desenfoque */
+html[data-estilo='vidrio'] :is(.pedido, .consejos, .nota-actividad) {
+  background: color-mix(in srgb, var(--color-superficie) 58%, transparent);
+  border: 1px solid var(--vidrio-linea);
+  box-shadow: var(--vidrio-brillo);
+}
+
+html[data-estilo='vidrio'] .pedido:hover {
+  box-shadow: var(--vidrio-brillo), var(--sombra-2);
+}
+
+html[data-estilo='vidrio'] .fuerza-barra {
+  background: color-mix(in srgb, var(--color-arena) 70%, transparent);
+  box-shadow: inset 0 1px 2px rgba(40, 20, 15, 0.16);
+}
