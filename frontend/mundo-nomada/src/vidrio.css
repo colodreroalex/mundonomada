@@ -85,3 +85,138 @@ html[data-estilo='vidrio'][data-bs-theme='dark'] body::before {
     radial-gradient(40rem 30rem at 88% 108%, color-mix(in srgb, var(--color-marca) 22%, transparent), transparent 70%);
 }
 
+/* =====================================================================
+   Cabecera y menús (menu)
+   ===================================================================== */
+/* El desenfoque va en una capa ::before: si estuviera en .cabecera, los
+   desplegables de dentro no podrían desenfocar la página. */
+html[data-estilo='vidrio'] .cabecera {
+  background: transparent;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  border-bottom-color: var(--vidrio-linea);
+}
+
+html[data-estilo='vidrio'] .cabecera::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: color-mix(in srgb, var(--color-secundario) 62%, transparent);
+  box-shadow: inset 0 -1px 0 color-mix(in srgb, var(--vidrio-borde) 60%, transparent);
+  -webkit-backdrop-filter: var(--vidrio-filtro);
+  backdrop-filter: var(--vidrio-filtro);
+  transition: background-color var(--t-media) var(--ease);
+}
+
+html[data-estilo='vidrio'] .cabecera-scroll {
+  box-shadow: 0 10px 30px -18px rgba(40, 20, 15, 0.4);
+}
+
+html[data-estilo='vidrio'] .cabecera-scroll::before {
+  background: color-mix(in srgb, var(--color-secundario) 74%, transparent);
+}
+
+/* Enlaces de escritorio: píldora de vidrio al pasar o estar activos */
+html[data-estilo='vidrio'] .nav-enlace:hover,
+html[data-estilo='vidrio'] .nav-enlace.activo,
+html[data-estilo='vidrio'] .accion:hover {
+  background: color-mix(in srgb, var(--color-superficie) 55%, transparent);
+  box-shadow: var(--vidrio-brillo), 0 0 0 1px var(--vidrio-linea);
+}
+
+/* Desplegables (Catálogo y usuario) */
+html[data-estilo='vidrio'] .desplegable-panel {
+  /* Más opaco que el vidrio normal: suele abrirse encima de fotos */
+  background: color-mix(in srgb, var(--color-superficie) 80%, transparent);
+  border: 1px solid var(--vidrio-borde);
+  border-radius: var(--radio-lg);
+  box-shadow: var(--vidrio-brillo), var(--vidrio-sombra-alta);
+  -webkit-backdrop-filter: var(--vidrio-filtro);
+  backdrop-filter: var(--vidrio-filtro);
+  transform: translate(-50%, -6px) scale(0.98);
+  transform-origin: top center;
+}
+
+html[data-estilo='vidrio'] .desplegable-panel.abierto {
+  transform: translate(-50%, 0) scale(1);
+}
+
+html[data-estilo='vidrio'] .usuario-panel {
+  transform: translateY(-6px) scale(0.98);
+  transform-origin: top right;
+}
+
+html[data-estilo='vidrio'] .usuario-panel.abierto {
+  transform: none;
+}
+
+html[data-estilo='vidrio'] .catalogo-enlace:hover,
+html[data-estilo='vidrio'] .catalogo-enlace:focus-visible,
+html[data-estilo='vidrio'] .usuario-opcion:hover {
+  background: color-mix(in srgb, var(--color-superficie) 70%, transparent);
+  box-shadow: var(--vidrio-brillo), 0 0 0 1px var(--vidrio-linea);
+}
+
+html[data-estilo='vidrio'] .catalogo-destacado {
+  border-radius: calc(var(--radio-lg) - 6px);
+}
+
+html[data-estilo='vidrio'] .catalogo-destacado-cta {
+  align-self: flex-start;
+  padding: 6px 12px;
+  border-radius: var(--radio-pill);
+  background: var(--vidrio-oscuro);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16);
+  text-decoration: none;
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+
+/* Bootstrap: menús desplegables genéricos */
+html[data-estilo='vidrio'] .dropdown-menu {
+  --bs-dropdown-bg: var(--vidrio-fondo);
+  border: 1px solid var(--vidrio-borde);
+  border-radius: var(--radio-lg);
+  box-shadow: var(--vidrio-brillo), var(--vidrio-sombra-alta);
+  -webkit-backdrop-filter: var(--vidrio-filtro);
+  backdrop-filter: var(--vidrio-filtro);
+}
+
+/* Panel lateral (móvil y tablet) */
+html[data-estilo='vidrio'] .panel-fondo {
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+}
+
+html[data-estilo='vidrio'] .panel-lateral {
+  background: var(--vidrio-fondo-fuerte);
+  border-left: 1px solid var(--vidrio-borde);
+  box-shadow: var(--vidrio-brillo), var(--vidrio-sombra-alta);
+  -webkit-backdrop-filter: var(--vidrio-filtro);
+  backdrop-filter: var(--vidrio-filtro);
+}
+
+html[data-estilo='vidrio'] .panel-cabecera,
+html[data-estilo='vidrio'] .panel-pie {
+  border-color: var(--vidrio-linea);
+}
+
+html[data-estilo='vidrio'] .panel-cuenta {
+  background: color-mix(in srgb, var(--color-primario-suave) 70%, var(--vidrio-fondo-sutil));
+  border: 1px solid var(--vidrio-linea);
+  box-shadow: var(--vidrio-brillo);
+}
+
+html[data-estilo='vidrio'] .panel-enlace:hover,
+html[data-estilo='vidrio'] .panel-enlace.activo {
+  background: color-mix(in srgb, var(--color-superficie) 72%, transparent);
+  box-shadow: var(--vidrio-brillo), 0 0 0 1px var(--vidrio-linea);
+}
+
+html[data-estilo='vidrio'] .interruptor {
+  background: color-mix(in srgb, var(--color-borde) 80%, transparent);
+  box-shadow: inset 0 1px 2px rgba(40, 20, 15, 0.18);
+}
+
