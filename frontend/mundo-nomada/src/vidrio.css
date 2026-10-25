@@ -220,3 +220,100 @@ html[data-estilo='vidrio'] .interruptor {
   box-shadow: inset 0 1px 2px rgba(40, 20, 15, 0.18);
 }
 
+/* =====================================================================
+   Portada (main): slides y ventajas
+   ===================================================================== */
+/* La animación de entrada pasa a la tarjeta: un ancestro con opacidad
+   animada impediría el desenfoque mientras dura. */
+html[data-estilo='vidrio'] .hero-contenido {
+  animation: none;
+}
+
+html[data-estilo='vidrio'] .hero-tarjeta {
+  max-width: 34rem;
+  padding: clamp(1.25rem, 0.9rem + 1.8vw, 2.25rem);
+  background: var(--vidrio-oscuro);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: var(--radio-lg);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16), 0 30px 60px -24px rgba(0, 0, 0, 0.6);
+  -webkit-backdrop-filter: saturate(140%) blur(var(--vidrio-blur));
+  backdrop-filter: saturate(140%) blur(var(--vidrio-blur));
+  animation: aparecer 0.7s var(--ease) both;
+}
+
+html[data-estilo='vidrio'] .hero-titulo {
+  margin-bottom: var(--esp-2);
+}
+
+@media (max-width: 991.98px) {
+  html[data-estilo='vidrio'] .hero-tarjeta {
+    align-self: stretch;
+    max-width: none;
+  }
+}
+
+/* Con la tarjeta, el degradado sobre la foto puede ser más ligero */
+@media (min-width: 992px) {
+  html[data-estilo='vidrio'] .carousel::after {
+    background: linear-gradient(90deg, rgba(20, 10, 8, 0.42) 0%, rgba(20, 10, 8, 0.12) 50%, rgba(20, 10, 8, 0) 75%);
+  }
+}
+
+/* Indicadores dentro de una píldora de vidrio */
+html[data-estilo='vidrio'] .carousel-indicators {
+  left: 50%;
+  right: auto;
+  width: auto;
+  margin: 0 0 var(--esp-4);
+  padding: 9px 12px;
+  transform: translateX(-50%);
+  align-items: center;
+  border-radius: var(--radio-pill);
+  background: var(--vidrio-oscuro);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+}
+
+/* Flechas: círculos de vidrio */
+html[data-estilo='vidrio'] .custom-control {
+  background: var(--vidrio-oscuro);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 10px 24px -10px rgba(0, 0, 0, 0.5);
+  -webkit-backdrop-filter: saturate(140%) blur(14px);
+  backdrop-filter: saturate(140%) blur(14px);
+}
+
+html[data-estilo='vidrio'] .custom-control:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Ventajas: tarjetas de vidrio sobre una banda arena translúcida con brillos */
+html[data-estilo='vidrio'] .service-features {
+  background:
+    radial-gradient(28rem 18rem at 12% 18%, color-mix(in srgb, var(--color-marca) 12%, transparent), transparent 70%),
+    radial-gradient(30rem 20rem at 88% 85%, color-mix(in srgb, var(--color-marca) 10%, transparent), transparent 70%),
+    color-mix(in srgb, var(--color-arena) 62%, transparent);
+}
+
+html[data-estilo='vidrio'] .service-item {
+  background: var(--vidrio-fondo);
+  border: 1px solid var(--vidrio-borde);
+  border-radius: var(--radio-lg);
+  box-shadow: var(--vidrio-brillo), var(--vidrio-sombra);
+  -webkit-backdrop-filter: var(--vidrio-filtro);
+  backdrop-filter: var(--vidrio-filtro);
+}
+
+@media (hover: hover) {
+  html[data-estilo='vidrio'] .service-item:hover {
+    box-shadow: var(--vidrio-brillo), var(--vidrio-sombra-alta);
+  }
+}
+
+html[data-estilo='vidrio'] .service-icon {
+  background: color-mix(in srgb, var(--color-marca) 10%, var(--vidrio-fondo-sutil));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 0 0 1px var(--color-primario-borde),
+    0 8px 18px -10px color-mix(in srgb, var(--color-marca) 60%, transparent);
+}

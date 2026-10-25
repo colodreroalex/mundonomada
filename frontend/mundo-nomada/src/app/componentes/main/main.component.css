@@ -63,6 +63,14 @@
   }
 }
 
+/* Envoltorio del lema: con el estilo de vidrio se convierte en tarjeta */
+.hero-tarjeta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--esp-2);
+}
+
 .hero-logo {
   width: 84px;
   aspect-ratio: 971 / 810;
