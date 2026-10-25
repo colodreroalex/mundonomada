@@ -286,6 +286,8 @@ esta capa como SVG `feTurbulence` en `data:` (la CSP ya permite `img-src data:`)
 
 ## 11. Cómo deshacer
 
+- **Comparar sin tocar código:** abrir cualquier página con `?estilo=clasico` al final de la
+  dirección (por ejemplo `/main?estilo=clasico`) muestra el estilo anterior en esa visita.
 - **Al instante, para comparar:** quitar `data-estilo="vidrio"` de `<html>` en `src/index.html`.
   La web vuelve a su aspecto actual. Solo se quedaría el resumen de pedidos del admin, si se
   aprobó, y con estilo sólido.

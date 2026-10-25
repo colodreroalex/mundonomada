@@ -10,7 +10,8 @@ html[data-estilo='vidrio'] {
   --vidrio-fondo: color-mix(in srgb, var(--color-superficie) 66%, transparent);
   --vidrio-fondo-fuerte: color-mix(in srgb, var(--color-superficie) 84%, transparent);
   --vidrio-fondo-sutil: color-mix(in srgb, var(--color-superficie) 40%, transparent);
-  --vidrio-oscuro: rgba(20, 10, 8, 0.3);
+  --vidrio-fondo-flotante: color-mix(in srgb, var(--color-superficie) 90%, transparent); /* encima de fotos o texto */
+  --vidrio-oscuro: rgba(20, 10, 8, 0.4); /* AA medido sobre la foto más clara de la portada */
   --vidrio-borde: rgba(255, 255, 255, 0.6);
   --vidrio-linea: color-mix(in srgb, var(--color-borde) 75%, transparent);
   --vidrio-brillo: inset 0 1px 0 rgba(255, 255, 255, 0.7);
@@ -25,6 +26,7 @@ html[data-estilo='vidrio'][data-bs-theme='dark'] {
   --vidrio-fondo: color-mix(in srgb, var(--color-superficie) 62%, transparent);
   --vidrio-fondo-fuerte: color-mix(in srgb, var(--color-superficie) 82%, transparent);
   --vidrio-fondo-sutil: color-mix(in srgb, var(--color-superficie) 38%, transparent);
+  --vidrio-fondo-flotante: color-mix(in srgb, var(--color-superficie) 90%, transparent);
   --vidrio-borde: rgba(255, 255, 255, 0.09);
   --vidrio-linea: rgba(255, 255, 255, 0.07);
   --vidrio-brillo: inset 0 1px 0 rgba(255, 255, 255, 0.07);
@@ -160,6 +162,17 @@ html[data-estilo='vidrio'] .usuario-opcion:hover {
 
 html[data-estilo='vidrio'] .catalogo-destacado {
   border-radius: calc(var(--radio-lg) - 6px);
+}
+
+/* El texto pequeño gris del menú, algo más oscuro: el panel puede abrirse
+   sobre una foto muy oscura o muy clara y debe seguir en AA */
+html[data-estilo='vidrio'] .catalogo-panel :is(.catalogo-enlace small, .catalogo-etiqueta) {
+  color: color-mix(in srgb, var(--color-texto) 55%, var(--color-texto-suave));
+}
+
+/* En oscuro, la cabecera con scroll es algo más opaca (granate claro sobre fotos) */
+html[data-estilo='vidrio'][data-bs-theme='dark'] .cabecera-scroll::before {
+  background: color-mix(in srgb, var(--color-secundario) 82%, transparent);
 }
 
 html[data-estilo='vidrio'] .catalogo-destacado-cta {
@@ -338,7 +351,7 @@ html[data-estilo='vidrio'] :is(.estado-vacio, .no-encontrado, .vacio) {
 
 /* Barras de compra fijas en móvil */
 html[data-estilo='vidrio'] :is(.barra-compra, .barra-total, .barra-pago) {
-  background: var(--vidrio-fondo-fuerte);
+  background: var(--vidrio-fondo-flotante);
   border-top: 1px solid var(--vidrio-borde);
   border-radius: var(--radio-lg) var(--radio-lg) 0 0;
   box-shadow: var(--vidrio-brillo), 0 -14px 34px -16px rgba(40, 20, 15, 0.35);
@@ -354,7 +367,7 @@ html[data-estilo='vidrio'] :is(.filters-bar, .opciones, .cart-header, .cart-item
 /* ---------- Catálogo (mostrar-products) ---------- */
 /* Etiquetas sobre la foto: translúcidas sin desenfoque (hay una por tarjeta) */
 html[data-estilo='vidrio'] .product-tag:not(.tag-ultimas):not(.tag-agotado) {
-  background: var(--vidrio-fondo-fuerte);
+  background: color-mix(in srgb, var(--color-superficie) 94%, transparent);
   border: 1px solid var(--vidrio-borde);
   box-shadow: var(--vidrio-brillo), 0 4px 12px -6px rgba(40, 20, 15, 0.35);
 }
@@ -671,7 +684,7 @@ html[data-estilo='vidrio'] .grafica-punto {
    ===================================================================== */
 /* Avisos flotantes: vidrio fuerte, conservando el borde izquierdo de color */
 html[data-estilo='vidrio'] .notification-banner {
-  background: var(--vidrio-fondo-fuerte);
+  background: var(--vidrio-fondo-flotante);
   border-top-color: var(--vidrio-borde);
   border-right-color: var(--vidrio-borde);
   border-bottom-color: var(--vidrio-borde);
@@ -741,6 +754,7 @@ html[data-estilo='vidrio'] .social-links a:not(:hover) {
   html[data-estilo='vidrio'] {
     --vidrio-fondo: var(--color-superficie);
     --vidrio-fondo-fuerte: var(--color-superficie);
+    --vidrio-fondo-flotante: var(--color-superficie);
     --vidrio-fondo-sutil: var(--color-superficie-2);
     --vidrio-oscuro: rgba(20, 10, 8, 0.78);
   }
@@ -755,6 +769,7 @@ html[data-estilo='vidrio'] .social-links a:not(:hover) {
   html[data-estilo='vidrio'] {
     --vidrio-fondo: var(--color-superficie);
     --vidrio-fondo-fuerte: var(--color-superficie);
+    --vidrio-fondo-flotante: var(--color-superficie);
     --vidrio-fondo-sutil: var(--color-superficie-2);
     --vidrio-oscuro: rgba(20, 10, 8, 0.78);
   }
