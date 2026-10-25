@@ -574,3 +574,71 @@ html[data-estilo='vidrio'] .fuerza-barra {
   background: color-mix(in srgb, var(--color-arena) 70%, transparent);
   box-shadow: inset 0 1px 2px rgba(40, 20, 15, 0.16);
 }
+
+/* =====================================================================
+   Administración: panel, pedidos y gráfica
+   ===================================================================== */
+/* Tarjetas del panel y elementos de listas: translúcidas sin desenfoque
+   (son muchas y detrás solo está el fondo ambiental) */
+html[data-estilo='vidrio'] :is(.admin-tarjeta:not(.destacada), .admin-item, .cifra, .filtro:not(.activo)) {
+  background: var(--vidrio-fondo-fuerte);
+  border-color: var(--vidrio-borde);
+  box-shadow: var(--vidrio-brillo), var(--sombra-1);
+}
+
+html[data-estilo='vidrio'] .admin-tarjeta {
+  border-radius: var(--radio-lg);
+}
+
+html[data-estilo='vidrio'] .admin-tarjeta:hover {
+  box-shadow: var(--vidrio-brillo), var(--vidrio-sombra);
+}
+
+html[data-estilo='vidrio'] :is(.admin-tarjeta.destacada, .filtro.activo) {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 10px 24px -12px color-mix(in srgb, var(--color-marca) 80%, transparent);
+}
+
+html[data-estilo='vidrio'] :is(.admin-tarjeta > .bi:first-child, .cifra-icono) {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 0 0 1px var(--color-primario-borde);
+}
+
+html[data-estilo='vidrio'] .admin-tarjeta.destacada > .bi:first-child {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+/* Pedidos del admin: tarjeta translúcida con cabecera y pie suaves */
+html[data-estilo='vidrio'] :is(.pedido-cabecera, .pedido-acciones) {
+  border-color: var(--vidrio-linea);
+}
+
+html[data-estilo='vidrio'] .pedido-envio {
+  background: color-mix(in srgb, var(--color-superficie-2) 70%, transparent);
+  border: 1px solid var(--vidrio-linea);
+}
+
+/* La gráfica es una sola superficie: lleva desenfoque */
+html[data-estilo='vidrio'] .grafica {
+  background: var(--vidrio-fondo-fuerte);
+  border-color: var(--vidrio-borde);
+  box-shadow: var(--vidrio-brillo), var(--vidrio-sombra);
+  -webkit-backdrop-filter: var(--vidrio-filtro);
+  backdrop-filter: var(--vidrio-filtro);
+}
+
+html[data-estilo='vidrio'] .guia {
+  stroke: var(--vidrio-linea);
+}
+
+/* Globo de la gráfica: vidrio sobre la curva */
+html[data-estilo='vidrio'] .grafica-globo {
+  background: var(--vidrio-fondo);
+  border-color: var(--vidrio-borde);
+  box-shadow: var(--vidrio-brillo), var(--vidrio-sombra-alta);
+  -webkit-backdrop-filter: saturate(160%) blur(10px);
+  backdrop-filter: saturate(160%) blur(10px);
+}
+
+html[data-estilo='vidrio'] .grafica-punto {
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.85), 0 0 0 7px var(--color-primario-suave),
+    0 6px 14px -4px color-mix(in srgb, var(--color-marca) 70%, transparent);
+}
