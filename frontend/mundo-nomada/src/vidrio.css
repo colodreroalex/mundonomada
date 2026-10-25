@@ -1,0 +1,814 @@
+/* =====================================================================
+   Mundo Nómada · capa de vidrio (glassmorphism)
+   Todo cuelga de html[data-estilo='vidrio'] (en src/index.html).
+   Quitar ese atributo devuelve la web a su aspecto anterior.
+   Los tintes salen de los tokens de styles.css: no hay colores nuevos.
+   ===================================================================== */
+
+/* ---------- Tokens ---------- */
+html[data-estilo='vidrio'] {
+  --vidrio-fondo: color-mix(in srgb, var(--color-superficie) 66%, transparent);
+  --vidrio-fondo-fuerte: color-mix(in srgb, var(--color-superficie) 84%, transparent);
+  --vidrio-fondo-sutil: color-mix(in srgb, var(--color-superficie) 40%, transparent);
+  --vidrio-fondo-flotante: color-mix(in srgb, var(--color-superficie) 90%, transparent); /* encima de fotos o texto */
+  --vidrio-oscuro: rgba(20, 10, 8, 0.4); /* AA medido sobre la foto más clara de la portada */
+  --vidrio-borde: rgba(255, 255, 255, 0.6);
+  --vidrio-linea: color-mix(in srgb, var(--color-borde) 75%, transparent);
+  --vidrio-brillo: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  --vidrio-sombra: 0 14px 36px -14px rgba(60, 30, 20, 0.22), 0 2px 6px rgba(60, 30, 20, 0.05);
+  --vidrio-sombra-alta: 0 24px 60px -18px rgba(60, 30, 20, 0.3), 0 4px 12px rgba(60, 30, 20, 0.06);
+  --vidrio-blur: 18px;
+  --vidrio-saturacion: 160%;
+  --vidrio-filtro: saturate(var(--vidrio-saturacion)) blur(var(--vidrio-blur));
+}
+
+html[data-estilo='vidrio'][data-bs-theme='dark'] {
+  --vidrio-fondo: color-mix(in srgb, var(--color-superficie) 62%, transparent);
+  --vidrio-fondo-fuerte: color-mix(in srgb, var(--color-superficie) 82%, transparent);
+  --vidrio-fondo-sutil: color-mix(in srgb, var(--color-superficie) 38%, transparent);
+  --vidrio-fondo-flotante: color-mix(in srgb, var(--color-superficie) 90%, transparent);
+  --vidrio-borde: rgba(255, 255, 255, 0.09);
+  --vidrio-linea: rgba(255, 255, 255, 0.07);
+  --vidrio-brillo: inset 0 1px 0 rgba(255, 255, 255, 0.07);
+  --vidrio-sombra: 0 14px 36px -14px rgba(0, 0, 0, 0.6), 0 2px 6px rgba(0, 0, 0, 0.3);
+  --vidrio-sombra-alta: 0 24px 60px -18px rgba(0, 0, 0, 0.7), 0 4px 12px rgba(0, 0, 0, 0.35);
+}
+
+@media (max-width: 575.98px) {
+  html[data-estilo='vidrio'] {
+    --vidrio-blur: 12px;
+  }
+}
+
+/* ---------- Utilidades ---------- */
+html[data-estilo='vidrio'] :is(.vidrio, .vidrio-fuerte, .vidrio-sutil, .vidrio-oscuro, .vidrio-sin-blur) {
+  background: var(--vidrio-fondo);
+  border: 1px solid var(--vidrio-borde);
+  border-radius: var(--radio-lg);
+  box-shadow: var(--vidrio-brillo), var(--vidrio-sombra);
+  -webkit-backdrop-filter: var(--vidrio-filtro);
+  backdrop-filter: var(--vidrio-filtro);
+}
+
+html[data-estilo='vidrio'] .vidrio-fuerte { background: var(--vidrio-fondo-fuerte); }
+html[data-estilo='vidrio'] .vidrio-sutil { background: var(--vidrio-fondo-sutil); }
+
+html[data-estilo='vidrio'] .vidrio-oscuro {
+  background: var(--vidrio-oscuro);
+  border-color: rgba(255, 255, 255, 0.16);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14), 0 20px 50px -20px rgba(0, 0, 0, 0.55);
+  color: #fbf8f4;
+}
+
+html[data-estilo='vidrio'] .vidrio-sin-blur {
+  background: var(--vidrio-fondo-fuerte);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+/* ---------- Fondo ambiental ---------- */
+/* Luces fijas muy difuminadas detrás del contenido: el vidrio necesita algo detrás */
+html[data-estilo='vidrio'] body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(48rem 36rem at 102% -6%, color-mix(in srgb, var(--color-marca) 15%, transparent), transparent 70%),
+    radial-gradient(42rem 34rem at -8% 58%, color-mix(in srgb, var(--color-marca) 7%, var(--color-arena)), transparent 72%),
+    radial-gradient(40rem 30rem at 88% 108%, color-mix(in srgb, var(--color-marca) 10%, transparent), transparent 70%);
+}
+
+html[data-estilo='vidrio'][data-bs-theme='dark'] body::before {
+  background:
+    radial-gradient(48rem 36rem at 102% -6%, color-mix(in srgb, var(--color-marca) 30%, transparent), transparent 70%),
+    radial-gradient(42rem 34rem at -8% 58%, color-mix(in srgb, var(--color-marca) 16%, transparent), transparent 72%),
+    radial-gradient(40rem 30rem at 88% 108%, color-mix(in srgb, var(--color-marca) 22%, transparent), transparent 70%);
+}
+
+/* =====================================================================
+   Cabecera y menús (menu)
+   ===================================================================== */
+/* El desenfoque va en una capa ::before: si estuviera en .cabecera, los
+   desplegables de dentro no podrían desenfocar la página. */
+html[data-estilo='vidrio'] .cabecera {
+  background: transparent;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  border-bottom-color: var(--vidrio-linea);
+}
+
+html[data-estilo='vidrio'] .cabecera::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: color-mix(in srgb, var(--color-secundario) 62%, transparent);
+  box-shadow: inset 0 -1px 0 color-mix(in srgb, var(--vidrio-borde) 60%, transparent);
+  -webkit-backdrop-filter: var(--vidrio-filtro);
+  backdrop-filter: var(--vidrio-filtro);
+  transition: background-color var(--t-media) var(--ease);
+}
+
+html[data-estilo='vidrio'] .cabecera-scroll {
+  box-shadow: 0 10px 30px -18px rgba(40, 20, 15, 0.4);
+}
+
+html[data-estilo='vidrio'] .cabecera-scroll::before {
+  background: color-mix(in srgb, var(--color-secundario) 74%, transparent);
+}
+
+/* Enlaces de escritorio: píldora de vidrio al pasar o estar activos */
+html[data-estilo='vidrio'] .nav-enlace:hover,
+html[data-estilo='vidrio'] .nav-enlace.activo,
+html[data-estilo='vidrio'] .accion:hover {
+  background: color-mix(in srgb, var(--color-superficie) 55%, transparent);
+  box-shadow: var(--vidrio-brillo), 0 0 0 1px var(--vidrio-linea);
+}
+
+/* Desplegables (Catálogo y usuario) */
+html[data-estilo='vidrio'] .desplegable-panel {
+  /* Más opaco que el vidrio normal: suele abrirse encima de fotos */
+  background: color-mix(in srgb, var(--color-superficie) 80%, transparent);
+  border: 1px solid var(--vidrio-borde);
+  border-radius: var(--radio-lg);
+  box-shadow: var(--vidrio-brillo), var(--vidrio-sombra-alta);
+  -webkit-backdrop-filter: var(--vidrio-filtro);
+  backdrop-filter: var(--vidrio-filtro);
+  transform: translate(-50%, -6px) scale(0.98);
+  transform-origin: top center;
+}
+
+html[data-estilo='vidrio'] .desplegable-panel.abierto {
+  transform: translate(-50%, 0) scale(1);
+}
+
+html[data-estilo='vidrio'] .usuario-panel {
+  transform: translateY(-6px) scale(0.98);
+  transform-origin: top right;
+}
+
+html[data-estilo='vidrio'] .usuario-panel.abierto {
+  transform: none;
+}
+
+html[data-estilo='vidrio'] .catalogo-enlace:hover,
+html[data-estilo='vidrio'] .catalogo-enlace:focus-visible,
+html[data-estilo='vidrio'] .usuario-opcion:hover {
+  background: color-mix(in srgb, var(--color-superficie) 70%, transparent);
+  box-shadow: var(--vidrio-brillo), 0 0 0 1px var(--vidrio-linea);
+}
+
+html[data-estilo='vidrio'] .catalogo-destacado {
+  border-radius: calc(var(--radio-lg) - 6px);
+}
+
+/* El texto pequeño gris del menú, algo más oscuro: el panel puede abrirse
+   sobre una foto muy oscura o muy clara y debe seguir en AA */
+html[data-estilo='vidrio'] .catalogo-panel :is(.catalogo-enlace small, .catalogo-etiqueta) {
+  color: color-mix(in srgb, var(--color-texto) 55%, var(--color-texto-suave));
+}
+
+/* En oscuro, la cabecera con scroll es algo más opaca (granate claro sobre fotos) */
+html[data-estilo='vidrio'][data-bs-theme='dark'] .cabecera-scroll::before {
+  background: color-mix(in srgb, var(--color-secundario) 82%, transparent);
+}
+
+html[data-estilo='vidrio'] .catalogo-destacado-cta {
+  align-self: flex-start;
+  padding: 6px 12px;
+  border-radius: var(--radio-pill);
+  background: var(--vidrio-oscuro);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16);
+  text-decoration: none;
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+
+/* Bootstrap: menús desplegables genéricos */
+html[data-estilo='vidrio'] .dropdown-menu {
+  --bs-dropdown-bg: var(--vidrio-fondo);
+  border: 1px solid var(--vidrio-borde);
+  border-radius: var(--radio-lg);
+  box-shadow: var(--vidrio-brillo), var(--vidrio-sombra-alta);
+  -webkit-backdrop-filter: var(--vidrio-filtro);
+  backdrop-filter: var(--vidrio-filtro);
+}
+
+/* Panel lateral (móvil y tablet) */
+html[data-estilo='vidrio'] .panel-fondo {
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+}
+
+html[data-estilo='vidrio'] .panel-lateral {
+  background: var(--vidrio-fondo-fuerte);
+  border-left: 1px solid var(--vidrio-borde);
+  box-shadow: var(--vidrio-brillo), var(--vidrio-sombra-alta);
+  -webkit-backdrop-filter: var(--vidrio-filtro);
+  backdrop-filter: var(--vidrio-filtro);
+}
+
+html[data-estilo='vidrio'] .panel-cabecera,
+html[data-estilo='vidrio'] .panel-pie {
+  border-color: var(--vidrio-linea);
+}
+
+html[data-estilo='vidrio'] .panel-cuenta {
+  background: color-mix(in srgb, var(--color-primario-suave) 70%, var(--vidrio-fondo-sutil));
+  border: 1px solid var(--vidrio-linea);
+  box-shadow: var(--vidrio-brillo);
+}
+
+html[data-estilo='vidrio'] .panel-enlace:hover,
+html[data-estilo='vidrio'] .panel-enlace.activo {
+  background: color-mix(in srgb, var(--color-superficie) 72%, transparent);
+  box-shadow: var(--vidrio-brillo), 0 0 0 1px var(--vidrio-linea);
+}
+
+html[data-estilo='vidrio'] .interruptor {
+  background: color-mix(in srgb, var(--color-borde) 80%, transparent);
+  box-shadow: inset 0 1px 2px rgba(40, 20, 15, 0.18);
+}
+
+/* =====================================================================
+   Portada (main): slides y ventajas
+   ===================================================================== */
+/* La animación de entrada pasa a la tarjeta: un ancestro con opacidad
+   animada impediría el desenfoque mientras dura. */
+html[data-estilo='vidrio'] .hero-contenido {
+  animation: none;
+}
+
+html[data-estilo='vidrio'] .hero-tarjeta {
+  max-width: 34rem;
+  padding: clamp(1.25rem, 0.9rem + 1.8vw, 2.25rem);
+  background: var(--vidrio-oscuro);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: var(--radio-lg);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16), 0 30px 60px -24px rgba(0, 0, 0, 0.6);
+  -webkit-backdrop-filter: saturate(140%) blur(var(--vidrio-blur));
+  backdrop-filter: saturate(140%) blur(var(--vidrio-blur));
+  animation: aparecer 0.7s var(--ease) both;
+}
+
+html[data-estilo='vidrio'] .hero-titulo {
+  margin-bottom: var(--esp-2);
+}
+
+@media (max-width: 991.98px) {
+  html[data-estilo='vidrio'] .hero-tarjeta {
+    align-self: stretch;
+    max-width: none;
+  }
+}
+
+/* Con la tarjeta, el degradado sobre la foto puede ser más ligero */
+@media (min-width: 992px) {
+  html[data-estilo='vidrio'] .carousel::after {
+    background: linear-gradient(90deg, rgba(20, 10, 8, 0.42) 0%, rgba(20, 10, 8, 0.12) 50%, rgba(20, 10, 8, 0) 75%);
+  }
+}
+
+/* Indicadores dentro de una píldora de vidrio */
+html[data-estilo='vidrio'] .carousel-indicators {
+  left: 50%;
+  right: auto;
+  width: auto;
+  margin: 0 0 var(--esp-4);
+  padding: 9px 12px;
+  transform: translateX(-50%);
+  align-items: center;
+  border-radius: var(--radio-pill);
+  background: var(--vidrio-oscuro);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+}
+
+/* Flechas: círculos de vidrio */
+html[data-estilo='vidrio'] .custom-control {
+  background: var(--vidrio-oscuro);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 10px 24px -10px rgba(0, 0, 0, 0.5);
+  -webkit-backdrop-filter: saturate(140%) blur(14px);
+  backdrop-filter: saturate(140%) blur(14px);
+}
+
+html[data-estilo='vidrio'] .custom-control:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Ventajas: tarjetas de vidrio sobre una banda arena translúcida con brillos */
+html[data-estilo='vidrio'] .service-features {
+  background:
+    radial-gradient(28rem 18rem at 12% 18%, color-mix(in srgb, var(--color-marca) 12%, transparent), transparent 70%),
+    radial-gradient(30rem 20rem at 88% 85%, color-mix(in srgb, var(--color-marca) 10%, transparent), transparent 70%),
+    color-mix(in srgb, var(--color-arena) 62%, transparent);
+}
+
+html[data-estilo='vidrio'] .service-item {
+  background: var(--vidrio-fondo);
+  border: 1px solid var(--vidrio-borde);
+  border-radius: var(--radio-lg);
+  box-shadow: var(--vidrio-brillo), var(--vidrio-sombra);
+  -webkit-backdrop-filter: var(--vidrio-filtro);
+  backdrop-filter: var(--vidrio-filtro);
+}
+
+@media (hover: hover) {
+  html[data-estilo='vidrio'] .service-item:hover {
+    box-shadow: var(--vidrio-brillo), var(--vidrio-sombra-alta);
+  }
+}
+
+html[data-estilo='vidrio'] .service-icon {
+  background: color-mix(in srgb, var(--color-marca) 10%, var(--vidrio-fondo-sutil));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 0 0 1px var(--color-primario-borde),
+    0 8px 18px -10px color-mix(in srgb, var(--color-marca) 60%, transparent);
+}
+
+/* =====================================================================
+   Catálogo, ficha, carrito y checkout
+   ===================================================================== */
+/* Paneles con texto o formularios: vidrio fuerte. Las barras fijas de móvil
+   están fuera de estos paneles, así que el desenfoque no las descoloca. */
+html[data-estilo='vidrio'] :is(.cart-lineas, .cart-totals, .resumen, .pago-escritorio, .shipping-form, .estado-vacio, .no-encontrado, .vacio) {
+  background: var(--vidrio-fondo-fuerte);
+  border: 1px solid var(--vidrio-borde);
+  border-radius: var(--radio-lg);
+  box-shadow: var(--vidrio-brillo), var(--vidrio-sombra);
+  -webkit-backdrop-filter: var(--vidrio-filtro);
+  backdrop-filter: var(--vidrio-filtro);
+}
+
+html[data-estilo='vidrio'] :is(.estado-vacio, .no-encontrado, .vacio) {
+  border-style: solid;
+}
+
+/* Barras de compra fijas en móvil */
+html[data-estilo='vidrio'] :is(.barra-compra, .barra-total, .barra-pago) {
+  background: var(--vidrio-fondo-flotante);
+  border-top: 1px solid var(--vidrio-borde);
+  border-radius: var(--radio-lg) var(--radio-lg) 0 0;
+  box-shadow: var(--vidrio-brillo), 0 -14px 34px -16px rgba(40, 20, 15, 0.35);
+  -webkit-backdrop-filter: var(--vidrio-filtro);
+  backdrop-filter: var(--vidrio-filtro);
+}
+
+/* Separadores más suaves dentro del vidrio */
+html[data-estilo='vidrio'] :is(.filters-bar, .opciones, .cart-header, .cart-item, .admin-botones, .auth-alternativa) {
+  border-color: var(--vidrio-linea);
+}
+
+/* ---------- Catálogo (mostrar-products) ---------- */
+/* Etiquetas sobre la foto: translúcidas sin desenfoque (hay una por tarjeta) */
+html[data-estilo='vidrio'] .product-tag:not(.tag-ultimas):not(.tag-agotado) {
+  background: color-mix(in srgb, var(--color-superficie) 94%, transparent);
+  border: 1px solid var(--vidrio-borde);
+  box-shadow: var(--vidrio-brillo), 0 4px 12px -6px rgba(40, 20, 15, 0.35);
+}
+
+html[data-estilo='vidrio'] :is(.tag-ultimas, .tag-agotado, .btn-addcart) {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 6px 16px -8px rgba(40, 20, 15, 0.5);
+}
+
+/* Vista rápida: solo aparece con ratón, de una en una */
+html[data-estilo='vidrio'] .btn-quickview {
+  background: var(--vidrio-fondo);
+  border: 1px solid var(--vidrio-borde);
+  box-shadow: var(--vidrio-brillo), var(--vidrio-sombra);
+  -webkit-backdrop-filter: var(--vidrio-filtro);
+  backdrop-filter: var(--vidrio-filtro);
+}
+
+/* Paginación en píldoras translúcidas */
+html[data-estilo='vidrio'] .pagination {
+  --bs-pagination-bg: var(--vidrio-fondo-fuerte);
+  --bs-pagination-border-color: var(--vidrio-borde);
+  --bs-pagination-disabled-bg: var(--vidrio-fondo-sutil);
+}
+
+html[data-estilo='vidrio'] .page-link {
+  box-shadow: var(--vidrio-brillo), var(--sombra-1);
+}
+
+html[data-estilo='vidrio'] .page-item.active .page-link {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 6px 16px -8px rgba(40, 20, 15, 0.5);
+}
+
+/* ---------- Ficha (detalle-producto) ---------- */
+html[data-estilo='vidrio'] .detalle-info {
+  position: relative;
+  padding: clamp(1.25rem, 0.9rem + 1.5vw, 2rem);
+  background: var(--vidrio-fondo-fuerte);
+  border: 1px solid var(--vidrio-borde);
+  border-radius: var(--radio-lg);
+  box-shadow: var(--vidrio-brillo), var(--vidrio-sombra);
+  -webkit-backdrop-filter: var(--vidrio-filtro);
+  backdrop-filter: var(--vidrio-filtro);
+}
+
+/* En móvil la ficha sube como una hoja de vidrio sobre el final de la foto */
+@media (max-width: 767.98px) {
+  html[data-estilo='vidrio'] .detalle-info {
+    margin-top: calc(-1 * var(--esp-7));
+  }
+}
+
+html[data-estilo='vidrio'] .talla-boton {
+  background: color-mix(in srgb, var(--color-superficie) 70%, transparent);
+  border-color: var(--vidrio-linea);
+  border-radius: var(--radio-pill);
+  box-shadow: var(--vidrio-brillo);
+}
+
+html[data-estilo='vidrio'] .talla-boton.elegida {
+  border-color: var(--color-marca);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 6px 16px -8px color-mix(in srgb, var(--color-marca) 80%, transparent);
+}
+
+html[data-estilo='vidrio'] .ventajas li {
+  background: color-mix(in srgb, var(--color-superficie) 60%, transparent);
+  border-color: var(--vidrio-linea);
+  border-radius: var(--radio);
+  box-shadow: var(--vidrio-brillo);
+}
+
+/* ---------- Carrito ---------- */
+html[data-estilo='vidrio'] .cart-lineas {
+  padding: var(--esp-2) clamp(1rem, 0.6rem + 1.5vw, 1.75rem);
+}
+
+html[data-estilo='vidrio'] .cart-lineas .cart-header {
+  padding-top: var(--esp-3);
+}
+
+html[data-estilo='vidrio'] .cart-lineas .cart-item:last-of-type {
+  border-bottom: none;
+}
+
+html[data-estilo='vidrio'] .quantity-control {
+  background: color-mix(in srgb, var(--color-superficie) 70%, transparent);
+  border-color: var(--vidrio-linea);
+  box-shadow: var(--vidrio-brillo);
+}
+
+html[data-estilo='vidrio'] :is(.continue-shopping, .secure-payment) {
+  background: color-mix(in srgb, var(--color-arena) 55%, transparent);
+  border: 1px solid var(--vidrio-borde);
+  box-shadow: var(--vidrio-brillo);
+}
+
+/* Barra de envío gratis: pista de vidrio y relleno granate */
+html[data-estilo='vidrio'] .progreso {
+  background: color-mix(in srgb, var(--color-arena) 70%, transparent);
+  box-shadow: inset 0 1px 2px rgba(40, 20, 15, 0.16), 0 1px 0 var(--vidrio-borde);
+}
+
+html[data-estilo='vidrio'] .progreso-barra {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  transition: width 600ms var(--ease);
+}
+
+/* ---------- Checkout ---------- */
+/* Los campos siguen sólidos para leerse bien */
+html[data-estilo='vidrio'] .shipping-form .form-control {
+  box-shadow: var(--vidrio-brillo);
+}
+
+/* =====================================================================
+   Cuenta: acceso, registro y perfil
+   (todo aquí: el CSS del perfil ya pasa del aviso de presupuesto)
+   ===================================================================== */
+html[data-estilo='vidrio'] :is(.panel-superficie, .perfil-cabecera, .dialogo) {
+  background: var(--vidrio-fondo-fuerte);
+  border: 1px solid var(--vidrio-borde);
+  box-shadow: var(--vidrio-brillo), var(--vidrio-sombra);
+  -webkit-backdrop-filter: var(--vidrio-filtro);
+  backdrop-filter: var(--vidrio-filtro);
+}
+
+html[data-estilo='vidrio'] .dialogo {
+  box-shadow: var(--vidrio-brillo), var(--vidrio-sombra-alta);
+}
+
+/* La tarjeta de registro contiene un aviso con position: fixed: el vidrio va
+   en una capa ::before para no convertir la tarjeta en su contenedor. */
+html[data-estilo='vidrio'] .auth-tarjeta {
+  position: relative;
+  isolation: isolate;
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+}
+
+html[data-estilo='vidrio'] .auth-tarjeta::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  z-index: -1;
+  border-radius: inherit;
+  background: var(--vidrio-fondo-fuerte);
+  border: 1px solid var(--vidrio-borde);
+  box-shadow: var(--vidrio-brillo), var(--vidrio-sombra-alta);
+  -webkit-backdrop-filter: var(--vidrio-filtro);
+  backdrop-filter: var(--vidrio-filtro);
+}
+
+/* Acceso y registro: brillos más presentes detrás de la tarjeta */
+html[data-estilo='vidrio'] .auth-pagina {
+  background:
+    radial-gradient(34rem 26rem at 78% 12%, color-mix(in srgb, var(--color-marca) 20%, transparent), transparent 70%),
+    radial-gradient(30rem 24rem at 18% 88%, color-mix(in srgb, var(--color-marca) 12%, var(--color-arena)), transparent 70%);
+}
+
+/* Ventana de detalle de pedido */
+html[data-estilo='vidrio'] .dialogo-fondo {
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+}
+
+html[data-estilo='vidrio'] :is(.dialogo-cabecera, .dialogo-pie) {
+  border-color: var(--vidrio-linea);
+}
+
+/* Menú de la cuenta: pestañas en móvil, columna en escritorio */
+html[data-estilo='vidrio'] .pestana {
+  background: color-mix(in srgb, var(--color-superficie) 62%, transparent);
+  border-color: var(--vidrio-borde);
+  box-shadow: var(--vidrio-brillo), var(--sombra-1);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+
+html[data-estilo='vidrio'] .pestana.activa {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 6px 16px -8px color-mix(in srgb, var(--color-marca) 80%, transparent);
+}
+
+@media (min-width: 992px) {
+  html[data-estilo='vidrio'] .perfil-menu {
+    background: var(--vidrio-fondo-fuerte);
+    border: 1px solid var(--vidrio-borde);
+    box-shadow: var(--vidrio-brillo), var(--vidrio-sombra);
+    -webkit-backdrop-filter: var(--vidrio-filtro);
+    backdrop-filter: var(--vidrio-filtro);
+  }
+
+  /* Dentro del panel ya hay desenfoque: las pestañas no llevan el suyo */
+  html[data-estilo='vidrio'] .pestana {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  html[data-estilo='vidrio'] .pestana:hover {
+    background: color-mix(in srgb, var(--color-superficie) 70%, transparent);
+  }
+
+  html[data-estilo='vidrio'] .pestana.activa {
+    background: var(--color-primario-suave);
+    box-shadow: var(--vidrio-brillo), 0 0 0 1px var(--color-primario-borde);
+  }
+}
+
+/* Estadísticas como tarjetas de cifras */
+html[data-estilo='vidrio'] .estadisticas li {
+  padding: var(--esp-3);
+  border-radius: var(--radio);
+  background: color-mix(in srgb, var(--color-superficie) 58%, transparent);
+  border: 1px solid var(--vidrio-linea);
+  box-shadow: var(--vidrio-brillo);
+}
+
+html[data-estilo='vidrio'] .estadisticas strong {
+  font-size: var(--fs-base);
+}
+
+html[data-estilo='vidrio'] :is(.stat-icon, .vacio-icono) {
+  background: color-mix(in srgb, var(--color-marca) 10%, var(--vidrio-fondo-sutil));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 0 0 1px var(--color-primario-borde);
+}
+
+/* Elementos repetidos o secundarios dentro de los paneles: sin desenfoque */
+html[data-estilo='vidrio'] :is(.pedido, .consejos, .nota-actividad) {
+  background: color-mix(in srgb, var(--color-superficie) 58%, transparent);
+  border: 1px solid var(--vidrio-linea);
+  box-shadow: var(--vidrio-brillo);
+}
+
+html[data-estilo='vidrio'] .pedido:hover {
+  box-shadow: var(--vidrio-brillo), var(--sombra-2);
+}
+
+html[data-estilo='vidrio'] .fuerza-barra {
+  background: color-mix(in srgb, var(--color-arena) 70%, transparent);
+  box-shadow: inset 0 1px 2px rgba(40, 20, 15, 0.16);
+}
+
+/* =====================================================================
+   Administración: panel, pedidos y gráfica
+   ===================================================================== */
+/* Tarjetas del panel y elementos de listas: translúcidas sin desenfoque
+   (son muchas y detrás solo está el fondo ambiental) */
+html[data-estilo='vidrio'] :is(.admin-tarjeta:not(.destacada), .admin-item, .cifra, .filtro:not(.activo)) {
+  background: var(--vidrio-fondo-fuerte);
+  border-color: var(--vidrio-borde);
+  box-shadow: var(--vidrio-brillo), var(--sombra-1);
+}
+
+html[data-estilo='vidrio'] .admin-tarjeta {
+  border-radius: var(--radio-lg);
+}
+
+html[data-estilo='vidrio'] .admin-tarjeta:hover {
+  box-shadow: var(--vidrio-brillo), var(--vidrio-sombra);
+}
+
+html[data-estilo='vidrio'] :is(.admin-tarjeta.destacada, .filtro.activo) {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 10px 24px -12px color-mix(in srgb, var(--color-marca) 80%, transparent);
+}
+
+html[data-estilo='vidrio'] :is(.admin-tarjeta > .bi:first-child, .cifra-icono) {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 0 0 1px var(--color-primario-borde);
+}
+
+html[data-estilo='vidrio'] .admin-tarjeta.destacada > .bi:first-child {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+/* Pedidos del admin: tarjeta translúcida con cabecera y pie suaves */
+html[data-estilo='vidrio'] :is(.pedido-cabecera, .pedido-acciones) {
+  border-color: var(--vidrio-linea);
+}
+
+html[data-estilo='vidrio'] .pedido-envio {
+  background: color-mix(in srgb, var(--color-superficie-2) 70%, transparent);
+  border: 1px solid var(--vidrio-linea);
+}
+
+/* La gráfica es una sola superficie: lleva desenfoque */
+html[data-estilo='vidrio'] .grafica {
+  background: var(--vidrio-fondo-fuerte);
+  border-color: var(--vidrio-borde);
+  box-shadow: var(--vidrio-brillo), var(--vidrio-sombra);
+  -webkit-backdrop-filter: var(--vidrio-filtro);
+  backdrop-filter: var(--vidrio-filtro);
+}
+
+html[data-estilo='vidrio'] .guia {
+  stroke: var(--vidrio-linea);
+}
+
+/* Globo de la gráfica: vidrio sobre la curva */
+html[data-estilo='vidrio'] .grafica-globo {
+  background: var(--vidrio-fondo);
+  border-color: var(--vidrio-borde);
+  box-shadow: var(--vidrio-brillo), var(--vidrio-sombra-alta);
+  -webkit-backdrop-filter: saturate(160%) blur(10px);
+  backdrop-filter: saturate(160%) blur(10px);
+}
+
+html[data-estilo='vidrio'] .grafica-punto {
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.85), 0 0 0 7px var(--color-primario-suave),
+    0 6px 14px -4px color-mix(in srgb, var(--color-marca) 70%, transparent);
+}
+
+/* =====================================================================
+   Avisos, acordeones, pie y páginas de información
+   ===================================================================== */
+/* Avisos flotantes: vidrio fuerte, conservando el borde izquierdo de color */
+html[data-estilo='vidrio'] .notification-banner {
+  background: var(--vidrio-fondo-flotante);
+  border-top-color: var(--vidrio-borde);
+  border-right-color: var(--vidrio-borde);
+  border-bottom-color: var(--vidrio-borde);
+  box-shadow: var(--vidrio-brillo), var(--vidrio-sombra-alta) !important;
+  -webkit-backdrop-filter: var(--vidrio-filtro);
+  backdrop-filter: var(--vidrio-filtro);
+}
+
+/* Bootstrap: ventanas modales (si se usan) y acordeón de preguntas frecuentes */
+html[data-estilo='vidrio'] .modal-content {
+  --bs-modal-bg: var(--vidrio-fondo-fuerte);
+  border: 1px solid var(--vidrio-borde);
+  border-radius: var(--radio-lg);
+  box-shadow: var(--vidrio-brillo), var(--vidrio-sombra-alta);
+  -webkit-backdrop-filter: var(--vidrio-filtro);
+  backdrop-filter: var(--vidrio-filtro);
+}
+
+html[data-estilo='vidrio'] .pagina-info .accordion {
+  --bs-accordion-bg: var(--vidrio-fondo-fuerte);
+  --bs-accordion-border-color: var(--vidrio-borde);
+}
+
+html[data-estilo='vidrio'] .pagina-info .accordion-item {
+  box-shadow: var(--vidrio-brillo);
+}
+
+html[data-estilo='vidrio'] .pagina-info .accordion-button:not(.collapsed) {
+  background-color: color-mix(in srgb, var(--color-primario-suave) 80%, var(--vidrio-fondo-fuerte)) !important;
+}
+
+html[data-estilo='vidrio'] .pagina-info .accordion-button {
+  background-color: transparent !important;
+}
+
+/* Páginas legales e informativas: vidrio fuerte, la lectura manda */
+html[data-estilo='vidrio'] .pagina-info .card {
+  background: var(--vidrio-fondo-fuerte) !important;
+  border-color: var(--vidrio-borde);
+  box-shadow: var(--vidrio-brillo), var(--sombra-1) !important;
+}
+
+html[data-estilo='vidrio'] .pagina-info .card-header.bg-primario {
+  border-bottom-color: var(--vidrio-linea);
+}
+
+/* Pie: fondo sólido; botón de WhatsApp y redes como vidrio */
+html[data-estilo='vidrio'] .boton-whatsapp {
+  background: color-mix(in srgb, var(--color-sobre-marca) 92%, transparent);
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8), 0 10px 26px -12px rgba(0, 0, 0, 0.45);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+
+html[data-estilo='vidrio'] .social-links a:not(:hover) {
+  background: color-mix(in srgb, var(--color-superficie) 60%, transparent);
+  box-shadow: var(--vidrio-brillo);
+}
+
+/* =====================================================================
+   Alternativas: el vidrio nunca debe empeorar la lectura
+   (al final del archivo para que ganen a todo lo anterior)
+   ===================================================================== */
+/* Sin desenfoque disponible o con "reducir transparencia": superficies sólidas */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  html[data-estilo='vidrio'] {
+    --vidrio-fondo: var(--color-superficie);
+    --vidrio-fondo-fuerte: var(--color-superficie);
+    --vidrio-fondo-flotante: var(--color-superficie);
+    --vidrio-fondo-sutil: var(--color-superficie-2);
+    --vidrio-oscuro: rgba(20, 10, 8, 0.78);
+  }
+
+  html[data-estilo='vidrio'] .cabecera::before,
+  html[data-estilo='vidrio'] :is(.desplegable-panel, .pestana:not(.activa)) {
+    background: var(--color-superficie);
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  html[data-estilo='vidrio'] {
+    --vidrio-fondo: var(--color-superficie);
+    --vidrio-fondo-fuerte: var(--color-superficie);
+    --vidrio-fondo-flotante: var(--color-superficie);
+    --vidrio-fondo-sutil: var(--color-superficie-2);
+    --vidrio-oscuro: rgba(20, 10, 8, 0.78);
+  }
+
+  html[data-estilo='vidrio'] .cabecera::before,
+  html[data-estilo='vidrio'] :is(.desplegable-panel, .pestana:not(.activa)) {
+    background: var(--color-superficie);
+  }
+
+  html[data-estilo='vidrio'] *,
+  html[data-estilo='vidrio'] *::before {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+}
+
+/* Alto contraste del sistema: sin efectos, los bordes se ven */
+@media (forced-colors: active) {
+  html[data-estilo='vidrio'] body::before {
+    display: none;
+  }
+
+  html[data-estilo='vidrio'] *,
+  html[data-estilo='vidrio'] *::before {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+    box-shadow: none !important;
+  }
+}
+
+@media print {
+  html[data-estilo='vidrio'] body::before {
+    display: none;
+  }
+
+  html[data-estilo='vidrio'] *,
+  html[data-estilo='vidrio'] *::before {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+    box-shadow: none !important;
+  }
+}

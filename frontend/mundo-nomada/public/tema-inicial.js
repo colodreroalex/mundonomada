@@ -11,4 +11,9 @@
   };
   aplicar();
   if (consulta.addEventListener) { consulta.addEventListener('change', aplicar); }
+
+  // Para comparar: abrir la web con ?estilo=clasico quita la capa de vidrio (src/vidrio.css)
+  if (/[?&]estilo=clasico(&|$)/.test(window.location.search)) {
+    document.documentElement.removeAttribute('data-estilo');
+  }
 })();
